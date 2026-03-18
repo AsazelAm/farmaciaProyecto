@@ -1,0 +1,161 @@
+@import "tailwindcss";
+input[type="email"]{
+  background-color: white;
+}
+input[type="password"]{
+  background-color: white;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-in-out;
+}
+.mostrar{
+  display: block !important;
+  position: absolute;
+  transform: translateX(0%) !important;
+  opacity: 1;
+  z-index: 100;
+  animation: rightIn 0.3s ease-in-out;
+}
+.carousel-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .carousel {
+    display: flex;
+    transition: transform 0.2s linear;
+  }
+  
+  .carousel-item {
+    width: 200px;
+    align-self: center;
+    min-width: 150px;
+    margin: 0 10px;
+    flex: none;
+  }
+  .carousel-item2 {
+    align-self: center;
+    margin: 0 10px;
+    flex: none;
+  }
+  
+  .carousel-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: grayscale(100%);
+    transition: filter 0.3s ease-in-out;
+  }
+  
+  .carousel-item img:hover {
+    filter: grayscale(0%);
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1;
+  }
+  .up{
+    animation: fadeIn 0.3s ease-in-out;
+    z-index: 100;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .right{
+    animation: rightIn 0.3s ease-in-out;
+  }
+  @keyframes rightIn {
+    from {
+      opacity: 0;
+      transform: translatex(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translatex(0);
+    }
+  }
+  @keyframes rightIn {
+    from {
+      opacity: 0;
+      transform: translatex(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translatex(0);
+    }
+  }
+
+  .clei::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    display: block;
+}
+
+.clei::-webkit-scrollbar-thumb:active {
+    background-color: #999999;
+}
+
+.clei::-webkit-scrollbar-thumb {
+    background: #191919;
+    border-radius: 4px;
+}
+
+.clei::-webkit-scrollbar-thumb:hover {
+    background: #000000;
+    box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.9);
+    display: block;
+}
+
+.clei::-webkit-scrollbar-track {
+    background: #e1e1e1;
+    border-radius: 4px;
+}
+
+/* Cambiamos el fondo cuando esté en active o hover */
+.clei::-webkit-scrollbar-track:hover,
+.clei::-webkit-scrollbar-track:active {
+    background: #d4d4d4;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+input[type=number] { -moz-appearance:textfield; }
+
+.add_button{
+  @apply bg-[#1447E6] text-white text-sm p-[4px] rounded-lg mb-2 w-[200px] cursor-pointer;
+}
+.add_textare{
+  @apply w-full p-[6px] text-xs border  bg-white  border-gray-400 rounded-lg resize-none overflow-hidden;
+}
+.col-table{
+  @apply p-[6px] font-semibold text-center text-sm ;
+}
