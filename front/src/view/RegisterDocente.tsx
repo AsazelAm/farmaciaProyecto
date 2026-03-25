@@ -9,7 +9,6 @@ import imgver from '../assets/ver.png';
 import imgesconder from '../assets/esconder.png';
 import bgdoc from '../assets/bg-regitredocen.jpg'; 
 import type {AuthDocente} from '../types';
-import { RegisterDocenteAPI } from '../Api/Docentes';
 import Loading from '../Helpers/Loading';
 // Componente para Ojo Visible
 const EyeIcon = (props: any) => (

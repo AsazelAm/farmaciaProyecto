@@ -20,7 +20,7 @@ export async function uploadImageGlobal(file: Express.Multer.File,id: string,fec
     throw new Error(`La imagen ${file.originalname} debe pesar máximo 5MB`);
   }
 
-  // 🔥 Siempre será WEBP
+  // Siempre será WEBP
   const fileName = `${id}-${fecha}.webp`;
   const savePath = path.join(folderPath, fileName);
 
