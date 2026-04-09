@@ -6,6 +6,10 @@ import { corsConfig } from "./config/cors";
 import UserRoute from "./Routes/UserRoutes";
 import AuthRoute from "./Routes/AuthRoutes";
 
+import LaboratorioRoutes from "./Routes/LaboratorioRoutes";
+import TipoProdRoutes from "./Routes/TipoProdRoutes";
+
+
 import path from "path";
 
 const app = express()
@@ -22,4 +26,7 @@ app.use("/Uploads", express.static(uploadsPath));
 
 app.use('/api/Auth', AuthRoute)
 app.use('/api/user', UserRoute)
+
+
+
 export default app

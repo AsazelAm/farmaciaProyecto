@@ -43,3 +43,21 @@ export type AuthUser = Pick<Users, 'Email' | 'Passwd'>
 export type AuthRol = Pick<Users, 'id_rol'>
 
 
+
+//type LABORATORIO
+export const laboraArray=z.object({
+    id_laboratorio:z.number(),
+    nombre:z.string(),
+    Estado:z.string(),
+    fecha_creacion:z.string()
+})
+export const GetLaboraArray= z.array(laboraArray);
+
+const GetLaboraShcemass = z.object({
+    id_laboratorio:z.number(),
+    nombre:z.string(),
+    Estado:z.string(),
+    fecha_creacion:z.string()
+})
+type laboraType = z.infer<typeof GetLaboraShcemass>
+
