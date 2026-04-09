@@ -57,7 +57,10 @@ const GetLaboraShcemass = z.object({
     id_laboratorio:z.number(),
     nombre:z.string(),
     Estado:z.string(),
+    img:z.string(),
     fecha_creacion:z.string()
 })
 type laboraType = z.infer<typeof GetLaboraShcemass>
-
+export type CreateLab=Pick<laboraType,'nombre'|'img'>
+export type UpdateLabo=Pick<laboraType,'nombre'| 'img'| 'id_laboratorio'>
+export type DeletLabora = Pick<laboraType,'mid_laboratorio'>
