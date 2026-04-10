@@ -4,7 +4,7 @@ const DataTipoProd = {
   async GetTipoProdM() {
     const Conexion = await conectar.getConnection();
     const results = await Conexion.query(
-      `SELECT nombre,fecha_creacion, Estado FROM tipo_producto WHERE Estado = 1;`,
+      `SELECT id_tipo_prod,nombre,fecha_creacion, Estado FROM tipo_producto WHERE Estado = 1;`,
     );
     Conexion.release();
     return results;

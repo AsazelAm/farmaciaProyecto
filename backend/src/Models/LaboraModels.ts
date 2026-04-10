@@ -3,7 +3,7 @@ import conectar from '../config/db';
 const DataLabora ={
     async GetLaboraM(){
         const Conexion = await conectar.getConnection();
-        const results = await Conexion.query(`SELECT nombre,img,fecha_creacion,Estado FROM laboratorio WHERE Estado = 1;`);
+        const results = await Conexion.query(`SELECT id_laboratorio,nombre,img,fecha_creacion,Estado FROM laboratorio WHERE Estado = 1;`);
         Conexion.release()
         return results;
     },
