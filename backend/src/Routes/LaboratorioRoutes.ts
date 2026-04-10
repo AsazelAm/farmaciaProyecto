@@ -15,9 +15,7 @@ router.get('/GetLab',
 ) 
 
 router.post('/AddLab',
-    upload.fields([
-        {name: 'img', maxCount:1}
-    ]),
+    upload.single('img'),
     LaboratorioControllers.AddLaboraC
 )
 
@@ -27,6 +25,7 @@ router.delete('/DeteleLab/:id_lab',
 )
 
 router.put('/UpdateLab/:id_lab',
+    upload.single('img'),
     LaboratorioControllers.UpdateLaboraC
 )
 

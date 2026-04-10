@@ -7,20 +7,29 @@ const DataLabora ={
         Conexion.release()
         return results;
     },
-    async AddLaboraM(nombre,img){
+    async AddLaboraM(nombre){
         const Conexion = await conectar.getConnection();
-        await Conexion.query(`INSERT INTO laboratorio(nombre,img) VALUES(?,?);`,[nombre,img]);
+        const results =await Conexion.query(`INSERT INTO laboratorio(nombre) VALUE(?);`,[nombre]);
         Conexion.release();
-        return "Laboratorio Registrado";
+        return Number(results.insertId);
     },
-    async UpdateLabM(nombre,img,id_lab){
+    async UpdateRutaimg(ruta:string, id_laboratorio:number| string){
+        const Conexion= await conectar.getConnection();
+        await Conexion.query(`
+            UPDATE laboratorio SET
+            img = ?
+            WHERE id_laboratorio = ?
+            `,[ruta,id_laboratorio]);
+        Conexion.release();
+        return "Imagen Guardado correctamente"
+    },
+    async UpdateLabM(id_lab,nombre){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
             UPDATE laboratorio SET
-            nombre = ?,
-            img = ?
+            nombre = ?
             WHERE id_laboratorio = ? AND Estado = 1;
-            `,[nombre,img, id_lab]);
+            `,[nombre, id_lab]);
             Conexion.release();
             return "Laboratorio Actualizado";
     },

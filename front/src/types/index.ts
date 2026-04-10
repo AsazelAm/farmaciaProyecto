@@ -100,7 +100,7 @@ const GetTipoProdShcemass =z.object({
 type TipoProdType=z.infer<typeof GetTipoProdShcemass>
 export type CreateTipoProd=Pick<TipoProdType, 'nombre'>
 export type UpdateTipoProd=Pick<TipoProdType, 'nombre'|'id_tipo_prod'>
-export type DeleteTipoProdj=Pick<TipoProdType, 'id_tipo_prod'>
+export type DeleteTipoProd=Pick<TipoProdType, 'id_tipo_prod'>
 
 
 //Type Presentacion 

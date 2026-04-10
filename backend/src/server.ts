@@ -27,6 +27,9 @@ app.use("/Uploads", express.static(uploadsPath));
 app.use('/api/Auth', AuthRoute)
 app.use('/api/user', UserRoute)
 
+app.use('/api/Laboratorio',LaboratorioRoutes)
+app.use('/api/TipoProd',TipoProdRoutes)
+
 
 
 export default app
