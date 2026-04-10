@@ -67,7 +67,7 @@ export const laboraArray=z.object({
     Estado:z.string(),
     fecha_creacion:z.string()
 })
-export const GetLaboraArray= z.array(laboraArray);
+export const LaboraShcemas= z.array(laboraArray);
 
 const GetLaboraShcemass = z.object({
     id_laboratorio:z.number(),
@@ -89,7 +89,7 @@ export const tipoProdArray=z.object({
     Estado:z.string(),
     fecha_creacion:z.string()
 })
-export const GetTipoProdArray=z.array(tipoProdArray);
+export const TipoProdShcemas=z.array(tipoProdArray);
 
 const GetTipoProdShcemass =z.object({
     id_tipo_prod:z.number(),
@@ -109,7 +109,7 @@ export const presentacionArray=z.object({
     nombre:z.string(),
     fecha_creacion:z.string()
 })
-export const GetPresentArray=z.array(presentacionArray)
+export const PresentShcemas=z.array(presentacionArray)
 
 const GetPresentaShcemass=z.object({
     id_presentacion:z.number(),
@@ -132,7 +132,7 @@ export const ClienteArray=z.object({
     email:z.string().nullable(),
     fecha_creacion:z.string()
 })
-export const GetClienteArray=z.array(ClienteArray)
+export const ClienteShcemas=z.array(ClienteArray)
 
 const GetClienteShcemass=z.object({
     id_cliente:z.number().nullable(),
@@ -159,7 +159,7 @@ export const ProveedorArray=z.object({
     contacto_principal:z.string().nullable(),
     fecha_creacion:z.string()
 })
-export const GetProveedorArray=z.array(ProveedorArray)
+export const ProveedorShcemas=z.array(ProveedorArray)
 
 const GetProveedorShcemass=z.object({
     id_proveedor:z.number(),
