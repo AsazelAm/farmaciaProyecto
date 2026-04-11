@@ -35,7 +35,7 @@ export async function UpdateLaboraApi(formData: FormData,id_laboratorio:number){
     try {
         const {data}=await api.put(`/Laboratorio/UpdateLab/${id_laboratorio}`,formData,{
             headers:{
-                'Content_Type':'multipart/form_data'
+                'Content-Type':'multipart/form-data'
             }
         });
         return data;

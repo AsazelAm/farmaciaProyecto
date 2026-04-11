@@ -47,7 +47,7 @@ export const tipo_usArray=z.object({
     id_tipo_us:z.number(),
     name_rol:z.string(),
 })
-export const GetTipo_usArray=z.array(tipo_usArray)
+export const TipoUsShcemas=z.array(tipo_usArray)
 
 const GetTipo_usShcemass=z.object({
     id_tipo_us:z.number(),
