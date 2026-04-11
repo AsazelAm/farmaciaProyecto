@@ -43,7 +43,8 @@ export async function DeleteTipoProdApi(id_tipo_prod:DeleteTipoProd['id_tipo_pro
         const {data} = await api.delete(`/TipoProd/DeleteTipoProd/${id_tipo_prod}`);
         return data;
     }catch(error){
-        if(isAxiosError(error)&& error.response)
+        if(isAxiosError(error)&& error.response){
             throw new Error(error.response.data.error)
+        }
     }
 }

@@ -109,7 +109,7 @@ export const presentacionArray=z.object({
     nombre:z.string(),
     fecha_creacion:z.string()
 })
-export const PresentShcemas=z.array(presentacionArray)
+export const PresentaShcemas=z.array(presentacionArray)
 
 const GetPresentaShcemass=z.object({
     id_presentacion:z.number(),

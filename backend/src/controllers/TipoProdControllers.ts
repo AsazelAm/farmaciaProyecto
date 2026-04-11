@@ -8,7 +8,7 @@ export class TipoProdControllers{
             res.status(200).json(data);
         }catch(error){
             console.error("Error al obtener el tipo de prodcto: ",error);
-            res.status(500).json({error:"Error al obtener el tipo del Producto"});
+            res.status(500).json({error:"ERROR al obtener el tipo del Producto"});
         }
     }
 
@@ -19,7 +19,7 @@ export class TipoProdControllers{
             res.status(200).json(data);
         }catch(error){
             console.error("Error al agregar un tipo de Producto: ",error);
-            res.status(500).json({error:"Error al Agregar un Tipo Proyecto"});
+            res.status(500).json({error:"ERROR al Agregar un Tipo Proyecto"});
         }
     }
 
@@ -31,7 +31,7 @@ export class TipoProdControllers{
             res.status(200).json(data);
         } catch (error) {
             console.error("Error al Actualizar Tipo de Producto: ",error);
-            res.status(500).json({error: "Error al actualizar el Tipo Producto"});
+            res.status(500).json({error: "ERROR al actualizar el Tipo Producto"});
         }
         
     }
@@ -43,7 +43,7 @@ export class TipoProdControllers{
             res.status(200).json(data);
         }catch(error){
             console.error("Error al Eliminar Tipo Producto: ",error);
-            res.status(500).json({error: "Error al eliminar al Tipo Producto"});
+            res.status(500).json({error: "ERROR al eliminar al Tipo Producto"});
         }
     }
 }
