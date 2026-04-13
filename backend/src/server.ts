@@ -8,6 +8,9 @@ import AuthRoute from "./Routes/AuthRoutes";
 
 import LaboratorioRoutes from "./Routes/LaboratorioRoutes";
 import TipoProdRoutes from "./Routes/TipoProdRoutes";
+import PresentaRoutes from "./Routes/PresentaRoutes";
+import ClienteRoutes from "./Routes/ClienteRoutes";
+import TipoUsRoutes from "./Routes/TipoUsRoutes";
 
 
 import path from "path";
@@ -29,6 +32,9 @@ app.use('/api/user', UserRoute)
 
 app.use('/api/Laboratorio',LaboratorioRoutes)
 app.use('/api/TipoProd',TipoProdRoutes)
+app.use('/api/Presentacion',PresentaRoutes);
+app.use('/api/Cliente',ClienteRoutes);
+app.use('/api/TipoUs',TipoUsRoutes);
 
 
 
