@@ -1,69 +1,33 @@
 import conectar from  "../config/db"
 
 interface CreateAdmins {
-    id_rol:number;
+    ci:string;
     nombre:string;
     apellido:string;
-    ci:number;
-    Email:string;
-    Passwd:string;
+    passwd:string;
     telefono:string;
-    id_city:number;
-    id_country:number;};
+    Email:string;
+    id_tipo_us:number;
+    id_sucursal:number;
+};
 
 interface UpdateAdmins{
-    id_rol:number;
+    id_usuario:number;
+    ci:string;
     nombre:string;
     apellido:string;
-    Email:string;
     telefono:string;
-    id_city:number;
-    id:string;
+    Email:string;
+    id_tipo_us:number;
+    id_sucursal:number;
 }
-interface CreateAlumnos {
-    nombre:string;
-    apellido:string;
-    ci:number;
-    Email:string;
-    telefono:string;
-    id_empresa:number;
-    id_city:number;
-    id_country:number;
-};
-
-interface UpdateEstudiantes {
-    nombre:string;
-    apellido:string;
-    Email:string;
-    telefono:string;
-    ci:number;
-    id_empresa:number;
-    id_city:number;
-    id:string;
-};
 
 const DataUser = {
     async UserAllModels(){
         const conection = await conectar.getConnection()
         const results = await conection.query(`
-        SELECT 
-            user.id_usuario,
-            user.apellido,
-            user.nombre,
-            user.telefono,
-            user.Email,
-            user.Estado,
-            rol.name_rol,
-            rol.id_rol,
-            city.city,
-            city.id_city,
-            city.id_country,
-            country.pais
-        FROM usuario
-            LEFT JOIN city ON user.id_city = city.id_city
-            LEFT JOIN country ON city.id_country = country.id_country
-            JOIN rol ON user.id_rol = rol.id_rol
-        WHERE user.Estado = 1
+        SELECT usu.id_usuario, usu.ci,usu.nombre,usu.apellido,usu.img,usu.telefono,usu.email,usu.Estado, sucursal.id_sucursal, sucursal.nombre,tipo_us.id_tipo_us, tipo_us.name_rol FROM usuario usu LEFT JOIN sucursal ON usu.id_sucursal = sucursal.id_sucursal 
+        JOIN tipo_us ON usu.id_tipo_us = tipo_us.id_tipo_us WHERE usu.Estado = 1;
     `)
     conection.release()
     return results
@@ -102,7 +66,8 @@ const DataUser = {
         }finally{
             Conexion.release()
         }
-    }, async GetPasswd(Email:string){
+    }, 
+    async GetPasswd(Email:string){
         const Conexion = await conectar.getConnection();
         try {
             const rows = await Conexion.query(`SELECT id_usuario, passwd FROM usuario WHERE Email = ?`,[Email])
@@ -143,7 +108,7 @@ const DataUser = {
     async GetCI(CI: string) {
         const Conexion = await conectar.getConnection();
         try {
-            const [rows] = await Conexion.query(`SELECT ci FROM user WHERE ci = ?`, [CI]);
+            const [rows] = await Conexion.query(`SELECT ci FROM usuario WHERE ci = ?`, [CI]);
             if (rows) {
                 return { exists: true, message: "El Carnet de Identidad ya está registrado" };
             }
@@ -155,33 +120,33 @@ const DataUser = {
             Conexion.release();
         }
     },
-     async CreateAdmins(Admins:CreateAdmins){
+     async CreateUsuarioM(Usuario:CreateAdmins){
         const Conexion = await conectar.getConnection()
         try {
-            await Conexion.query(`
+            const result=await Conexion.query(`
                 INSERT INTO 
-                user (
-                id_rol,
+                usuario (
+                ci,
                 nombre,
                 apellido,
-                ci,
-                Email,
+                Passwd,
                 telefono,
-                id_city,
-                Passwd, 
+                Email,
                 Confirmed
-                ) VALUES (?,?, ?, ?, ?, ?, ?,?,?)`,[
-                    Admins.id_rol,
-                    Admins.nombre,
-                    Admins.apellido,
-                    Admins.ci,
-                    Admins.Email,
-                    Admins.telefono,
-                    Admins.id_city,
-                    Admins.Passwd,
+                id_tipo_us,
+                id_sucursal
+                ) VALUES (?,?,?,?,?,?,?,?,?)`,[
+                    Usuario.ci,
+                    Usuario.nombre,
+                    Usuario.apellido,
+                    Usuario.passwd,
+                    Usuario.telefono,
+                    Usuario.Email,
                     "1",
+                    Usuario.id_tipo_us,
+                    Usuario.id_sucursal
                 ])
-            return "Usuario Creado"
+            return Number(result.insertId);
         } catch (error) {
             console.error("Error al crear admin models:", error);
             throw new Error("Error al crear admin models:");
@@ -189,146 +154,39 @@ const DataUser = {
             Conexion.release()
         }
     },
-
+    async UpdateRutaimg(ruta:string, id_usuario:number| string){
+            const Conexion= await conectar.getConnection();
+            await Conexion.query(`
+                UPDATE usuario SET
+                img = ?
+                WHERE id_usuario = ?
+                `,[ruta,id_usuario]);
+            Conexion.release();
+            return "Imagen Guardado correctamente"
+        },
     async DeleteUserId(id){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
-            UPDATE user set Estado = 0 where id_user = ?;    
+            UPDATE usuario SET Estado = 0 WHERE id_usuario = ?;    
         `,[id]);
         Conexion.release()
         return "Usuario Eliminado Correctamente"
     },
-
     async UpodateUserbyId(data:UpdateAdmins){
         const Conexion  = await conectar.getConnection();
         await Conexion.query(`
-            UPDATE user set
-            id_rol = ?,
+            UPDATE usuario SET
+            ci= ?,
             nombre = ?,
             apellido = ?,
-            Email = ?,
             telefono = ?,
-            id_city=?
-            where id_user = ?
-        `,[data.id_rol,data.nombre,data.apellido,data.Email,data.telefono,data.id_city,data.id]);
+            Email = ?,
+            id_tipo_us=?,
+            id_sucursal = ?
+            where id_usuario = ?
+        `,[data.ci,data.nombre,data.apellido,data.telefono,data.Email,data.id_tipo_us,data.id_sucursal,data.id_usuario]);
         Conexion.release()
         return "Datos Actualizados"
-    },
-    //Docentes
-    async GetDocentesModels(){
-        const Conexion = await conectar.getConnection();
-        const Results = await Conexion.query(`
-            SELECT user.id_user, user.nombre, user.apellido FROM user 
-            JOIN rol ON user.id_rol = rol.id_rol
-            WHERE rol.id_rol = 2 AND rol.Estado = 1 AND user.Estado = 1;    
-        `)
-        Conexion.release()
-        return Results
-    },
-    //roles
-    async RolAllModels(){
-        const Conexion = await conectar.getConnection();
-        const Results = await Conexion.query(`Select id_rol, name_rol from rol where Estado = 1;`);
-        Conexion.release();
-        return Results;
-    },
-    async addRol(rol){
-        const Conexion = await conectar.getConnection();
-        await Conexion.query(`INSERT INTO Rol (name_rol) values (?)`,[rol]);
-        Conexion.release();
-        return 'Rol creado';
-    },
-    async DeleteRol(id){
-        const Conexion = await conectar.getConnection();
-        await Conexion.query(`
-            UPDATE Rol Set Estado = 0 where id_rol = ?;    
-        `,[id])
-        Conexion.release();
-        return "Rol Eliminado"
-    },
-    async UpdateRolModels(id,rol){
-        const Conexion = await conectar.getConnection();
-        await Conexion.query(`
-            UPDATE Rol set name_rol = ? where id_rol = ?;
-        `,[rol,id])
-        Conexion.release();
-        return "Rol Actualizado"
-    },
-
-    async GetAlumnosModels(){
-        const Conexion = await conectar.getConnection();
-        const data = await Conexion.query(`
-             SELECT 
-                user.id_user, 
-                user.nombre, 
-                user.apellido, 
-                user.ci, 
-                user.Email, 
-                user.telefono,
-                user.id_empresa,
-                user.id_city,
-                city.city,
-                city.id_country,
-                country.pais
-            FROM user
-            JOIN rol ON user.id_rol = rol.id_rol
-            JOIN city ON user.id_city = city.id_city
-            JOIN country ON city.id_country = country.id_country
-            WHERE rol.id_rol = 3
-            AND user.Estado = 1;
-        `)
-        Conexion.release();
-        return data
-    },
-    async GetCityCoun(idcontry){
-        const Conexion =await conectar.getConnection();
-        const data =await Conexion.query(`
-            SELECT id_city,city FROM city WHERE id_country=? AND Estado = 1;
-            `,[idcontry])
-        Conexion.release();
-        return data;
-    },
-    async createStudentsModels(data:CreateAlumnos){
-        const Conexion = await conectar.getConnection();
-        await Conexion.query(`
-            INSERT INTO user(id_rol,nombre,apellido, Email,telefono,ci, id_empresa,id_city)VALUES(3,?,?,?,?,?,?,?);
-        `,[
-            data.nombre,
-            data.apellido,
-            data.Email,
-            data.telefono,
-            data.ci,
-            data.id_empresa,
-            data.id_city
-        ]);
-        Conexion.release();
-        return 'Estudiante Creado'
-    },
-    async UpdateStudentsModels(data:UpdateEstudiantes){
-        const Conexion =await conectar.getConnection();
-        await Conexion.query(`
-            UPDATE user SET
-            nombre = ?,
-            apellido= ?,
-            Email= ?,
-            telefono=?,
-            ci=?,
-            id_empresa=?,
-            id_city=?
-            WHERE id_user = ? AND id_rol=3;
-        `,[
-            data.nombre,
-            data.apellido,
-            data.Email,
-            data.telefono,
-            data.ci,
-            data.id_empresa,
-            data.id_city,
-            data.id
-        ])
-            Conexion.release()
-            return "Datos Actualizados"
     }
-  
 }
-export default DataUser
+export default DataUser;

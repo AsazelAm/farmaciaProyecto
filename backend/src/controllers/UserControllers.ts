@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import DataUser from "../Models/UserModels";
+import { uploadImageGlobal } from "../Middleware/SaveImg";
+import { GetDateToday } from "../lib/Time";
 import { HashPassword } from "../Utils/auth";
 
 export class UserControllers {
@@ -8,13 +10,16 @@ export class UserControllers {
             const data = await DataUser.UserAllModels();
             res.status(200).json(data)
         } catch (error) {
-            console.error("Error al obtener el Rol:", error);
-            res.status(500).json({ error: "Error al obtener el Rol:" });
+            console.error("Error al obtener Usuario:", error);
+            res.status(500).json({ error: "ERROR al obtener el Usuario:" });
         }
     }
-    static readonly CreateUserControllers = async(req:Request,res:Response)=>{
+    static readonly CreateUserControllers = async(req:Request,res:Response):Promise<any>=>{
         try {
-            const { nombre,apellido, id_rol, Passwd, ci, Email, telefono,id_city,id_country } = req.body;
+            const { ci,nombre,apellido, passwd,telefono,Email, id_tipo_us,id_sucursal } = req.body;
+            const files = req.file;
+            const imgFile = files;
+            const fecha=GetDateToday();
             const VE =  await DataUser.GetEmail(Email);
             if(VE.exists){
                 res.status(400).json({error:"El Email ya esta Registrado"});
@@ -26,21 +31,24 @@ export class UserControllers {
                 return; 
             }
 
-            const NewPasswd = await HashPassword(Passwd);
+            const NewPasswd = await HashPassword(passwd);
 
-            await DataUser.CreateAdmins({
-                id_rol,
+            const id_usuario = await DataUser.CreateUsuarioM({
+                ci,
                 nombre,
                 apellido,
-                ci,
-                Email,
+                passwd: NewPasswd,
                 telefono,
-                id_city,
-                id_country,
-                Passwd: NewPasswd,
+                Email,
+                id_tipo_us,
+                id_sucursal
             });
+            if(imgFile){
+                const rutaImg = await uploadImageGlobal(imgFile,String(id_usuario),fecha,'Usuario');
+                await DataUser.UpdateRutaimg(rutaImg,id_usuario);
+            }
 
-            res.status(201).json({ message: "Usuario creado con éxito"});
+            res.status(201).json({ message: "Usuario creado con éxito",id_usuario:id_usuario});
         } catch (error) {
             console.error("Error al crear usuario:", error);
             res.status(500).json({ error: "Error al crear usuario:" });
@@ -60,9 +68,18 @@ export class UserControllers {
 
     static readonly UpdateUserControllers = async(req:Request,res:Response)=>{
         try {
-            const {id} = req.params
-            const {id_rol,nombre,apellido,Email,telefono,id_city} = req.body
-            const data = await DataUser.UpodateUserbyId({id_rol,nombre,apellido,Email,telefono,id_city,id});
+            const id_usuario=Number(req.params.id_usuario);
+            const { ci,nombre,apellido,telefono,Email, id_tipo_us,id_sucursal } = req.body;
+            const files = req.file;
+            const imgFile = files;
+            const fecha=GetDateToday();
+
+            const data = await DataUser.UpodateUserbyId({ci,nombre,apellido,telefono,Email,id_tipo_us,id_sucursal,id_usuario});
+
+            if(imgFile){
+                const rutaImg= await uploadImageGlobal(imgFile,String(id_usuario),fecha,'Usuario');
+                await DataUser.UpdateRutaimg(rutaImg,id_usuario)
+            }
             res.status(200).json(data)
         } catch (error) {
             console.error("Error al actualizar usuarios:", error);
@@ -70,111 +87,5 @@ export class UserControllers {
         }
     }
 
-    static readonly Getdocentes = async(req:Request,res:Response)=>{
-        try {
-            const data = await DataUser.GetDocentesModels()
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al actualizar usuarios:", error);
-            res.status(500).json({ error: "Error al actualizar usuarios:" });
-        }
-    }
 
-    //roles
-    static readonly GetRol = async(req:Request,res:Response)=>{
-        try {
-            const data = await DataUser.RolAllModels();
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al obtener el Rol:", error);
-            res.status(500).json({ error: "Error al obtener el Rol:" });
-        }
-    }
-    static readonly addRolController  = async(req:Request,res:Response)=>{
-        try {
-            const {rol} = req.body
-            const data = await DataUser.addRol(rol);
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al crear nuevo rol:", error);
-            res.status(500).json({ error: "Error al crear nuevo rol:" });
-        }
-    }
-    static readonly DeleteRolControolers = async (req:Request,res:Response)=>{
-        try {
-            const {id} = req.params
-            const data = await DataUser.DeleteRol(id);
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al eliminar el rol:", error);
-            res.status(500).json({ error: "Error al eliminar el rol:" });
-        }
-    }
-    static readonly UpdateRolControllers = async (req:Request,res:Response)=>{
-        try {
-            const {id} = req.params
-            const {rol} = req.body
-            const data  = await DataUser.UpdateRolModels(id,rol);
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al actualizar el rol:", error);
-            res.status(500).json({ error: "Error al actualizar el rol:" }); 
-        }
-    }
-
-    static readonly GetAlumnosControllers = async (req:Request,res:Response)=>{
-        try {
-            const data =await DataUser.GetAlumnosModels();
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al actualizar el rol:", error);
-            res.status(500).json({ error: "Error al actualizar el rol:" }); 
-        }
-    }
-
-
-    static readonly GetCityCountryControllers= async(req:Request,res:Response)=>{
-        try{
-            const {id_contry}=req.params;
-            const data=await DataUser.GetCityCoun(id_contry);
-            res.status(200).json(data);
-        }catch(error){
-            console.error("Error al actualizar la Ciudad:", error);
-            res.status(500).json({ error: "Error al actualizar la Ciudad:" }); 
-        }
-    }
-    
-
-    static readonly CreateStudentsControllers = async (req:Request,res:Response)=>{
-        try {
-            const {nombre,apellido,Email,telefono,ci,id_empresa,id_city,id_country} = req.body
-            const data = await DataUser.createStudentsModels({nombre,apellido,Email,telefono,ci,id_empresa,id_city,id_country});
-            res.status(200).json(data)
-        } catch (error) {
-            console.error("Error al actualizar el rol:", error);
-            res.status(500).json({ error: "Error al actualizar el rol:" }); 
-        }
-    }
-
-    static readonly UpdateStudentsController = async(req:Request,res:Response)=>{
-        try{
-        const {id}=req.params
-        const {nombre,apellido,Email,telefono,ci,id_empresa,id_city}=req.body
-        const data =await DataUser.UpdateStudentsModels({
-            nombre,
-            apellido,
-            Email,
-            telefono,
-            ci,
-            id_empresa,
-            id_city,
-            id});
-        
-        res.status(200).json(data);
-        }catch(error) {
-            console.error("Error al actualizar Estudiante:", error);
-            res.status(500).json({ error: "Error al actualizar al Estudiante:" });
-        }
-        
-    }
 }
