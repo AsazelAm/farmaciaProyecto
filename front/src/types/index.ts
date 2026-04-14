@@ -114,6 +114,7 @@ export type DeleteSucursal = Pick<SucurType, "id_sucursal">;
 export const laboraArray = z.object({
   id_laboratorio: z.number(),
   nombre: z.string(),
+  img: z.string().nullable(),
   fecha_creacion: z.string(),
 });
 export const LaboraShcemas = z.array(laboraArray);
@@ -126,8 +127,8 @@ const GetLaboraShcemass = z.object({
   fecha_creacion: z.string(),
 });
 type LaboraType = z.infer<typeof GetLaboraShcemass>;
-export type CreateLab = Pick<LaboraType, "nombre" | "img">;
-export type UpdateLabo = Pick<LaboraType, "nombre" | "img" | "id_laboratorio">;
+export type CreateLab = Pick<LaboraType,'nombre'> & { img: FileList | null };
+export type UpdateLabo = Pick<LaboraType, "nombre" | "img" | "id_laboratorio"|"fecha_creacion">;
 export type DeletLabora = Pick<LaboraType, "id_laboratorio">;
 
 //Type Tipo Producto

@@ -40,16 +40,16 @@ export class LaboratorioControllers{
 
     static readonly UpdateLaboraC = async(req:Request,res:Response):Promise<any>=>{
         try{
-            const {id_lab}=req.params;
+            const {id_laboratorio}=req.params;
             const {nombre}= req.body;
             const ImgFile= req.file;
             const fecha = GetDateToday()
 
-            await DataLabora.UpdateLabM(id_lab,nombre);
+            await DataLabora.UpdateLabM(id_laboratorio,nombre);
 
             if(ImgFile){
-                const rutaImg = await uploadImageGlobal(ImgFile,String(id_lab),fecha,'Laboratorio');
-                await DataLabora.UpdateRutaimg(rutaImg,id_lab);
+                const rutaImg = await uploadImageGlobal(ImgFile,String(id_laboratorio),fecha,'Laboratorio');
+                await DataLabora.UpdateRutaimg(rutaImg,id_laboratorio);
             }
             res.status(200).json("Laboratorio Actualizado Exitosamente");
         }catch(error){
@@ -60,8 +60,8 @@ export class LaboratorioControllers{
 
     static readonly DeleteLaboraC = async(req:Request,res:Response)=>{
         try{
-            const {id_lab}=req.params;
-            const data = await DataLabora.DeleteLabM(id_lab);
+            const {id_laboratorio}=req.params;
+            const data = await DataLabora.DeleteLabM(id_laboratorio);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al eliminar Un laboratorio: ",error);

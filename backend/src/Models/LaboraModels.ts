@@ -3,7 +3,7 @@ import conectar from '../config/db';
 const DataLabora ={
     async GetLaboraM(){
         const Conexion = await conectar.getConnection();
-        const results = await Conexion.query(`SELECT id_laboratorio,nombre,fecha_creacion FROM laboratorio WHERE Estado = 1;`);
+        const results = await Conexion.query(`SELECT id_laboratorio,nombre,img,fecha_creacion FROM laboratorio WHERE Estado = 1;`);
         Conexion.release()
         return results;
     },
@@ -33,10 +33,10 @@ const DataLabora ={
             Conexion.release();
             return "Laboratorio Actualizado";
     },
-    async DeleteLabM(id_lab){
+    async DeleteLabM(id_laboratorio){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
-            UPDATE laboratorio SET Estado = 0 WHERE id_laboratorio = ?;`,[id_lab]);
+            UPDATE laboratorio SET Estado = 0 WHERE id_laboratorio = ?;`,[id_laboratorio]);
             Conexion.release();
             return "Laboratorio Eliminado";
     }
