@@ -11,6 +11,7 @@ import TipoProdRoutes from "./Routes/TipoProdRoutes";
 import PresentaRoutes from "./Routes/PresentaRoutes";
 import ClienteRoutes from "./Routes/ClienteRoutes";
 import TipoUsRoutes from "./Routes/TipoUsRoutes";
+import SucursalRoutes from "./Routes/SucursalRoutes";
 
 
 import path from "path";
@@ -35,6 +36,7 @@ app.use('/api/TipoProd',TipoProdRoutes)
 app.use('/api/Presentacion',PresentaRoutes);
 app.use('/api/Cliente',ClienteRoutes);
 app.use('/api/TipoUs',TipoUsRoutes);
+app.use('/api/Sucursal',SucursalRoutes);
 
 
 

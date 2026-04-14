@@ -14,13 +14,12 @@ export const UserSchema = z.object({
   nombre: z.string(),
   apellido: z.string(),
   img: z.string().nullable(),
-  passwd: z.string(),
   telefono: z.string().nullable(),
-  Email: z.string().nullable(),
-  ultimo_acceso: z.string().nullable(),
+  email: z.string().nullable(),
+  ultimo_acceso: z.string().nullable().optional(),
   id_tipo_us: z.number(),
   id_sucursal: z.number(),
-  nombreS: z.string(),
+  nombre_sucursal: z.string().optional(),
   name_rol: z.string(),
 });
 export const GetUserSchema = z.array(UserSchema);
@@ -29,20 +28,21 @@ const GetUsuarioSchema= z.object({
     id_usuario: z.number(),
   ci: z.string(),
   nombre: z.string(),
+  name_rol:z.string(),
   apellido: z.string(),
   img: z.string().nullable(),
   passwd: z.string(),
   passwd_Confirmation: z.string(),
   telefono: z.string().nullable(),
-  Email: z.string().nullable(),
+  email: z.string().nullable(),
   ultimo_acceso: z.string().nullable(),
   id_tipo_us: z.number(),
   id_sucursal: z.number(),
 });
 type Admins = z.infer<typeof GetUsuarioSchema>
-export type CreateAdmins = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'passwd'|'passwd_Confirmation'|'telefono'|'Email'|'id_tipo_us'|'id_sucursal'>
+export type CreateAdmins = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'passwd'|'passwd_Confirmation'|'telefono'|'email'|'id_tipo_us'|'id_sucursal'>
 export type deleteuser = Pick<Admins,'id_usuario'>
-export type updateuser = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'telefono'|'Email'|'id_tipo_us'|'id_sucursal'|'id_usuario'>
+export type updateuser = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'telefono'|'email'|'id_tipo_us'|'id_sucursal'|'id_usuario'|'name_rol'>
 //Auth get user
 export const GetAuthUsers = z.object({
   id_user: z.number(),
@@ -136,7 +136,6 @@ export type DeletLabora = Pick<LaboraType, "id_laboratorio">;
 export const tipoProdArray = z.object({
   id_tipo_prod: z.number(),
   nombre: z.string(),
-  Estado: z.string(),
   fecha_creacion: z.string(),
 });
 export const TipoProdShcemas = z.array(tipoProdArray);
@@ -149,7 +148,7 @@ const GetTipoProdShcemass = z.object({
 });
 type TipoProdType = z.infer<typeof GetTipoProdShcemass>;
 export type CreateTipoProd = Pick<TipoProdType, "nombre">;
-export type UpdateTipoProd = Pick<TipoProdType, "nombre" | "id_tipo_prod">;
+export type UpdateTipoProd = Pick<TipoProdType, "nombre" | "id_tipo_prod"|'fecha_creacion'>;
 export type DeleteTipoProd = Pick<TipoProdType, "id_tipo_prod">;
 
 //Type Presentacion

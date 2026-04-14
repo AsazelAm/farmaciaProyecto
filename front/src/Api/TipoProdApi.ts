@@ -6,8 +6,12 @@ export async function GetTipoProdApi(){
     try{
         const {data}=await api.get('/TipoProd/GetTipoProd');
         const response= TipoProdShcemas.safeParse(data);
-        if(response.success){
-            return response.data
+        if (response.success) {
+            return response.data; // Retorno exitoso
+        } else {
+            // SI ZOD FALLA: Imprimimos el error en consola para debug y lanzamos error
+            console.error("Error de validación Zod:", response.error);
+            throw new Error("Los datos recibidos del servidor no son válidos");
         }
     }catch(error){
         if(isAxiosError(error)&& error.response){

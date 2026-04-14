@@ -34,15 +34,22 @@ export default function   Aside() {
   return (
     <div className="flex bg-[#DEEAFF]">
       <aside className="group w-[70px] hover:w-[254px] h-screen max-h-screen overflow-y-auto 
-      overflow-x-hidden rounded-r-2xl border-r-2 border-gray clei bg-[#00155C] flex flex-col 
+      overflow-x-hidden rounded-r-2xl border-r-2 border-gray clei bg-[#42137B] flex flex-col 
       justify-between transition-all duration-300">
         <nav className="py-10 flex flex-col gap-2">
           {/* <ul>
              <NavItem to="/Dashboard/Usuarios" icon={user} label="Usuarios" />
           </ul> */}
           <SubMenu icon={user} label="Usuarios">
-            <NavItem to="/Dashboard/Roles" icon={rol} label="Roles" />
-            <NavItem to="/Dashboard/Usuarios" icon={user} label="Users" />
+            <NavItem to="/Dashboard/Usuarios" icon={user} label="Usuarios" />
+            <NavItem to="/Dashboard/TipoUs" icon={rol} label="Roles" />
+          </SubMenu>
+          <SubMenu icon={user} label ="Catalago">
+            <NavItem to="/Dashboard/Productos" icon={user} label="Productos"/>
+            <NavItem to="/Dashboard/Presentacion"icon={user} label="Presentacion"/>
+            <NavItem to="/Dashboard/TipoProductos"icon={user} label="Tipo De Productos"/>
+            <NavItem to="/Dashboard/Laboratorios" icon={user} label="Labotorios"/>
+
           </SubMenu>
          
 

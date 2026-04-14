@@ -4,7 +4,7 @@ import {TipoUsShcemas, type CreateTipo_us,type UpdateTipo_us, type DeleteTipo_us
 
 export async function GetTipoUsApi(){
     try{
-        const {data}= await api.get('/TipoUs/GetTipo/Us');
+        const {data}= await api.get('/TipoUs/GetTipoUs');
         const response = TipoUsShcemas.safeParse(data);
         if(response.success){
             return response.data

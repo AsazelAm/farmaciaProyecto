@@ -1,6 +1,6 @@
 import api from "../lib/Axios";
 import { isAxiosError } from "axios";
-import { GetUserSchema, type CreateAdmins,type deleteuser, type updateuser, TipoUsShcemas,SucursalShcemas} from "../types";
+import { GetUserSchema, type CreateAdmins,type deleteuser, TipoUsShcemas,SucursalShcemas} from "../types";
 
 
 export async function GetUserAllApi() {
@@ -9,6 +9,24 @@ export async function GetUserAllApi() {
         const response = GetUserSchema.safeParse(data)
         if(response.success){
             return response.data
+        }
+        // Si el schema falla, lanzamos el error con detalle para depurar
+        console.error("Zod parse error:", response.error.issues)
+        throw new Error("Los datos recibidos no tienen el formato esperado")
+
+    } catch (error) {
+        if(isAxiosError(error) && error.response){
+            throw new Error(error.response.data.error)
+        } 
+    } 
+}
+
+export async function GetUserAllIdApi(id_usuario:number) {
+    try {
+        const {data} = await api.get(`/user/GetAllId/${id_usuario}`)
+        const response = GetUserSchema.safeParse(data)
+        if(response.success){
+            return response.data;
         }
     } catch (error) {
         if(isAxiosError(error) && error.response){
@@ -30,7 +48,11 @@ export async function ResetPasswd({formData, id_usuario}:{formData:any;id_usuari
 
 export async function AddUser(formdata:CreateAdmins){
     try {
-        const {data} = await api.post('/user/addUser',formdata)
+        const {data} = await api.post('/user/addUser',formdata,{
+            headers:{
+                'Content-Type':'multipart/form-data'
+            }
+        });
         return data
     } catch (error) {
         if(isAxiosError(error) && error.response){
@@ -79,9 +101,13 @@ export async function DeleteuserApi(id:deleteuser['id_usuario']){
     }
 }
 
-export async function UpdateUserApi(formData:updateuser){
+export async function UpdateUserApi(formData:FormData,id_usuario:number){
     try {
-        const {data} = await api.put(`/user/UpdateUser/${formData.id_usuario}`, formData)
+        const {data} = await api.put(`/user/UpdateUser/${id_usuario}`, formData,{
+            headers:{
+                'Content-Type':'multipart/form-data'
+            }
+        });
         return data
     } catch (error) {
          if(isAxiosError(error) && error.response){

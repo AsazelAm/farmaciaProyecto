@@ -14,13 +14,25 @@ export class UserControllers {
             res.status(500).json({ error: "ERROR al obtener el Usuario:" });
         }
     }
+
+    static readonly  GetAllUserId = async(req:Request,res:Response)=>{
+        try {
+            const {id_usuario}=req.params;
+            const data = await DataUser.UserAllModelsId(id_usuario);
+            res.status(200).json(data)
+        } catch (error) {
+            console.error("Error al obtener Usuario:", error);
+            res.status(500).json({ error: "ERROR al obtener el Usuario:" });
+        }
+    }
+
     static readonly CreateUserControllers = async(req:Request,res:Response):Promise<any>=>{
         try {
-            const { ci,nombre,apellido, passwd,telefono,Email, id_tipo_us,id_sucursal } = req.body;
+            const { ci,nombre,apellido, passwd,telefono,email, id_tipo_us,id_sucursal } = req.body;
             const files = req.file;
             const imgFile = files;
             const fecha=GetDateToday();
-            const VE =  await DataUser.GetEmail(Email);
+            const VE =  await DataUser.GetEmail(email);
             if(VE.exists){
                 res.status(400).json({error:"El Email ya esta Registrado"});
                 return;
@@ -39,7 +51,7 @@ export class UserControllers {
                 apellido,
                 passwd: NewPasswd,
                 telefono,
-                Email,
+                email,
                 id_tipo_us,
                 id_sucursal
             });
@@ -57,8 +69,8 @@ export class UserControllers {
 
     static readonly DeleteUserControllers = async(req:Request,res:Response)=>{
         try {
-            const {id} = req.params
-            const data = await DataUser.DeleteUserId(id);
+            const {id_usuario} = req.params
+            const data = await DataUser.DeleteUserId(id_usuario);
             res.status(200).json(data)
         } catch (error) {
             console.error("Error al eliminar el usuario:", error);
@@ -69,12 +81,12 @@ export class UserControllers {
     static readonly UpdateUserControllers = async(req:Request,res:Response)=>{
         try {
             const id_usuario=Number(req.params.id_usuario);
-            const { ci,nombre,apellido,telefono,Email, id_tipo_us,id_sucursal } = req.body;
+            const { ci,nombre,apellido,telefono,email, id_tipo_us,id_sucursal } = req.body;
             const files = req.file;
             const imgFile = files;
             const fecha=GetDateToday();
 
-            const data = await DataUser.UpodateUserbyId({ci,nombre,apellido,telefono,Email,id_tipo_us,id_sucursal,id_usuario});
+            const data = await DataUser.UpodateUserbyId({ci,nombre,apellido,telefono,email,id_tipo_us,id_sucursal,id_usuario});
 
             if(imgFile){
                 const rutaImg= await uploadImageGlobal(imgFile,String(id_usuario),fecha,'Usuario');

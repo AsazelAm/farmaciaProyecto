@@ -6,7 +6,7 @@ interface CreateAdmins {
     apellido:string;
     passwd:string;
     telefono:string;
-    Email:string;
+    email:string;
     id_tipo_us:number;
     id_sucursal:number;
 };
@@ -17,25 +17,44 @@ interface UpdateAdmins{
     nombre:string;
     apellido:string;
     telefono:string;
-    Email:string;
+    email:string;
     id_tipo_us:number;
     id_sucursal:number;
 }
 
 const DataUser = {
     async UserAllModels(){
-        const conection = await conectar.getConnection()
-        const results = await conection.query(`
-        SELECT usu.id_usuario, usu.ci,usu.nombre,usu.apellido,usu.img,usu.telefono,usu.email,usu.Estado, sucursal.id_sucursal, sucursal.nombre,tipo_us.id_tipo_us, tipo_us.name_rol FROM usuario usu LEFT JOIN sucursal ON usu.id_sucursal = sucursal.id_sucursal 
-        JOIN tipo_us ON usu.id_tipo_us = tipo_us.id_tipo_us WHERE usu.Estado = 1;
+    const conection = await conectar.getConnection()
+    const results = await conection.query(`
+        SELECT usu.id_usuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.Estado,
+               sucursal.id_sucursal, sucursal.nombre AS nombre_sucursal,
+               tipo_us.id_tipo_us, tipo_us.name_rol
+        FROM usuario usu
+        LEFT JOIN sucursal ON usu.id_sucursal = sucursal.id_sucursal
+        JOIN tipo_us ON usu.id_tipo_us = tipo_us.id_tipo_us
+        WHERE usu.Estado = 1;
     `)
     conection.release()
     return results
-    },
-    async GetEmail(Email: string) {
+},
+async UserAllModelsId(id_usuario){
+    const conection = await conectar.getConnection()
+    const results = await conection.query(`
+        SELECT usu.id_usuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.Estado,
+               sucursal.id_sucursal, sucursal.nombre AS nombre_sucursal,
+               tipo_us.id_tipo_us, tipo_us.name_rol
+        FROM usuario usu
+        LEFT JOIN sucursal ON usu.id_sucursal = sucursal.id_sucursal
+        JOIN tipo_us ON usu.id_tipo_us = tipo_us.id_tipo_us
+        WHERE usu.Estado = 1 AND usu.id_usuario = ?;
+    `,[id_usuario])
+    conection.release()
+    return results
+},
+    async GetEmail(email: string) {
         const Conexion = await conectar.getConnection();
         try {
-            const rows:any = await Conexion.query(`SELECT Email FROM usuario WHERE Email = ?`, [Email]);
+            const rows:any = await Conexion.query(`SELECT email FROM usuario WHERE Email = ?`, [email]);
             if (rows && rows.length > 0) {
                 return { exists: true, message: "El Email ya está registrado" };
             }
@@ -47,10 +66,10 @@ const DataUser = {
             Conexion.release();
         }
     },
-     async VerifedConfirmed(Email){
+     async VerifedConfirmed(email){
         const Conexion = await conectar.getConnection();
         try {
-            const rows = await Conexion.query(`SELECT Confirmed FROM usuario WHERE Email = ? AND Confirmed = 1;`,[Email])
+            const rows = await Conexion.query(`SELECT Confirmed FROM usuario WHERE email = ? AND Confirmed = 1;`,[email])
 
               console.log("RESULT COMPLETO:", JSON.stringify(rows));
         console.log("result[0]:", JSON.stringify(rows[0]));
@@ -67,10 +86,10 @@ const DataUser = {
             Conexion.release()
         }
     }, 
-    async GetPasswd(Email:string){
+    async GetPasswd(email:string){
         const Conexion = await conectar.getConnection();
         try {
-            const rows = await Conexion.query(`SELECT id_usuario, passwd FROM usuario WHERE Email = ?`,[Email])
+            const rows = await Conexion.query(`SELECT id_usuario, passwd FROM usuario WHERE email = ?`,[email])
             return rows
         } catch (error) {
             console.error("Error al consultar Passwd:", error);
@@ -91,12 +110,12 @@ const DataUser = {
             Conexion.release()
         }
     },
-    async GetIdRol(Email:string){
+    async GetIdRol(email:string){
         const Conexion = await conectar.getConnection()
         try {
             const rows = await Conexion.query(`SELECT tipo_us.name_rol FROM usuario
              JOIN tipo_us ON usuario.id_tipo_us = tipo_us.id_tipo_us
-             WHERE usuario.Email = ?`,[Email]);
+             WHERE usuario.email = ?`,[email]);
             return rows
         } catch (error) {
             console.error("Error al consultar GetId:", error);
@@ -125,24 +144,14 @@ const DataUser = {
         try {
             const result=await Conexion.query(`
                 INSERT INTO 
-                usuario (
-                ci,
-                nombre,
-                apellido,
-                Passwd,
-                telefono,
-                Email,
-                Confirmed
-                id_tipo_us,
-                id_sucursal
-                ) VALUES (?,?,?,?,?,?,?,?,?)`,[
+                usuario (ci,nombre,apellido,passwd,telefono,email,Confirmed,id_tipo_us,id_sucursal)VALUES(?,?,?,?,?,?,?,?,?)`,[
                     Usuario.ci,
                     Usuario.nombre,
                     Usuario.apellido,
                     Usuario.passwd,
                     Usuario.telefono,
-                    Usuario.Email,
-                    "1",
+                    Usuario.email,
+                    1,
                     Usuario.id_tipo_us,
                     Usuario.id_sucursal
                 ])
@@ -180,11 +189,11 @@ const DataUser = {
             nombre = ?,
             apellido = ?,
             telefono = ?,
-            Email = ?,
+            email = ?,
             id_tipo_us=?,
             id_sucursal = ?
             where id_usuario = ?
-        `,[data.ci,data.nombre,data.apellido,data.telefono,data.Email,data.id_tipo_us,data.id_sucursal,data.id_usuario]);
+        `,[data.ci,data.nombre,data.apellido,data.telefono,data.email,data.id_tipo_us,data.id_sucursal,data.id_usuario]);
         Conexion.release()
         return "Datos Actualizados"
     }

@@ -26,8 +26,8 @@ export class TipoUsControllers {
     static readonly UpdateTipoUsC = async(req:Request,res:Response)=>{
         try{
             const {id_tipo_us}=req.params;
-            const {nombre}= req.body;
-            const data = await DataTipoUs.UpdateTipoUsM(nombre,id_tipo_us);
+            const {name_rol}= req.body;
+            const data = await DataTipoUs.UpdateTipoUsM(name_rol,id_tipo_us);
             res.status(200).json(data); 
         }catch(error){
             console.error("Error al Agregar al Tipo de Usuario");

@@ -41,10 +41,10 @@ export class AuthControllers {
     
     static readonly ResetPasswd = async(req:Request,res:Response)=>{
         try {
-            const {id} = req.params
-            const {Passwd} = req.body
-            const NewPasswd =  await HashPassword(Passwd)
-            const data = await DataUsers.ResetPasswd(NewPasswd,id);
+            const {id_usuario} = req.params
+            const {passwd} = req.body
+            const NewPasswd =  await HashPassword(passwd)
+            const data = await DataUsers.ResetPasswd(NewPasswd,id_usuario);
             res.status(200).json(data)
         } catch (error) {
             console.error("Error al restablecer la contrasenha:", error);

@@ -3,7 +3,7 @@ import conectar from '../config/db';
 const DataTipoUs={
     async GetTipoUsM (){
         const Conexion= await conectar.getConnection();
-        const results = Conexion.query(`
+        const results = await Conexion.query(`
             SELECT id_tipo_us,name_rol, fecha_creacion
             FROM tipo_us WHERE Estado = 1;`);
         Conexion.release();
