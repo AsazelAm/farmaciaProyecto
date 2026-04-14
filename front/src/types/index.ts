@@ -114,8 +114,6 @@ export type DeleteSucursal = Pick<SucurType, "id_sucursal">;
 export const laboraArray = z.object({
   id_laboratorio: z.number(),
   nombre: z.string(),
-  img: z.string().nullable(),
-  Estado: z.string(),
   fecha_creacion: z.string(),
 });
 export const LaboraShcemas = z.array(laboraArray);
@@ -166,7 +164,7 @@ const GetPresentaShcemass = z.object({
 });
 type PresentaType = z.infer<typeof GetPresentaShcemass>;
 export type CreatePresenta = Pick<PresentaType, "nombre">;
-export type UpdatePresenta = Pick<PresentaType, "nombre" | "id_presentacion">;
+export type UpdatePresenta = Pick<PresentaType, "nombre" | "id_presentacion"|"fecha_creacion">;
 export type DeletePresenta = Pick<PresentaType, "id_presentacion">;
 
 //Type Cliente

@@ -9,13 +9,12 @@ import type { UpdatePresenta } from "../../../../types";
 const PresentacionForm = lazy(() => import("../../../../Components/Presentacion/PresentacionForm"));
 const UpdatePresentacion = lazy(() => import("../../../../Components/Presentacion/UpdatePresentacion"));
 
-// Paleta de colores lila del archivo TipoUs
+// Paleta de colores lila
 const COLORS = {
   dark: "#4A1A6E",
   medium: "#7B3FA0",
   light: "#F3EBF9",
   border: "#D8B4F0",
-  text: "#4A1A6E"
 };
 
 export default function Presentacion() {
@@ -49,20 +48,17 @@ export default function Presentacion() {
 
   // Lógica del Buscador
   const filteredRows = useMemo(() => {
-    if (!rows) return [];
-    if (!search) return rows;
-    return rows.filter((row) =>
-      row.nombre.toLowerCase().includes(search.toLowerCase())
+    const list: UpdatePresenta[] = Array.isArray(rows) ? rows : [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((r) =>
+      String(r.nombre ?? "").toLowerCase().includes(q)
     );
   }, [rows, search]);
 
   const handleEdit = (presenta: UpdatePresenta) => {
     setSelectedPresenta(presenta);
     setIsEditing(true);
-  };
-
-  const handleDelete = (id: number) => {
-    setConfirmId(id);
   };
 
   if (isLoading) return <Loading />;
@@ -91,79 +87,157 @@ export default function Presentacion() {
         </button>
       </div>
 
-      {/* BUSCADOR */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
-        <div className="relative">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      {/* BARRA DE BÚSQUEDA */}
+      <div className="bg-white rounded-2xl shadow-sm border p-4 mb-6" style={{ borderColor: COLORS.border }}>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+
+          <div className="relative flex-1 w-full">
+            <svg
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+              style={{ color: COLORS.medium }}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-          </span>
-          <input
-            type="text"
-            placeholder="Buscar presentación por nombre..."
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 transition-all"
-            style={{ "--tw-focus-ring-color": COLORS.medium } as any}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre de rol..."
+              className="w-full pl-12 pr-10 py-3 rounded-xl border-2 outline-none text-sm transition-colors"
+              style={{ borderColor: COLORS.border, color: COLORS.dark }}
+            />
+
+            {search && (
+              <button
+                aria-label="Limpiar búsqueda"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-purple-100 transition-colors text-sm"
+                style={{ color: COLORS.medium }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div
+            className="px-4 py-2 rounded-lg font-semibold border text-sm flex-shrink-0"
+            style={{ background: COLORS.light, color: COLORS.dark, borderColor: COLORS.border }}
+          >
+            {filteredRows.length} {filteredRows.length === 1 ? "Presentacion" : "Presentaciones"}
+          </div>
         </div>
       </div>
 
       {/* TABLA */}
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+      <div className="bg-white rounded-2xl shadow-lg border overflow-hidden" style={{ borderColor: COLORS.border }}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr style={{ backgroundColor: COLORS.light }}>
-                <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider" style={{ color: COLORS.dark }}>ID</th>
-                <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider" style={{ color: COLORS.dark }}>Nombre</th>
-                <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider" style={{ color: COLORS.dark }}>Fecha Creación</th>
-                <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider text-center" style={{ color: COLORS.dark }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredRows.map((row) => (
-                <tr key={row.id_presentacion} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-600">#{row.id_presentacion}</td>
-                  <td className="px-6 py-4">
-                    <span className="font-semibold text-gray-800">{row.nombre}</span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">
-                    {new Date(row.fecha_creacion).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center gap-3">
-                      <button
-                        onClick={() => handleEdit(row)}
-                        className="p-2 rounded-lg transition-colors hover:bg-blue-50 text-blue-600"
-                        title="Editar"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(row.id_presentacion)}
-                        className="p-2 rounded-lg transition-colors hover:bg-red-50 text-red-600"
-                        title="Eliminar"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
+          <div className="max-h-[calc(116vh-320px)] overflow-y-auto">
+            <table className="w-full text-left border-collapse">
+              <thead
+                className="sticky top-0 z-10 text-white"
+                style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}
+              >
+                <tr>
+                  <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider w-16 text-center">Nro</th>
+                  <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider">Nombre</th>
+                  <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider">Fecha Creación</th>
+                  <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider w-36 text-center">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filteredRows.length === 0 && (
-          <div className="py-12 text-center text-gray-400 font-medium">
-            No se encontraron presentaciones que coincidan con la búsqueda.
+              </thead>
+
+              <tbody className="divide-y divide-purple-50">
+                {/* ESTADO VACÍO */}
+                {filteredRows.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div
+                          className="w-20 h-20 rounded-full flex items-center justify-center"
+                          style={{ background: COLORS.light }}
+                        >
+                          <svg className="w-10 h-10" style={{ color: COLORS.border }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                          </svg>
+                        </div>
+                        <p className="font-medium" style={{ color: COLORS.dark }}>
+                          No se encontraron presentaciones
+                        </p>
+                        <p className="text-sm" style={{ color: COLORS.medium }}>
+                          {search ? "Intenta con otros términos de búsqueda" : "Comienza creando la primera presentación"}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {/* LISTADO DE DATOS */}
+                {filteredRows.map((row, index) => (
+                  <tr
+                    key={row.id_presentacion ?? index}
+                    className="hover:bg-purple-50/40 transition-colors"
+                  >
+                    {/* NRO */}
+                    <td className="px-6 py-4 text-center font-semibold text-sm" style={{ color: COLORS.medium }}>
+                      {index + 1}
+                    </td>
+
+                    {/* NOMBRE CON AVATAR LILA */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                          style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}
+                        >
+                          {String(row.nombre ?? "P")[0].toUpperCase()}
+                        </div>
+                        <span className="font-semibold" style={{ color: "#2D0A47" }}>
+                          {row.nombre}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* FECHA */}
+                    <td className="px-6 py-4 text-sm font-medium" style={{ color: "#6B7280" }}>
+                      {new Date(row.fecha_creacion).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </td>
+
+                    {/* ACCIONES */}
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(row)}
+                          title="Editar presentación"
+                          className="p-2 rounded-lg transition-colors hover:bg-purple-100"
+                          style={{ color: COLORS.dark }}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+
+                        <button
+                          onClick={() => setConfirmId(row.id_presentacion)}
+                          title="Eliminar presentación"
+                          className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
       </div>
 
       {/* MODALES */}
@@ -191,7 +265,7 @@ export default function Presentacion() {
   );
 }
 
-// Sub-componente interno para confirmación (Mismo estilo que TipoUs)
+// Sub-componente interno para confirmación
 function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: any) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

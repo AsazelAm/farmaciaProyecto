@@ -3,10 +3,10 @@ import ErrorMessage from "../Error/ErrorMessage";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { UpdateUserApi } from "../../Api/UserApi"; // Asegúrate de que la ruta sea correcta
+import { UpdateUserApi } from "../../Api/UserApi"; 
 import { GetTipoUsApi } from "../../Api/TipoUsApi";
 import { GetSucursalApi } from "../../Api/SucursalApi";
-import type { updateuser } from "../../types"; // Importado de index.ts
+import type { updateuser } from "../../types"; 
 
 type Props = Readonly<{
     SetVer: React.Dispatch<React.SetStateAction<boolean>>;
@@ -24,49 +24,41 @@ type FormDataFields = {
     img: FileList | null;
 };
 
-// Estilos reutilizados de UsuarioForm
-const inputStyles = "w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all";
-const labelStyles = "block text-sm font-semibold text-gray-700 mb-1";
-const sectionStyles = "bg-gray-50 p-5 rounded-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4";
+// ESTILOS ACTUALIZADOS CON LA PALETA DE TIPO_US_FORM
+const inputStyles = "w-full p-3 border-2 rounded-xl outline-none focus:ring-2 focus:ring-[#7B3FA0] transition-colors border-[#D8B4F0] text-[#2D0A47]";
+const labelStyles = "block text-sm font-semibold text-[#4A1A6E] mb-1";
+const sectionStyles = "bg-[#F3EBF9] p-5 rounded-2xl border border-[#D8B4F0] grid grid-cols-1 md:grid-cols-2 gap-4";
 
 export default function UpdateUsuario({ SetVer, SendValor }: Props) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const queryClient = useQueryClient();
 
-    // Cargar catálogos para los selects
     const { data: tiposUsuario } = useQuery({ queryKey: ["TipoUsAll"], queryFn: GetTipoUsApi });
     const { data: sucursales } = useQuery({ queryKey: ["sucursalesAll"], queryFn: GetSucursalApi });
 
     const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormDataFields>();
 
-    // Inicializar el formulario con los datos de SendValor
     useEffect(() => {
-    if (SendValor) {
-        reset({
-            ci: SendValor.ci,
-            nombre: SendValor.nombre,
-            apellido: SendValor.apellido,
-            telefono: SendValor.telefono,
-            email: SendValor.email,
-            id_tipo_us: String(SendValor.id_tipo_us),
-            id_sucursal: String(SendValor.id_sucursal),
-        });
-        
-        if (SendValor.img) {
-            // 1. Reemplazamos las barras invertidas \ por /
-            const fixedPath = SendValor.img.replace(/\\/g, '/');
-
-            // 2. Construimos la URL apuntando a la raíz del servidor, NO a /api
-            // Si VITE_API_URL termina en /api, necesitamos la URL base (http://localhost:8080)
-            const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
-            const imageUrl = `${baseUrl}/${fixedPath}`;
+        if (SendValor) {
+            reset({
+                ci: SendValor.ci,
+                nombre: SendValor.nombre,
+                apellido: SendValor.apellido,
+                telefono: SendValor.telefono,
+                email: SendValor.email,
+                id_tipo_us: String(SendValor.id_tipo_us),
+                id_sucursal: String(SendValor.id_sucursal),
+            });
             
-            setImgPreview(imageUrl);
+            if (SendValor.img) {
+                const fixedPath = SendValor.img.replace(/\\/g, '/');
+                const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+                const imageUrl = `${baseUrl}/${fixedPath}`;
+                setImgPreview(imageUrl);
+            }
         }
-    }
-}, [SendValor, reset]);
+    }, [SendValor, reset]);
 
-    // Lógica de limpieza y cambio de imagen igual a UsuarioForm
     useEffect(() => {
         return () => {
             if (imgPreview && imgPreview.startsWith("blob:")) {
@@ -87,7 +79,7 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
         mutationFn: ({ formData, id }: { formData: FormData; id: number }) => UpdateUserApi(formData, id),
         onError: (error: any) => toast.error(error.message),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] }); // Invalida la lista global
+            queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
             toast.success(data);
             SetVer(false);
         }
@@ -95,7 +87,6 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
 
     const handleForm = (data: FormDataFields) => {
         if (!SendValor) return;
-
         const formData = new FormData();
         formData.append("ci", data.ci);
         formData.append("nombre", data.nombre);
@@ -104,34 +95,29 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
         formData.append("email", data.email);
         formData.append("id_tipo_us", data.id_tipo_us);
         formData.append("id_sucursal", data.id_sucursal);
-
-        if (data.img && data.img[0]) {
-            formData.append("img", data.img[0]);
-        }
-
+        if (data.img && data.img[0]) formData.append("img", data.img[0]);
         mutation.mutate({ formData, id: SendValor.id_usuario });
     };
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden relative animate-in fade-in zoom-in duration-300">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl relative animate-in fade-in zoom-in duration-300 border-2 border-[#D8B4F0]">
                 
-                {/* Cabecera */}
-                <div className="bg-blue-900 p-6 text-white flex justify-between items-center sticky top-0 z-10">
+                {/* Cabecera con degradado de TipoUsForm */}
+                <div className="p-6 text-white flex justify-between items-center sticky top-0 z-10" style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}>
                     <div>
                         <h2 className="text-2xl font-black uppercase tracking-tighter">Actualizar Usuario</h2>
-                        <p className="text-blue-200 text-xs font-medium">Modifica la información del perfil</p>
+                        <p className="text-purple-200 text-xs font-medium">Modifica la información del perfil</p>
                     </div>
                     <button onClick={() => SetVer(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(handleForm)} className="p-8 space-y-6" noValidate>
+                <form onSubmit={handleSubmit(handleForm)} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto overflow-x-hidden " noValidate>
                     
-                    {/* Sección: Información Personal */}
                     <div className="space-y-4">
-                        <h3 className="text-blue-900 font-bold text-sm uppercase tracking-widest border-l-4 border-blue-900 pl-3">Datos Personales</h3>
+                        <h3 className="text-[#4A1A6E] font-bold text-sm uppercase tracking-widest border-l-4 border-[#7B3FA0] pl-3">Datos Personales</h3>
                         <div className={sectionStyles}>
                             <div>
                                 <label className={labelStyles}>C.I. / Documento</label>
@@ -154,9 +140,8 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                         </div>
                     </div>
 
-                    {/* Sección: Roles y Sucursal */}
                     <div className="space-y-4">
-                        <h3 className="text-blue-900 font-bold text-sm uppercase tracking-widest border-l-4 border-blue-900 pl-3">Asignación</h3>
+                        <h3 className="text-[#4A1A6E] font-bold text-sm uppercase tracking-widest border-l-4 border-[#7B3FA0] pl-3">Asignación</h3>
                         <div className={sectionStyles}>
                             <div>
                                 <label className={labelStyles}>Tipo de Usuario</label>
@@ -183,14 +168,14 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                         </div>
                     </div>
 
-                    {/* Sección: Imagen (Idéntica a UsuarioForm) */}
-                    <div className="flex flex-col md:flex-row items-center gap-6 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
+                    {/* Imagen con bordes y botones lila */}
+                    <div className="flex flex-col md:flex-row items-center gap-6 p-5 bg-[#F3EBF9] rounded-2xl border border-[#D8B4F0]">
                         <div className="relative group">
-                            <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-blue-200 flex items-center justify-center overflow-hidden shadow-inner">
+                            <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-[#D8B4F0] flex items-center justify-center overflow-hidden shadow-inner">
                                 {imgPreview ? (
                                     <img src={imgPreview} alt="Vista previa" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-gray-400 text-[10px] text-center uppercase font-bold px-2">Sin Foto</span>
+                                    <span className="text-[#7B3FA0] text-[10px] text-center uppercase font-bold px-2">Sin Foto</span>
                                 )}
                             </div>
                         </div>
@@ -201,7 +186,7 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                                 accept="image/*"
                                 {...register("img")}
                                 onChange={handleImageChange}
-                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                className="w-full text-sm text-[#4A1A6E] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-[#7B3FA0] hover:file:bg-purple-200 cursor-pointer"
                             />
                         </div>
                     </div>
@@ -209,9 +194,18 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                     <button 
                         type="submit" 
                         disabled={mutation.isPending || isSubmitting}
-                        className="w-full py-4 bg-blue-900 text-white rounded-2xl font-bold text-lg shadow-xl hover:bg-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-4 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-purple-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}
                     >
-                        {mutation.isPending || isSubmitting ? "Guardando Cambios..." : "Actualizar Información"}
+                        {mutation.isPending || isSubmitting ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                <span>Guardando Cambios...</span>
+                            </div>
+                        ) : "Actualizar Información"}
                     </button>
                 </form>
             </div>

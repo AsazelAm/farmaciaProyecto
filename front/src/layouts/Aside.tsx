@@ -1,4 +1,3 @@
-// Aside.tsx (Refactorizado)
 import { useNavigate, Navigate, Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { useAuth } from "../Hook/UseAuth";
@@ -9,13 +8,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import NavItem from "./Admin/NavItem";
 import SubMenu from "./Admin/SubMenu";
 
-
-export default function   Aside() {
+export default function Aside() {
   const navigate = useNavigate();
   const { data, isError, isLoading } = useAuth();
   const Rol = data?.name_rol;
-
-  
 
   const handleLogout = () => {
     localStorage.removeItem('AUTH_TOKEN');
@@ -32,42 +28,69 @@ export default function   Aside() {
   }
 
   return (
-    <div className="flex bg-[#DEEAFF]">
-      <aside className="group w-[70px] hover:w-[254px] h-screen max-h-screen overflow-y-auto 
-      overflow-x-hidden rounded-r-2xl border-r-2 border-gray clei bg-[#42137B] flex flex-col 
-      justify-between transition-all duration-300">
-        <nav className="py-10 flex flex-col gap-2">
-          {/* <ul>
-             <NavItem to="/Dashboard/Usuarios" icon={user} label="Usuarios" />
-          </ul> */}
-          <SubMenu icon={user} label="Usuarios">
-            <NavItem to="/Dashboard/Usuarios" icon={user} label="Usuarios" />
-            <NavItem to="/Dashboard/TipoUs" icon={rol} label="Roles" />
-          </SubMenu>
-          <SubMenu icon={user} label ="Catalago">
-            <NavItem to="/Dashboard/Productos" icon={user} label="Productos"/>
-            <NavItem to="/Dashboard/Presentacion"icon={user} label="Presentacion"/>
-            <NavItem to="/Dashboard/TipoProductos"icon={user} label="Tipo De Productos"/>
-            <NavItem to="/Dashboard/Laboratorios" icon={user} label="Labotorios"/>
+    <div className="flex min-h-screen bg-[#DEEAFF] overflow-x-hidden" >
+      {/* Contenedor del Aside con posicionamiento fijo/sticky */}
+      <aside className="
+        sticky top-0 left-0 z-50
+        group w-[70px] hover:w-[260px] 
+        h-screen 
+        bg-[#42137B] 
+        flex flex-col justify-between 
+        transition-all duration-500 ease-in-out
+        shadow-2xl border-r border-white/10
+        overflow-y-auto overflow-x-hidden
+      ">
+        <nav className="py-8 flex flex-col gap-4">
+          {/* Espaciado superior para el logo o icono principal */}
+          <div className="flex justify-center mb-6">
+             <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">A</span>
+             </div>
+          </div>
 
-          </SubMenu>
-         
+          <div className="px-2 space-y-1">
+            <SubMenu icon={user} label="Usuarios">
+              <NavItem to="/Dashboard/Usuarios" icon={user} label="Usuarios" />
+              <NavItem to="/Dashboard/TipoUs" icon={rol} label="Roles" />
+            </SubMenu>
 
+            <SubMenu icon={user} label="Catálogo">
+              <NavItem to="/Dashboard/Productos" icon={user} label="Productos" />
+              <NavItem to="/Dashboard/Presentacion" icon={user} label="Presentación" />
+              <NavItem to="/Dashboard/TipoProductos" icon={user} label="Tipos" />
+              <NavItem to="/Dashboard/Laboratorios" icon={user} label="Laboratorios" />
+            </SubMenu>
+          </div>
         </nav>
 
-        <div className="flex justify-center lg:p-10">
+        {/* Sección de Botón Salir - Mejorada visualmente */}
+        <div className="p-4 border-t border-white/10 mb-4">
           <button
             onClick={handleLogout}
-            className="p-[6px] text-sm text-center bg-red-600 text-white rounded-xl hover:scale-105 duration-300"
+            className="
+              w-full flex items-center justify-center gap-2
+              py-3 px-2
+              bg-red-590 hover:bg-red-600 
+              text-red-500 hover:text-white
+              rounded-xl transition-all duration-300
+              group-hover:px-4
+            "
           >
-            Salir
+            <span className="font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+              Cerrar Sesión
+            </span>
+            <span className="group-hover:hidden text-lg">✕</span>
           </button>
         </div>
       </aside>
-      <div className="w-full bg-[#DEEAFF]">
-       
-        <Outlet />
-      </div>
+
+      {/* Contenedor Principal (Outlet) */}
+      <main className="flex-1 min-w-0 h-screen overflow-y-auto bg-[#DEEAFF]">
+        <div className="p-6">
+           <Outlet />
+        </div>
+      </main>
+
       <ToastContainer pauseOnHover={false} pauseOnFocusLoss={false} />
     </div>
   );
