@@ -106,11 +106,9 @@ export default function TipoUsForm({ setIsOpen, isOpen }: Cua) {
               <button
                 onClick={handleClose}
                 title="Cerrar"
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/25 transition-colors text-white"
+                className="p-2 px-4 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/25 transition-colors text-white"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                Cerrar
               </button>
             </div>
           </div>

@@ -53,7 +53,7 @@ export default function TipoUs() {
   return (
     <div
       className="min-h-screen w-full p-4 md:p-8"
-      style={{ background: "linear-gradient(135deg, #F3EBF9 0%, #EDE4F5 50%, #E6D8F2 100%)" }}
+      
     >
       <div className="mx-auto max-w-[1400px]">
 

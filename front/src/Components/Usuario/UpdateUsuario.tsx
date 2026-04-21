@@ -27,7 +27,7 @@ type FormDataFields = {
 // ESTILOS ACTUALIZADOS CON LA PALETA DE TIPO_US_FORM
 const inputStyles = "w-full p-3 border-2 rounded-xl outline-none focus:ring-2 focus:ring-[#7B3FA0] transition-colors border-[#D8B4F0] text-[#2D0A47]";
 const labelStyles = "block text-sm font-semibold text-[#4A1A6E] mb-1";
-const sectionStyles = "bg-[#F3EBF9] p-5 rounded-2xl border border-[#D8B4F0] grid grid-cols-1 md:grid-cols-2 gap-4";
+const sectionStyles = " p-5 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4";
 
 export default function UpdateUsuario({ SetVer, SendValor }: Props) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
@@ -104,13 +104,13 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl relative animate-in fade-in zoom-in duration-300 border-2 border-[#D8B4F0]">
                 
                 {/* Cabecera con degradado de TipoUsForm */}
-                <div className="p-6 text-white flex justify-between items-center sticky top-0 z-10" style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}>
+                <div className="p-6 text-white flex justify-between  items-center sticky top-0 z-10 rounded-t-[20px]" style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}>
                     <div>
                         <h2 className="text-2xl font-black uppercase tracking-tighter">Actualizar Usuario</h2>
                         <p className="text-purple-200 text-xs font-medium">Modifica la información del perfil</p>
                     </div>
-                    <button onClick={() => SetVer(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button onClick={() => SetVer(false)} className="bg-white/10 hover:bg-white/20 p-2 px-4 rounded-xl transition-colors">
+                        Cerrar
                     </button>
                 </div>
 

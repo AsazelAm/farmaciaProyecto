@@ -32,7 +32,8 @@ export default function Aside() {
       {/* Contenedor del Aside con posicionamiento fijo/sticky */}
       <aside className="
         sticky top-0 left-0 z-50
-        group w-[70px] hover:w-[260px] 
+        rounded-r-xl
+        group w-[90px] hover:w-[260px] 
         h-screen 
         bg-[#42137B] 
         flex flex-col justify-between 
@@ -71,15 +72,15 @@ export default function Aside() {
               w-full flex items-center justify-center gap-2
               py-3 px-2
               bg-red-590 hover:bg-red-600 
-              text-red-500 hover:text-white
+              text-white border-[1px] hover:text-white
               rounded-xl transition-all duration-300
               group-hover:px-4
             "
-          >
+          > 
             <span className="font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-              Cerrar Sesión
+               Cerrar Sesión 
             </span>
-            <span className="group-hover:hidden text-lg">✕</span>
+            
           </button>
         </div>
       </aside>

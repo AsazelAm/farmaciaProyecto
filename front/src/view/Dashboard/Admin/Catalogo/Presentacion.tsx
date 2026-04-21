@@ -64,7 +64,7 @@ export default function Presentacion() {
   if (isLoading) return <Loading />;
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50">
+    <div className="p-6 min-h-screen ">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>

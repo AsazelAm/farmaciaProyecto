@@ -30,7 +30,7 @@ const LOCAL_STORAGE_KEY = "UsuarioFormData";
 // ESTILOS ACTUALIZADOS CON LA PALETA LILA/PÚRPURA
 const inputStyles = "w-full p-3 border-2 rounded-xl outline-none focus:ring-2 focus:ring-[#7B3FA0] transition-all border-[#D8B4F0] text-[#2D0A47]";
 const labelStyles = "block text-sm font-semibold text-[#4A1A6E] mb-1";
-const sectionStyles = "bg-[#F3EBF9] p-5 rounded-2xl border border-[#D8B4F0] grid grid-cols-1 md:grid-cols-2 gap-4";
+const sectionStyles = " p-5 rounded-2xl  grid grid-cols-1 md:grid-cols-2 gap-4";
 
 export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);

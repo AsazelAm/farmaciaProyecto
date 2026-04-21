@@ -76,10 +76,8 @@ export default function LaboratorioForm({ setIsOpen, isOpen }: Cua) {
                         <h2 className="text-2xl font-bold">Nuevo Laboratorio</h2>
                         <p className="text-purple-100 text-sm">Registra un nuevo proveedor médico</p>
                     </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                    <button onClick={handleClose} className="p-2 px-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
+                       Cerrar
                     </button>
                 </div>
 
