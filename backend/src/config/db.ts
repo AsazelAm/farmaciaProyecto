@@ -1,5 +1,6 @@
 import mariadb from "mariadb";
 import dotenv from "dotenv";
+import fs from "fs"; // Necesario para leer el certificado
 
 dotenv.config();
 
@@ -15,9 +16,17 @@ const data = mariadb.createPool({
     user: process.env.USER_BD,
     password: process.env.USER_PASSWORD,
     database: process.env.DATABASE,
-    port:parseInt(process.env.PORT_BD || "3307"),
+
+    port: parseInt(process.env.PORT_BD || "4000"), 
     connectionLimit: 20,
-    acquireTimeout: 40000,
+    acquireTimeout: 60000, // Subimos un poco el tiempo por la latencia a AWS
+    
+    // CONFIGURACIÓN SSL CRÍTICA
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true 
+    },
+
     idleTimeout: 60000,
     resetAfterUse: true,
     minimumIdle: 5
@@ -26,12 +35,13 @@ const data = mariadb.createPool({
 async function testConnection() {
     try {
         const connection = await data.getConnection();
-        console.log("Conexión exitosa a la base de datos.");
+        console.log("✅ Conexión exitosa a TiDB Cloud.");
         connection.release();
     } catch (error) {
-        console.error("Error al conectar con la base de datos:MIO ", error);
+        console.error("❌ Error al conectar con la base de datos: ", error);
     }
 }
+
 testConnection();
 
 export default data;
