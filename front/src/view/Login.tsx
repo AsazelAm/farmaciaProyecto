@@ -26,8 +26,8 @@ export default function Logins() {
   const navigate = useNavigate();
 
   const initialValues: AuthUser = {
-    Email: "",
-    Passwd: "",
+    email: "",
+    passwd: "",
   };
 
   const {
@@ -126,7 +126,7 @@ export default function Logins() {
                 type="email"
                 placeholder="Correo Electronico"
                 className="w-full border border-gray-300 p-2 rounded-lg"
-                {...register("Email", {
+                {...register("email", {
                   required: "El Email es obligatorio",
                   pattern: {
                     value: /\S+@\S+\.\S+/,
@@ -134,14 +134,14 @@ export default function Logins() {
                   },
                 })}
               />
-              {errors.Email && (
-                <ErrorMessage>{errors.Email.message}</ErrorMessage>
+              {errors.email && (
+                <ErrorMessage>{errors.email.message}</ErrorMessage>
               )}
             </div>
 
             <div className="flex flex-col gap-2">
               <label
-                htmlFor="password"
+                htmlFor="passwd"
                 className="font-bold text-lg text-[#42137B]"
               >
                 Contraseña
@@ -150,12 +150,12 @@ export default function Logins() {
                 type="password"
                 placeholder="Contraseña"
                 className="w-full border border-gray-300 p-2 rounded-lg"
-                {...register("Passwd", {
+                {...register("passwd", {
                   required: "El Password es obligatorio",
                 })}
               />
-              {errors.Passwd && (
-                <ErrorMessage>{errors.Passwd.message}</ErrorMessage>
+              {errors.passwd && (
+                <ErrorMessage>{errors.passwd.message}</ErrorMessage>
               )}
             </div>
 

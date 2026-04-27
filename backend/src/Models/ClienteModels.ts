@@ -4,7 +4,7 @@ const DataCliente={
     async GetClientM(){
         const Conexion = await conectar.getConnection();
         const results= await Conexion.query(`
-            SELECT id_cliente,ci,nombre,apellido,telefono, email,fecha_creacion FROM cliente WHERE Estado = 1;`)
+            SELECT id_cliente,ci,nombre,apellido,telefono, email,fechaCreacion FROM cliente WHERE estado = 1;`)
         Conexion.release();
         return results;
     },
@@ -19,7 +19,7 @@ const DataCliente={
         const Conexion = await conectar.getConnection();
         const results= await Conexion.query(`
             SELECT COUNT(*) AS existe FROM cliente
-            WHERE ci = ? AND Estado = 1`,[ci]);
+            WHERE ci = ? AND estado = 1`,[ci]);
         const existeCi=results[0].existe;
         const exisCi=Number(existeCi);
         Conexion.release();
@@ -28,7 +28,7 @@ const DataCliente={
     async VerificarCiUpdate(ci,id_cliente){
         const Conexion = await conectar.getConnection();
         const results = await Conexion.query(`
-            SELECT COUNT(*) AS existe FROM cliente WHERE ci = ? AND id_cliente != ? AND Estado = 1`,[ci,id_cliente]);
+            SELECT COUNT(*) AS existe FROM cliente WHERE ci = ? AND id_cliente != ? AND estado = 1`,[ci,id_cliente]);
         const existeCi=results[0].existe;
         const exisCi = Number(existeCi);
         Conexion.release();
@@ -39,7 +39,7 @@ const DataCliente={
         const Results = await Conexion.query(`
             SELECT COUNT(*) AS existe 
             FROM cliente 
-            WHERE email = ? AND Estado = 1
+            WHERE email = ? AND estado = 1
         `, [email]);
         const existeEmail = Results[0].existe;
         const existEmail = Number(existeEmail);
@@ -51,7 +51,7 @@ const DataCliente={
         const Results = await Conexion.query(`
             SELECT COUNT(*) AS existe 
             FROM cliente 
-            WHERE email = ? AND id_cliente != ? AND Estado = 1
+            WHERE email = ? AND id_cliente != ? AND estado = 1
         `, [email, id_cliente]);
         const existeEmail = Results[0].existe;
         const existEmail  = Number(existeEmail);
@@ -67,13 +67,13 @@ const DataCliente={
             apellido = ?,
             telefono = ?,
             email = ?,
-            WHERE id_cliente = ? AND Estado = 1;`,[ci,nombre,apellido,telefono,email,id_cliente]);
+            WHERE id_cliente = ? AND estado = 1;`,[ci,nombre,apellido,telefono,email,id_cliente]);
         Conexion.release();
         return "Cliente Actualizado";
     },
     async DeleteClientM(id_cliente){
         const Conexion = await conectar.getConnection();
-        Conexion.query(`UPDATE cliente SET Estado = 0 WHERE id_cliente = ?;`,[id_cliente]);
+        Conexion.query(`UPDATE cliente SET estado = 0 WHERE id_cliente = ?;`,[id_cliente]);
         Conexion.release();
         return "Cliente Eliminado";
     }

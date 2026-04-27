@@ -155,7 +155,7 @@ export default function Laboratorio() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 font-medium">
-                        {item.fecha_creacion ? new Date(item.fecha_creacion).toLocaleDateString() : '---'}
+                        {item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString() : '---'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center items-center gap-2">

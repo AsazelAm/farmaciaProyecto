@@ -1,11 +1,11 @@
-import { array, z } from "zod";
+import { z } from "zod";
 
 export const LoginShcema = z.object({
   email: z
     .string()
     .min(1, { message: "El Email es Obligatorio" })
     .email({ message: "Email no valido" }),
-  password: z.string().min(8, { message: "Minimo 8 Caracteres" }),
+  passwd: z.string().min(8, { message: "Minimo 8 Caracteres" }),
 });
 //TYPE USUARIO
 export const UserSchema = z.object({
@@ -16,10 +16,10 @@ export const UserSchema = z.object({
   img: z.string().nullable(),
   telefono: z.string().nullable(),
   email: z.string().nullable(),
-  ultimo_acceso: z.string().nullable().optional(),
+  ultimoAcceso: z.string().nullable().optional(),
   id_tipo_us: z.number(),
   id_sucursal: z.number(),
-  nombre_sucursal: z.string().optional(),
+  nombreSucursal: z.string().optional(),
   name_rol: z.string(),
 });
 export const GetUserSchema = z.array(UserSchema);
@@ -35,7 +35,7 @@ const GetUsuarioSchema= z.object({
   passwd_Confirmation: z.string(),
   telefono: z.string().nullable(),
   email: z.string().nullable(),
-  ultimo_acceso: z.string().nullable(),
+  ultimoAcceso: z.string().nullable(),
   id_tipo_us: z.number(),
   id_sucursal: z.number(),
 });
@@ -46,7 +46,7 @@ export type updateuser = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'telefono'|'
 //Auth get user
 export const GetAuthUsers = z.object({
   id_user: z.number(),
-  id_rol: z.number(),
+  id_tipo_us: z.number(),
   nombre: z.string(),
 });
 
@@ -55,28 +55,24 @@ export const GetAuthUserSchema = z.array(GetAuthUsers);
 const GetUserShcemass = z.object({
   id_user: z.number(),
   nombre: z.string(),
-  id_rol: z.number(),
+  id_tipo_us: z.number(),
   name_rol: z.string(),
-  id_municipio: z.number(),
-  municipio: z.string(),
-  CI: z.string().nullable(),
-  Sueldo: z.string().nullable(),
-  TipoSueldo: z.string().nullable(),
+  ci: z.string().nullable(),
   F_inicio: z
     .string()
     .refine((date) => !isNaN(Date.parse(date)), { message: "Fecha inválida" })
     .transform((date) => date.split("T")[0])
     .nullable(),
-  Email: z.string().nullable(),
-  Estado: z.number().nullable(),
-  Passwd: z.string(),
+  email: z.string().nullable(),
+  estado: z.number().nullable(),
+  passwd: z.string(),
 });
 
 type Users = z.infer<typeof GetUserShcemass>;
 
-export type UpdateEstado = Pick<Users, "id_user" | "Estado">;
-export type AuthUser = Pick<Users, "Email" | "Passwd">;
-export type AuthRol = Pick<Users, "id_rol">;
+export type UpdateEstado = Pick<Users, "id_user" | "estado">;
+export type AuthUser = Pick<Users, "email" | "passwd">;
+export type AuthRol = Pick<Users, "id_tipo_us">;
 
 //Type Tipo_us
 export const tipo_usArray = z.object({
@@ -115,27 +111,27 @@ export const laboraArray = z.object({
   id_laboratorio: z.number(),
   nombre: z.string(),
   img: z.string().nullable(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 export const LaboraShcemas = z.array(laboraArray);
 
 const GetLaboraShcemass = z.object({
   id_laboratorio: z.number(),
   nombre: z.string(),
-  Estado: z.string(),
+  estado: z.string(),
   img: z.string().nullable(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 type LaboraType = z.infer<typeof GetLaboraShcemass>;
 export type CreateLab = Pick<LaboraType,'nombre'> & { img: FileList | null };
-export type UpdateLabo = Pick<LaboraType, "nombre" | "img" | "id_laboratorio"|"fecha_creacion">;
+export type UpdateLabo = Pick<LaboraType, "nombre" | "img" | "id_laboratorio"|"fechaCreacion">;
 export type DeletLabora = Pick<LaboraType, "id_laboratorio">;
 
 //Type Tipo Producto
 export const tipoProdArray = z.object({
   id_tipo_prod: z.number(),
   nombre: z.string(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 export const TipoProdShcemas = z.array(tipoProdArray);
 
@@ -143,29 +139,29 @@ const GetTipoProdShcemass = z.object({
   id_tipo_prod: z.number(),
   nombre: z.string(),
   Estado: z.string(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 type TipoProdType = z.infer<typeof GetTipoProdShcemass>;
 export type CreateTipoProd = Pick<TipoProdType, "nombre">;
-export type UpdateTipoProd = Pick<TipoProdType, "nombre" | "id_tipo_prod"|'fecha_creacion'>;
+export type UpdateTipoProd = Pick<TipoProdType, "nombre" | "id_tipo_prod"|'fechaCreacion'>;
 export type DeleteTipoProd = Pick<TipoProdType, "id_tipo_prod">;
 
 //Type Presentacion
 export const presentacionArray = z.object({
   id_presentacion: z.number(),
   nombre: z.string(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 export const PresentaShcemas = z.array(presentacionArray);
 
 const GetPresentaShcemass = z.object({
   id_presentacion: z.number(),
   nombre: z.string(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 type PresentaType = z.infer<typeof GetPresentaShcemass>;
 export type CreatePresenta = Pick<PresentaType, "nombre">;
-export type UpdatePresenta = Pick<PresentaType, "nombre" | "id_presentacion"|"fecha_creacion">;
+export type UpdatePresenta = Pick<PresentaType, "nombre" | "id_presentacion"|"fechaCreacion">;
 export type DeletePresenta = Pick<PresentaType, "id_presentacion">;
 
 //Type Cliente
@@ -176,7 +172,7 @@ export const ClienteArray = z.object({
   apellido: z.string().nullable(),
   telefono: z.string().nullable(),
   email: z.string().nullable(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 export const ClienteShcemas = z.array(ClienteArray);
 
@@ -187,7 +183,7 @@ const GetClienteShcemass = z.object({
   apellido: z.string().nullable(),
   telefono: z.string().nullable(),
   email: z.string().nullable(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 type ClienteType = z.infer<typeof GetClienteShcemass>;
 export type CreateCliente = Pick<
@@ -209,7 +205,7 @@ export const ProveedorArray = z.object({
   email: z.string().nullable(),
   direccion: z.string().nullable(),
   contacto_principal: z.string().nullable(),
-  fecha_creacion: z.string(),
+  fechaCreacion: z.string(),
 });
 export const ProveedorShcemas = z.array(ProveedorArray);
 
@@ -220,8 +216,8 @@ const GetProveedorShcemass = z.object({
   telefono: z.string().nullable(),
   email: z.string().nullable(),
   direccion: z.string().nullable(),
-  contacto_principal: z.string().nullable(),
-  fecha_creacion: z.string(),
+  contactoPrincipal: z.string().nullable(),
+  fechaCreacion: z.string(),
 });
 type ProveedorType = z.infer<typeof GetProveedorShcemass>;
 export type CreateProveedor = Pick<
@@ -231,7 +227,7 @@ export type CreateProveedor = Pick<
   | "telefono"
   | "email"
   | "direccion"
-  | "contacto_principal"
+  | "contactoPrincipal"
 >;
 export type UpdateProveedor = Pick<
   ProveedorType,
@@ -240,7 +236,7 @@ export type UpdateProveedor = Pick<
   | "telefono"
   | "email"
   | "direccion"
-  | "contacto_principal"
+  | "contactoPrincipal"
   | "id_proveedor"
 >;
 export type DeleteProveedor = Pick<ProveedorType, "id_proveedor">;

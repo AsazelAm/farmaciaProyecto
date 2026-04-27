@@ -4,7 +4,7 @@ const DataTipoProd = {
   async GetTipoProdM() {
     const Conexion = await conectar.getConnection();
     const results = await Conexion.query(
-      `SELECT id_tipo_prod,nombre,fecha_creacion FROM tipo_producto WHERE Estado = 1;`,
+      `SELECT id_tipo_prod,nombre,fechaCreacion FROM tipo_producto WHERE estado = 1;`,
     );
     Conexion.release();
     return results;
@@ -22,13 +22,13 @@ const DataTipoProd = {
     await Conexion.query(`
             UPDATE tipo_producto SET
             nombre = ?
-            WHERE Estado = 1 AND id_tipo_prod = ?;`,[nombre,id_tipo_prod]);
+            WHERE estado = 1 AND id_tipo_prod = ?;`,[nombre,id_tipo_prod]);
             Conexion.release();
             return "Tipo de Producto Actualizado";
   },
   async DeleteTipoProdM(id_tipo_prod){
     const Conexion = await conectar.getConnection();
-    await Conexion.query(`UPDATE tipo_producto SET Estado = 0 WHERE id_tipo_prod = ?`,[id_tipo_prod]);
+    await Conexion.query(`UPDATE tipo_producto SET estado = 0 WHERE id_tipo_prod = ?`,[id_tipo_prod]);
     Conexion.release();
     return "Tipo Producto Eliminado";
   }

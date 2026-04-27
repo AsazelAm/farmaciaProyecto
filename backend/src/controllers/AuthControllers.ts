@@ -7,25 +7,25 @@ export class AuthControllers {
 
     static readonly Login = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { Email, Passwd } = req.body;
-        const data = await DataUsers.GetEmail(Email);
+        const { email, passwd } = req.body;
+        const data = await DataUsers.GetEmail(email);
         if (!data || !data.exists) {
             return res.status(400).json({ error: 'El Email no está registrado' });
         }
-        const VeriCon = await DataUsers.VerifedConfirmed(Email);
+        const VeriCon = await DataUsers.VerifedConfirmed(email);
         if (!VeriCon.exists) {
             return res.status(400).json({ error: 'El usuario no está verificado' });
         }
-        const Pass = await DataUsers.GetPasswd(Email);
+        const Pass = await DataUsers.GetPasswd(email);
         const VerPass = Pass[0].passwd;
-        const Correct = await CheckPassword(Passwd, VerPass);
+        const Correct = await CheckPassword(passwd, VerPass);
         if (!Correct) {
             return res.status(401).json({ error: 'El password es incorrecto' });
         }
         const idUser = Pass[0].id_usuario;
 
         const token2 = GenerateJwt(idUser);
-        const IDRolArray = await DataUsers.GetIdRol(Email);
+        const IDRolArray = await DataUsers.GetIdRol(email);
         if (!IDRolArray || IDRolArray.length === 0) {
             throw new Error("Rol no encontrado");
         }

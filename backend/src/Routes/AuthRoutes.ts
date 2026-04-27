@@ -9,8 +9,8 @@ const router = Router()
 
 router.post('/login',
     limiter,
-    body('Email').isEmail().withMessage('El Email no es valido'),
-    body('Passwd').notEmpty().withMessage('El Password es obligatorio'),
+    body('email').isEmail().withMessage('El Email no es valido'),
+    body('passwd').notEmpty().withMessage('El Password es obligatorio'),
     handleInputErrors,
     AuthControllers.Login
 )

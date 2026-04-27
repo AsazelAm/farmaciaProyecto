@@ -200,7 +200,7 @@ export default function Presentacion() {
 
                     {/* FECHA */}
                     <td className="px-6 py-4 text-sm font-medium" style={{ color: "#6B7280" }}>
-                      {new Date(row.fecha_creacion).toLocaleDateString('es-ES', {
+                      {new Date(row.fechaCreacion).toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: 'long',
                         year: 'numeric'

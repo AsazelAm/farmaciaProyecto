@@ -54,7 +54,7 @@ async UserAllModelsId(id_usuario){
     async GetEmail(email: string) {
         const Conexion = await conectar.getConnection();
         try {
-            const rows:any = await Conexion.query(`SELECT email FROM usuario WHERE Email = ?`, [email]);
+            const rows:any = await Conexion.query(`SELECT email FROM usuario WHERE email = ?`, [email]);
             if (rows && rows.length > 0) {
                 return { exists: true, message: "El Email ya está registrado" };
             }

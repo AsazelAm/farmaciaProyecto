@@ -4,7 +4,7 @@ const DataPresentacion={
     async GetPresentaM(){
         const Conexion = await conectar.getConnection();
         const results = await Conexion.query(`
-            SELECT id_presentacion,nombre,fecha_creacion FROM presentacion WHERE Estado = 1;`);
+            SELECT id_presentacion,nombre,fechaCreacion FROM presentacion WHERE estado = 1;`);
             Conexion.release();
             return results;
     },
@@ -20,7 +20,7 @@ const DataPresentacion={
         await Conexion.query(`
             UPDATE presentacion SET
             nombre = ?
-            WHERE id_presentacion = ? AND Estado = 1;`,[nombre,id_presentacion]);
+            WHERE id_presentacion = ? AND estado = 1;`,[nombre,id_presentacion]);
         Conexion.release();
         return "Presentacion Actualizado";
     },
@@ -28,7 +28,7 @@ const DataPresentacion={
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
             UPDATE presentacion SET
-            Estado = 0 
+            estado = 0 
             WHERE id_presentacion = ?;`,[id_presentacion]);
         Conexion.release();
         return "Presentacion Eliminado";

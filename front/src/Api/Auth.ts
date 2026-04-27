@@ -51,7 +51,7 @@ export async function GetAuthUsers() {
     
 }
 
-export async function GetAuthRol(id:AuthRol['id_rol']){
+export async function GetAuthRol(id:AuthRol['id_tipo_us']){
     try {
         const {data} = await api.get(`/Auth/GetRols/${id}`)
         return data

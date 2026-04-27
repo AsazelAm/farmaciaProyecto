@@ -15,7 +15,7 @@ const DataProveedor={
 async GetProveedorM(){
     const conection = await conectar.getConnection();
     const results = await conection.query(`
-        SELECT codigo,nombre,telefono,email,direccion,contacto_principal,fecha_creacion FROM proveedor WHERE Estado = 1 ;    
+        SELECT codigo,nombre,telefono,email,direccion,contactoPrincipal,fechaCreacion FROM proveedor WHERE estado = 1 ;    
     `)
     conection.release()
     return results;
@@ -23,7 +23,7 @@ async GetProveedorM(){
 async AddProveedorM(Proveedor:Proveedores){
     const conection = await conectar.getConnection();
     const results =await conection.query(`
-    INTO proveedor(codigo,nombre,telefono,email,direccion,contacto_principal) VALUES (?,?,?,?,?,?);
+    INTO proveedor(codigo,nombre,telefono,email,direccion,contactoPrincipal) VALUES (?,?,?,?,?,?);
     `,[Proveedor.codigo,
         Proveedor.nombre,
         Proveedor.telefono,
@@ -34,13 +34,13 @@ async AddProveedorM(Proveedor:Proveedores){
     conection.release();
     return Number(results.insertId);
 },
-async UpdateProveedorM(data:Proveedores){
+/*async UpdateProveedorM(data:Proveedores){
     const conecction = conectar.getConnection();
     await conecction.query(`
         UPDATE ´proveedor SET
         codigo = nummero
         nombre = ?,
         `)
-}
+}*/
 }
 export default DataProveedor;
