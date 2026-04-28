@@ -148,8 +148,14 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                             <input {...register("apellido", { required: "Apellido obligatorio" })} className={inputStyles} />
                             {errors.apellido && <ErrorMessage>{errors.apellido.message}</ErrorMessage>}
                         </div>
-                    </div>
 
+                        
+                    </div>
+                    <div className='px-5 rounded-2xl grid grid-cols-1'>
+                        <label className='block text-sm font-semibold text-[#4A1A6E] mb-1'>Telefono *</label>
+                        <input {...register("telefono", { required: "Telefono obligatorio" })} className='w-full p-3 border-2 rounded-xl outline-none focus:ring-2 focus:ring-[#7B3FA0] transition-all border-[#D8B4F0] text-[#2D0A47]' />
+                        {errors.telefono && <ErrorMessage>{errors.telefono.message}</ErrorMessage>}
+                    </div>
                     {/* Sección: Roles y Seguridad */}
                     <div className={sectionStyles}>
                         <h3 className="md:col-span-2 text-lg font-bold text-[#4A1A6E] border-b border-[#D8B4F0] pb-2">Acceso y Sucursal</h3>
