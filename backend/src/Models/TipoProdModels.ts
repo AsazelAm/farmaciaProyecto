@@ -28,7 +28,7 @@ const DataTipoProd = {
   },
   async DeleteTipoProdM(id_tipo_prod){
     const Conexion = await conectar.getConnection();
-    await Conexion.query(`UPDATE tipo_producto SET estado = 0 WHERE id_tipo_prod = ?`,[id_tipo_prod]);
+    await Conexion.query(`UPDATE tipo_producto SET estado = 0 WHERE id_tipo_prod = ?;`,[id_tipo_prod]);
     Conexion.release();
     return "Tipo Producto Eliminado";
   }

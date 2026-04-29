@@ -21,7 +21,13 @@ export class LaboratorioControllers{
             const imgFile = files;
             const {nombre}=req.body;
             const fecha=GetDateToday();
-            
+        
+            const VeriNombre = await DataLabora.VerificarNombreM(nombre);
+            if(VeriNombre.exists){
+                res.status(400).json({error:"El nombre del Laboratorio ya esta Registrado"});
+                return ;
+            }
+
             const id_laboratorio = await DataLabora.AddLaboraM(nombre);
 
             if(imgFile){
@@ -44,6 +50,11 @@ export class LaboratorioControllers{
             const {nombre}= req.body;
             const ImgFile= req.file;
             const fecha = GetDateToday()
+
+            const UpdaNomb = await DataLabora.VerificarUpdateNombreM(nombre,id_laboratorio);
+            if(UpdaNomb !== 0){
+                return res.status(400).json({error:"El nombre ya esta registrado"});
+            }
 
             await DataLabora.UpdateLabM(id_laboratorio,nombre);
 

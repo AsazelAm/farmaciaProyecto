@@ -32,7 +32,32 @@ const DataPresentacion={
             WHERE id_presentacion = ?;`,[id_presentacion]);
         Conexion.release();
         return "Presentacion Eliminado";
+    },
+    async ValidaNombreM(nombre){
+        const Conexion = await conectar.getConnection();
+        try{
+            const [rows] = await Conexion.query(`
+                SELECT nombre FROM presentacion nombre = ?;`,[nombre]);
+                if(rows){
+                    return {exists:true,message:"La presentacion ya Existe"};
+                }
+                return {exists:false};
+        }catch(error){
+            console.error("Error al consultar el nombre,",error);
+            throw new Error("Error al verificar el nombre");
+        }finally{
+            Conexion.release();
+        }
+    },
+    async VeriUpdaNombreM(nombre,id_presentacion){
+        const Conexion = await conectar.getConnection();
+        const results = await Conexion.query(`
+            SELECT COUNT(*) AS existe FROM presentacion WHERE nombre = ? AND id_proveedor != ?  AND estado = 1;`,[nombre,id_presentacion]);
+            const existeNombre = results[0].existe;
+            const exisNomb = Number(existeNombre);
+            Conexion.release();
+            return exisNomb;
     }
 
-}
+};
 export default DataPresentacion;
