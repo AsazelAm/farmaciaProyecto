@@ -15,7 +15,7 @@ router.post('/login',
     AuthControllers.Login
 )
 
-router.put('/reset-passwd/:id_usuario',
+router.put('/reset-passwd/:idUsuario',
     authenticate,
     AuthControllers.ResetPasswd
 )

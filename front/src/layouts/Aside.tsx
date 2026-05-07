@@ -11,7 +11,7 @@ import SubMenu from "./Admin/SubMenu";
 export default function Aside() {
   const navigate = useNavigate();
   const { data, isError, isLoading } = useAuth();
-  const Rol = data?.name_rol;
+  const Rol = data?.nameRol;
 
   const handleLogout = () => {
     localStorage.removeItem('AUTH_TOKEN');

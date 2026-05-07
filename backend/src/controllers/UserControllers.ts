@@ -17,8 +17,8 @@ export class UserControllers {
 
     static readonly  GetAllUserId = async(req:Request,res:Response)=>{
         try {
-            const {id_usuario}=req.params;
-            const data = await DataUser.UserAllModelsId(id_usuario);
+            const {idUsuario}=req.params;
+            const data = await DataUser.UserAllModelsId(idUsuario);
             res.status(200).json(data)
         } catch (error) {
             console.error("Error al obtener Usuario:", error);
@@ -28,7 +28,7 @@ export class UserControllers {
 
     static readonly CreateUserControllers = async(req:Request,res:Response):Promise<any>=>{
         try {
-            const { ci,nombre,apellido, passwd,telefono,email, id_tipo_us,id_sucursal } = req.body;
+            const { ci,nombre,apellido, passwd,telefono,email, idTipoUs,idSucursal } = req.body;
             const files = req.file;
             const imgFile = files;
             const fecha=GetDateToday();
@@ -52,8 +52,8 @@ export class UserControllers {
                 passwd: NewPasswd,
                 telefono,
                 email,
-                id_tipo_us,
-                id_sucursal
+                idTipoUs,
+                idSucursal
             });
             if(imgFile){
                 const rutaImg = await uploadImageGlobal(imgFile,String(id_usuario),fecha,'Usuario');
@@ -69,8 +69,8 @@ export class UserControllers {
 
     static readonly DeleteUserControllers = async(req:Request,res:Response)=>{
         try {
-            const {id_usuario} = req.params
-            const data = await DataUser.DeleteUserId(id_usuario);
+            const {idUsuario} = req.params
+            const data = await DataUser.DeleteUserId(idUsuario);
             res.status(200).json(data)
         } catch (error) {
             console.error("Error al eliminar el usuario:", error);
@@ -80,17 +80,17 @@ export class UserControllers {
 
     static readonly UpdateUserControllers = async(req:Request,res:Response)=>{
         try {
-            const id_usuario=Number(req.params.id_usuario);
-            const { ci,nombre,apellido,telefono,email, id_tipo_us,id_sucursal } = req.body;
+            const idUsuario=Number(req.params.idUsuario);
+            const { ci,nombre,apellido,telefono,email, idTipoUs,idSucursal } = req.body;
             const files = req.file;
             const imgFile = files;
             const fecha=GetDateToday();
 
-            const data = await DataUser.UpodateUserbyId({ci,nombre,apellido,telefono,email,id_tipo_us,id_sucursal,id_usuario});
+            const data = await DataUser.UpodateUserbyId({ci,nombre,apellido,telefono,email,idTipoUs,idSucursal,idUsuario});
 
             if(imgFile){
-                const rutaImg= await uploadImageGlobal(imgFile,String(id_usuario),fecha,'Usuario');
-                await DataUser.UpdateRutaimg(rutaImg,id_usuario)
+                const rutaImg= await uploadImageGlobal(imgFile,String(idUsuario),fecha,'Usuario');
+                await DataUser.UpdateRutaimg(rutaImg,idUsuario)
             }
             res.status(200).json(data)
         } catch (error) {

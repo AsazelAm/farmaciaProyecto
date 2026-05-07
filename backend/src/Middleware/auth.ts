@@ -5,9 +5,9 @@ declare global {
     namespace Express {
         interface Request {
             user?: {
-                id_user: number;
-                id_rol:number;
-                rol:string;
+                idUsuario: number;
+                idTipoUs:number;
+                nameRol:string;
             };
         }
     }
@@ -30,7 +30,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
         if (decoded?.id) {
             const [user] = await db.query(
-                'SELECT usuario.id_usuario, usuario.id_tipo_us, tipo_us.name_rol FROM usuario JOIN tipo_us ON usuario.id_tipo_us = tipo_us.id_tipo_us WHERE usuario.id_usuario = ?',[decoded.id]
+                'SELECT usuario.idUsuario, usuario.idTipoUs, tipous.nameRol FROM usuario JOIN tipous ON usuario.idTipoUs = tipous.idTipoUs WHERE usuario.idUsuario = ?',[decoded.id]
             );
             if (!user) {
                 return res.status(401).json({ error: 'Usuario no encontrado' });

@@ -4,30 +4,30 @@ const DataTipoUs={
     async GetTipoUsM (){
         const Conexion= await conectar.getConnection();
         const results = await Conexion.query(`
-            SELECT id_tipo_us,name_rol, fechaCreacion
-            FROM tipo_us WHERE Estado = 1;`);
+            SELECT idTipoUs,nameRol, fechaCreacion
+            FROM tipoUs WHERE estado = 1;`);
         Conexion.release();
         return results;
     },
-    async AddTipoUsM(name_rol){
+    async AddTipoUsM(nameRol){
         const Conexion = await conectar.getConnection();
-        await Conexion.query(`INSERT INTO tipo_us(name_rol) VALUES(?);`,[name_rol]);
+        await Conexion.query(`INSERT INTO tipoUs(nameRol) VALUES(?);`,[nameRol]);
         Conexion.release();
         return "Rol agregado exitosamente";
     },
-    async UpdateTipoUsM(name_rol,id_tipo_us){
+    async UpdateTipoUsM(nameRol,idTipoUs){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
-            UPDATE tipo_us SET
-            name_rol = ?
-            WHERE id_tipo_us = ? AND estado = 1`,[name_rol,id_tipo_us]);
+            UPDATE tipoUs SET
+            nameRol = ?
+            WHERE idTipoUs = ? AND estado = 1`,[nameRol,idTipoUs]);
         Conexion.release();
         return "Rol actulizado Correctamente";
     },
-    async DeleteTipoUsM(id_tipo_us){
+    async DeleteTipoUsM(idTipoUs){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
-            UPDATE tipo_us SET estado = 0 WHERE id_tipo_us = ?;`,[id_tipo_us]);
+            UPDATE tipoUs SET estado = 0 WHERE idTipoUs = ?;`,[idTipoUs]);
         Conexion.release();
         return "Rol Eliminado exitosamente "
     }

@@ -9,7 +9,7 @@ export const LoginShcema = z.object({
 });
 //TYPE USUARIO
 export const UserSchema = z.object({
-  id_usuario: z.number(),
+  idUsuario: z.number(),
   ci: z.string(),
   nombre: z.string(),
   apellido: z.string(),
@@ -17,18 +17,18 @@ export const UserSchema = z.object({
   telefono: z.string().nullable(),
   email: z.string().nullable(),
   ultimoAcceso: z.string().nullable().optional(),
-  id_tipo_us: z.number(),
-  id_sucursal: z.number(),
+  idTipoUs: z.number(),
+  idSucursal: z.number(),
   nombreSucursal: z.string().optional(),
-  name_rol: z.string(),
+  nameRol: z.string(),
 });
 export const GetUserSchema = z.array(UserSchema);
 
 const GetUsuarioSchema= z.object({
-    id_usuario: z.number(),
+    idUsuario: z.number(),
   ci: z.string(),
   nombre: z.string(),
-  name_rol:z.string(),
+  nameRol:z.string(),
   apellido: z.string(),
   img: z.string().nullable(),
   passwd: z.string(),
@@ -36,27 +36,27 @@ const GetUsuarioSchema= z.object({
   telefono: z.string().nullable(),
   email: z.string().nullable(),
   ultimoAcceso: z.string().nullable(),
-  id_tipo_us: z.number(),
-  id_sucursal: z.number(),
+  idTipoUs: z.number(),
+  idSucursal: z.number(),
 });
 type Admins = z.infer<typeof GetUsuarioSchema>
-export type CreateAdmins = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'passwd'|'passwd_Confirmation'|'telefono'|'email'|'id_tipo_us'|'id_sucursal'>
-export type deleteuser = Pick<Admins,'id_usuario'>
-export type updateuser = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'telefono'|'email'|'id_tipo_us'|'id_sucursal'|'id_usuario'|'name_rol'>
+export type CreateAdmins = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'passwd'|'passwd_Confirmation'|'telefono'|'email'|'idTipoUs'|'idSucursal'>
+export type deleteuser = Pick<Admins,'idUsuario'>
+export type updateuser = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'telefono'|'email'|'idTipoUs'|'idSucursal'|'idUsuario'|'nameRol'>
 //Auth get user
 export const GetAuthUsers = z.object({
-  id_user: z.number(),
-  id_tipo_us: z.number(),
+  idUsuario: z.number(),
+  idTipoUs: z.number(),
   nombre: z.string(),
 });
 
 export const GetAuthUserSchema = z.array(GetAuthUsers);
 
 const GetUserShcemass = z.object({
-  id_user: z.number(),
+  idUsuario: z.number(),
   nombre: z.string(),
-  id_tipo_us: z.number(),
-  name_rol: z.string(),
+  idTipoUs: z.number(),
+  nameRol: z.string(),
   ci: z.string().nullable(),
   F_inicio: z
     .string()
@@ -70,41 +70,41 @@ const GetUserShcemass = z.object({
 
 type Users = z.infer<typeof GetUserShcemass>;
 
-export type UpdateEstado = Pick<Users, "id_user" | "estado">;
+export type UpdateEstado = Pick<Users, "idUsuario" | "estado">;
 export type AuthUser = Pick<Users, "email" | "passwd">;
-export type AuthRol = Pick<Users, "id_tipo_us">;
+export type AuthRol = Pick<Users, "idTipoUs">;
 
 //Type Tipo_us
 export const tipo_usArray = z.object({
-  id_tipo_us: z.number(),
-  name_rol: z.string(),
+  idTipoUs: z.number(),
+  nameRol: z.string(),
 });
 export const TipoUsShcemas = z.array(tipo_usArray);
 
 const GetTipo_usShcemass = z.object({
-  id_tipo_us: z.number(),
-  name_rol: z.string(),
+  idTipoUs: z.number(),
+  nameRol: z.string(),
 });
 type Tipo_usType = z.infer<typeof GetTipo_usShcemass>;
-export type CreateTipo_us = Pick<Tipo_usType, "name_rol">;
-export type UpdateTipo_us = Pick<Tipo_usType, "name_rol" | "id_tipo_us">;
-export type DeleteTipo_us = Pick<Tipo_usType, "id_tipo_us">;
+export type CreateTipo_us = Pick<Tipo_usType, "nameRol">;
+export type UpdateTipo_us = Pick<Tipo_usType, "nameRol" | "idTipoUs">;
+export type DeleteTipo_us = Pick<Tipo_usType, "idTipoUs">;
 
 //Type SUCURSAL
 export const sucursalArray = z.object({
-  id_sucursal: z.number(),
+  idSucursal: z.number(),
   nombre: z.string(),
 });
 export const SucursalShcemas = z.array(sucursalArray);
 
 const GetSucursalShcemass = z.object({
-  id_sucursal: z.number(),
+  idSucursal: z.number(),
   nombre: z.string(),
 });
 type SucurType = z.infer<typeof GetSucursalShcemass>;
 export type CreateSucursal = Pick<SucurType, "nombre">;
-export type UpdateSucursal = Pick<SucurType, "nombre" | "id_sucursal">;
-export type DeleteSucursal = Pick<SucurType, "id_sucursal">;
+export type UpdateSucursal = Pick<SucurType, "nombre" | "idSucursal">;
+export type DeleteSucursal = Pick<SucurType, "idSucursal">;
 
 //type LABORATORIO
 export const laboraArray = z.object({
@@ -138,7 +138,7 @@ export const TipoProdShcemas = z.array(tipoProdArray);
 const GetTipoProdShcemass = z.object({
   id_tipo_prod: z.number(),
   nombre: z.string(),
-  Estado: z.string(),
+  estado: z.string(),
   fechaCreacion: z.string(),
 });
 type TipoProdType = z.infer<typeof GetTipoProdShcemass>;

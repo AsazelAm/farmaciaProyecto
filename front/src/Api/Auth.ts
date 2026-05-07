@@ -3,9 +3,9 @@ import { isAxiosError } from "axios";
 import type { AuthRol, AuthUser } from "../types";
 
 
-export async function ResetPasswd({formData, id_usuario}:{formData:any;id_usuario:number}){
+export async function ResetPasswd({formData, idUsuario}:{formData:any;idUsuario:number}){
     try {
-        const {data} = await api.put(`/Auth/reset-passwd/${id_usuario}`,formData)
+        const {data} = await api.put(`/Auth/reset-passwd/${idUsuario}`,formData)
         return data
     } catch (error) {
         if(isAxiosError(error) && error.response) {
@@ -51,7 +51,7 @@ export async function GetAuthUsers() {
     
 }
 
-export async function GetAuthRol(id:AuthRol['id_tipo_us']){
+export async function GetAuthRol(id:AuthRol['idTipoUs']){
     try {
         const {data} = await api.get(`/Auth/GetRols/${id}`)
         return data

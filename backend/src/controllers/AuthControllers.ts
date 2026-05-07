@@ -22,15 +22,15 @@ export class AuthControllers {
         if (!Correct) {
             return res.status(401).json({ error: 'El password es incorrecto' });
         }
-        const idUser = Pass[0].id_usuario;
+        const idUser = Pass[0].idUsuario;
 
         const token2 = GenerateJwt(idUser);
         const IDRolArray = await DataUsers.GetIdRol(email);
         if (!IDRolArray || IDRolArray.length === 0) {
             throw new Error("Rol no encontrado");
         }
-        const IDRol = IDRolArray[0].name_rol;
-
+        const IDRol = IDRolArray[0].nameRol;
+        
         res.status(200).json({ token2, IDRol });
 
     } catch (error) {
@@ -41,10 +41,10 @@ export class AuthControllers {
     
     static readonly ResetPasswd = async(req:Request,res:Response)=>{
         try {
-            const {id_usuario} = req.params
+            const {idUsuario} = req.params
             const {passwd} = req.body
             const NewPasswd =  await HashPassword(passwd)
-            const data = await DataUsers.ResetPasswd(NewPasswd,id_usuario);
+            const data = await DataUsers.ResetPasswd(NewPasswd,idUsuario);
             res.status(200).json(data)
         } catch (error) {
             console.error("Error al restablecer la contrasenha:", error);

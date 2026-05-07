@@ -29,7 +29,7 @@ export async function AddTipoUsApi(formData:CreateTipo_us){
 
 export async function UpdateTipoUsApi(formData:UpdateTipo_us){
     try{
-        const {data}= await api.put(`/TipoUs/UpdateTipoUs/${formData.id_tipo_us}`,formData);
+        const {data}= await api.put(`/TipoUs/UpdateTipoUs/${formData.idTipoUs}`,formData);
         return data;
     }catch(error){
         if(isAxiosError(error) && error.response){
@@ -38,9 +38,9 @@ export async function UpdateTipoUsApi(formData:UpdateTipo_us){
     }
 }
 
-export async function DeleteTipoUsApi(id_tipo_us:DeleteTipo_us['id_tipo_us']) {
+export async function DeleteTipoUsApi(idTipoUs:DeleteTipo_us['idTipoUs']) {
     try{
-        const {data}= await api.delete(`/TipoUs/DeleteTipoUs/${id_tipo_us}`);
+        const {data}= await api.delete(`/TipoUs/DeleteTipoUs/${idTipoUs}`);
         return data;
     }catch(error){
         if(isAxiosError(error)&& error.response){

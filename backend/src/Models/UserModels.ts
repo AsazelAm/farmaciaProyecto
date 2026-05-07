@@ -7,47 +7,47 @@ interface CreateAdmins {
     passwd:string;
     telefono:string;
     email:string;
-    id_tipo_us:number;
-    id_sucursal:number;
+    idTipoUs:number;
+    idSucursal:number;
 };
 
 interface UpdateAdmins{
-    id_usuario:number;
+    idUsuario:number;
     ci:string;
     nombre:string;
     apellido:string;
     telefono:string;
     email:string;
-    id_tipo_us:number;
-    id_sucursal:number;
+    idTipoUs:number;
+    idSucursal:number;
 }
 
 const DataUser = {
     async UserAllModels(){
     const conection = await conectar.getConnection()
     const results = await conection.query(`
-        SELECT usu.id_usuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.Estado,
-               sucursal.id_sucursal, sucursal.nombre AS nombre_sucursal,
-               tipo_us.id_tipo_us, tipo_us.name_rol
+        SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado,
+               sucursal.idSucursal, sucursal.nombre AS nombre_sucursal,
+               tipous.idTipoUs, tipous.nameRol
         FROM usuario usu
-        LEFT JOIN sucursal ON usu.id_sucursal = sucursal.id_sucursal
-        JOIN tipo_us ON usu.id_tipo_us = tipo_us.id_tipo_us
-        WHERE usu.Estado = 1;
+        LEFT JOIN sucursal ON usu.idSucursal = sucursal.idSucursal
+        JOIN tipous ON usu.idTipoUs = tipous.idTipoUs
+        WHERE usu.estado = 1;
     `)
     conection.release()
     return results
 },
-async UserAllModelsId(id_usuario){
+async UserAllModelsId(idUsuario){
     const conection = await conectar.getConnection()
     const results = await conection.query(`
-        SELECT usu.id_usuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.Estado,
-               sucursal.id_sucursal, sucursal.nombre AS nombre_sucursal,
-               tipo_us.id_tipo_us, tipo_us.name_rol
+        SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado,
+               sucursal.idSucursal, sucursal.nombre AS nombre_sucursal,
+               tipous.idTipoUs, tipous.nameRol
         FROM usuario usu
-        LEFT JOIN sucursal ON usu.id_sucursal = sucursal.id_sucursal
-        JOIN tipo_us ON usu.id_tipo_us = tipo_us.id_tipo_us
-        WHERE usu.Estado = 1 AND usu.id_usuario = ?;
-    `,[id_usuario])
+        LEFT JOIN sucursal ON usu.idSucursal = sucursal.idSucursal
+        JOIN tipous ON usu.idTipoUs = tipous.idTipoUs
+        WHERE usu.estado = 1 AND usu.idUsuario = ?;
+    `,[idUsuario])
     conection.release()
     return results
 },
@@ -69,14 +69,14 @@ async UserAllModelsId(id_usuario){
      async VerifedConfirmed(email){
         const Conexion = await conectar.getConnection();
         try {
-            const rows = await Conexion.query(`SELECT Confirmed FROM usuario WHERE email = ? AND Confirmed = 1;`,[email])
+            const rows = await Conexion.query(`SELECT confirmed FROM usuario WHERE email = ? AND confirmed = 1;`,[email])
 
               console.log("RESULT COMPLETO:", JSON.stringify(rows));
         console.log("result[0]:", JSON.stringify(rows[0]));
         console.log("result[0].length:", rows[0]?.length);
         console.log("result[0][0]:", JSON.stringify(rows[0]?.[0]));
             
-        const confirmed = rows[0].Confirmed;
+        const confirmed = rows[0].confirmed;
         console.log("Confirmed value:", confirmed); 
             return { exists: confirmed == 1 };
         } catch (error) {
@@ -89,7 +89,7 @@ async UserAllModelsId(id_usuario){
     async GetPasswd(email:string){
         const Conexion = await conectar.getConnection();
         try {
-            const rows = await Conexion.query(`SELECT id_usuario, passwd FROM usuario WHERE email = ?`,[email])
+            const rows = await Conexion.query(`SELECT idUsuario, passwd FROM usuario WHERE email = ?`,[email])
             return rows
         } catch (error) {
             console.error("Error al consultar Passwd:", error);
@@ -101,7 +101,7 @@ async UserAllModelsId(id_usuario){
     async ResetPasswd(Passwd,idUser){
         const Conexion = await conectar.getConnection()
         try {
-            await Conexion.query(`UPDATE usuario SET passwd = ? where id_usuario = ?;`,[Passwd,idUser]);
+            await Conexion.query(`UPDATE usuario SET passwd = ? where idUsuario = ?;`,[Passwd,idUser]);
             return "Passwd Actualizado"
         } catch (error) {
             console.error("Error al consultar Passwd:", error);
@@ -113,8 +113,8 @@ async UserAllModelsId(id_usuario){
     async GetIdRol(email:string){
         const Conexion = await conectar.getConnection()
         try {
-            const rows = await Conexion.query(`SELECT tipo_us.name_rol FROM usuario
-             JOIN tipo_us ON usuario.id_tipo_us = tipo_us.id_tipo_us
+            const rows = await Conexion.query(`SELECT tipous.nameRol FROM usuario
+             JOIN tipous ON usuario.idTipoUs = tipous.idTipoUs
              WHERE usuario.email = ?`,[email]);
             return rows
         } catch (error) {
@@ -144,7 +144,7 @@ async UserAllModelsId(id_usuario){
         try {
             const result=await Conexion.query(`
                 INSERT INTO 
-                usuario (ci,nombre,apellido,passwd,telefono,email,Confirmed,id_tipo_us,id_sucursal)VALUES(?,?,?,?,?,?,?,?,?)`,[
+                usuario (ci,nombre,apellido,passwd,telefono,email,Confirmed,idTipoUs,idSucursal)VALUES(?,?,?,?,?,?,?,?,?)`,[
                     Usuario.ci,
                     Usuario.nombre,
                     Usuario.apellido,
@@ -152,8 +152,8 @@ async UserAllModelsId(id_usuario){
                     Usuario.telefono,
                     Usuario.email,
                     1,
-                    Usuario.id_tipo_us,
-                    Usuario.id_sucursal
+                    Usuario.idTipoUs,
+                    Usuario.idSucursal
                 ])
             return Number(result.insertId);
         } catch (error) {
@@ -163,20 +163,20 @@ async UserAllModelsId(id_usuario){
             Conexion.release()
         }
     },
-    async UpdateRutaimg(ruta:string, id_usuario:number| string){
+    async UpdateRutaimg(ruta:string, idUsuario:number| string){
             const Conexion= await conectar.getConnection();
             await Conexion.query(`
                 UPDATE usuario SET
                 img = ?
-                WHERE id_usuario = ?
-                `,[ruta,id_usuario]);
+                WHERE idUsuario = ?
+                `,[ruta,idUsuario]);
             Conexion.release();
             return "Imagen Guardado correctamente"
         },
     async DeleteUserId(id){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
-            UPDATE usuario SET Estado = 0 WHERE id_usuario = ?;    
+            UPDATE usuario SET estado = 0 WHERE idUsuario = ?;    
         `,[id]);
         Conexion.release()
         return "Usuario Eliminado Correctamente"
@@ -190,10 +190,10 @@ async UserAllModelsId(id_usuario){
             apellido = ?,
             telefono = ?,
             email = ?,
-            id_tipo_us=?,
-            id_sucursal = ?
-            where id_usuario = ?
-        `,[data.ci,data.nombre,data.apellido,data.telefono,data.email,data.id_tipo_us,data.id_sucursal,data.id_usuario]);
+            idTipoUs=?,
+            idSucursal = ?
+            where idUsuario = ?
+        `,[data.ci,data.nombre,data.apellido,data.telefono,data.email,data.idTipoUs,data.idSucursal,data.idUsuario]);
         Conexion.release()
         return "Datos Actualizados"
     }

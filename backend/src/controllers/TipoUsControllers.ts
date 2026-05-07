@@ -14,8 +14,8 @@ export class TipoUsControllers {
 
     static readonly AddTipoUsC = async(req:Request,res:Response)=>{
         try{
-            const {name_rol}=req.body;
-            const data= await DataTipoUs.AddTipoUsM(name_rol);
+            const {nameRol}=req.body;
+            const data= await DataTipoUs.AddTipoUsM(nameRol);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al Agregar Tipo de Usuario: ",error);
@@ -25,9 +25,9 @@ export class TipoUsControllers {
 
     static readonly UpdateTipoUsC = async(req:Request,res:Response)=>{
         try{
-            const {id_tipo_us}=req.params;
-            const {name_rol}= req.body;
-            const data = await DataTipoUs.UpdateTipoUsM(name_rol,id_tipo_us);
+            const {idTipoUs}=req.params;
+            const {nameRol}= req.body;
+            const data = await DataTipoUs.UpdateTipoUsM(nameRol,idTipoUs);
             res.status(200).json(data); 
         }catch(error){
             console.error("Error al Agregar al Tipo de Usuario");
@@ -37,8 +37,8 @@ export class TipoUsControllers {
 
     static readonly DeleteTipoUsC = async(req:Request,res:Response)=>{
         try{
-            const {id_tipo_us}=req.params;
-            const data = await DataTipoUs.DeleteTipoUsM(id_tipo_us);
+            const {idTipoUs}=req.params;
+            const data = await DataTipoUs.DeleteTipoUsM(idTipoUs);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al eliminar el tipo de usuario: ",error);

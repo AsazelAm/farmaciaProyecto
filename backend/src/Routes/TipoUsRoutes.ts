@@ -13,11 +13,11 @@ router.post('/AddTipoUs',
     TipoUsControllers.AddTipoUsC
 )
 
-router.put('/UpdateTipoUs/:id_tipo_us',
+router.put('/UpdateTipoUs/:idTipoUs',
     TipoUsControllers.UpdateTipoUsC
 )
 
-router.delete('/DeleteTipoUs/:id_tipo_us',
+router.delete('/DeleteTipoUs/:idTipoUs',
     TipoUsControllers.DeleteTipoUsC
 )
 

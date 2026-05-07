@@ -85,7 +85,7 @@ export default function Logins() {
 
   useEffect(() => {
     if (pio) {
-      const Rol = pio.name_rol;
+      const Rol = pio.nameRol;
       const rutaDestino = rutasPorRol[Rol];
       if (rutaDestino) {
         navigate(rutaDestino, { replace: true });

@@ -21,9 +21,9 @@ export async function GetUserAllApi() {
     } 
 }
 
-export async function GetUserAllIdApi(id_usuario:number) {
+export async function GetUserAllIdApi(idUsuario:number) {
     try {
-        const {data} = await api.get(`/user/GetAllId/${id_usuario}`)
+        const {data} = await api.get(`/user/GetAllId/${idUsuario}`)
         const response = GetUserSchema.safeParse(data)
         if(response.success){
             return response.data;
@@ -35,9 +35,9 @@ export async function GetUserAllIdApi(id_usuario:number) {
     } 
 }
 
-export async function ResetPasswd({formData, id_usuario}:{formData:any;id_usuario:number}){
+export async function ResetPasswd({formData, idUsuario}:{formData:any;idUsuario:number}){
     try {
-        const {data} = await api.put(`/Auth/reset-passwd/${id_usuario}`,formData)
+        const {data} = await api.put(`/Auth/reset-passwd/${idUsuario}`,formData)
         return data
     } catch (error) {
         if(isAxiosError(error) && error.response) {
@@ -62,7 +62,7 @@ export async function AddUser(formdata:CreateAdmins){
 }
 
 
-export async function GetTipoUsUsuarioApi(id:CreateAdmins['id_tipo_us']) {
+export async function GetTipoUsUsuarioApi(id:CreateAdmins['idTipoUs']) {
     try{
         const {data}=await api.get(`/user/City/${id}`);
         const response = TipoUsShcemas.safeParse(data)
@@ -76,7 +76,7 @@ export async function GetTipoUsUsuarioApi(id:CreateAdmins['id_tipo_us']) {
     }
 }
 
-export async function GetSucursalUsuarioApi(id:CreateAdmins['id_sucursal']) {
+export async function GetSucursalUsuarioApi(id:CreateAdmins['idSucursal']) {
     try{
         const {data}=await api.get(`/user/Sucursal/${id}`);
         const response = SucursalShcemas.safeParse(data)
@@ -90,7 +90,7 @@ export async function GetSucursalUsuarioApi(id:CreateAdmins['id_sucursal']) {
     }
 }
 
-export async function DeleteuserApi(id:deleteuser['id_usuario']){
+export async function DeleteuserApi(id:deleteuser['idUsuario']){
     try {
         const {data} = await api.delete(`/user/DeleteUser/${id}`);
         return data
@@ -101,9 +101,9 @@ export async function DeleteuserApi(id:deleteuser['id_usuario']){
     }
 }
 
-export async function UpdateUserApi(formData:FormData,id_usuario:number){
+export async function UpdateUserApi(formData:FormData,idUsuario:number){
     try {
-        const {data} = await api.put(`/user/UpdateUser/${id_usuario}`, formData,{
+        const {data} = await api.put(`/user/UpdateUser/${idUsuario}`, formData,{
             headers:{
                 'Content-Type':'multipart/form-data'
             }
