@@ -25,9 +25,9 @@ export class TipoProdControllers{
 
     static readonly UpdateTipoProdC = async(req:Request,res:Response)=>{
         try {
-            const {id_tipo_prod}=req.params;
+            const {idTipoProd}=req.params;
             const {nombre}=req.body;
-            const data = await DataTipoProd.UpdateTipoProdM(nombre,id_tipo_prod);
+            const data = await DataTipoProd.UpdateTipoProdM(nombre,idTipoProd);
             res.status(200).json(data);
         } catch (error) {
             console.error("Error al Actualizar Tipo de Producto: ",error);
@@ -38,8 +38,8 @@ export class TipoProdControllers{
 
     static readonly DeleteTipoProdC = async(req:Request,res:Response)=>{
         try{
-            const {id_tipo_prod}=req.params;
-            const data = await DataTipoProd.DeleteTipoProdM(id_tipo_prod);
+            const {idTipoProd}=req.params;
+            const data = await DataTipoProd.DeleteTipoProdM(idTipoProd);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al Eliminar Tipo Producto: ",error);

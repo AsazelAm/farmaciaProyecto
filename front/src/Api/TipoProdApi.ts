@@ -33,7 +33,7 @@ export async function AddTipoProdApi(formData:CreateTipoProd){
 
 export async function UpdateTipoProdApi(formdata:UpdateTipoProd){
     try{
-        const {data} =await api.put(`/TipoProd/UpdateTipoPro/${formdata.id_tipo_prod}`,formdata);
+        const {data} =await api.put(`/TipoProd/UpdateTipoPro/${formdata.idTipoProd}`,formdata);
         return data;
     }catch(error){
         if(isAxiosError(error)&& error.response){
@@ -42,9 +42,9 @@ export async function UpdateTipoProdApi(formdata:UpdateTipoProd){
     }
 }
 
-export async function DeleteTipoProdApi(id_tipo_prod:DeleteTipoProd['id_tipo_prod']){
+export async function DeleteTipoProdApi(idTipoProd:DeleteTipoProd['idTipoProd']){
     try{
-        const {data} = await api.delete(`/TipoProd/DeleteTipoProd/${id_tipo_prod}`);
+        const {data} = await api.delete(`/TipoProd/DeleteTipoProd/${idTipoProd}`);
         return data;
     }catch(error){
         if(isAxiosError(error)&& error.response){

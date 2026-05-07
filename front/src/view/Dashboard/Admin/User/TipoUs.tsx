@@ -44,7 +44,7 @@ export default function TipoUs() {
     const q = search.trim().toLowerCase();
     if (!q) return list;
     return list.filter((r) =>
-      String(r.name_rol ?? "").toLowerCase().includes(q)
+      String(r.nameRol ?? "").toLowerCase().includes(q)
     );
   }, [rows, search]);
 
@@ -189,7 +189,7 @@ export default function TipoUs() {
 
                   {filtered.map((item, index) => (
                     <tr
-                      key={item.id_tipo_us ?? index}
+                      key={item.idTipoUs ?? index}
                       className="hover:bg-purple-50/40 transition-colors"
                     >
                       <TdCell className="text-center font-semibold" style={{ color: "#7B3FA0" }}>
@@ -202,10 +202,10 @@ export default function TipoUs() {
                             className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
                             style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}
                           >
-                            {String(item.name_rol ?? "?")[0].toUpperCase()}
+                            {String(item.nameRol ?? "?")[0].toUpperCase()}
                           </div>
                           <span className="font-semibold" style={{ color: "#2D0A47" }}>
-                            {item.name_rol}
+                            {item.nameRol}
                           </span>
                         </div>
                       </TdCell>
@@ -226,7 +226,7 @@ export default function TipoUs() {
                           </button>
 
                           <button
-                            onClick={() => setConfirmId(item.id_tipo_us)}
+                            onClick={() => setConfirmId(item.idTipoUs)}
                             title="Eliminar tipo de usuario"
                             className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50 hover:text-red-700"
                           >

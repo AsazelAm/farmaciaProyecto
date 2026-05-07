@@ -37,20 +37,20 @@ export class ClienteControllers{
 
     static readonly UpdateClienteC=async (req:Request,res:Response)=>{
         try{
-            const {id_cliente}= req.params;
+            const {idCliente}= req.params;
             const {ci,nombre,apellido,telefono,email}=req.body;
 
-            const ciVeri= await DataCliente.VerificarCiUpdate(ci,id_cliente);
+            const ciVeri= await DataCliente.VerificarCiUpdate(ci,idCliente);
             if(ciVeri !==0){
                 return res.status(400).json({error:"El Carnet de identidad ya esta registrado"});
             }
 
-            const emailVeri = await DataCliente.VerificarEmailUpdate(email,id_cliente);
+            const emailVeri = await DataCliente.VerificarEmailUpdate(email,idCliente);
             if(emailVeri!== 0){
                 return res.status(400).json({error:"El email ya esta registrado"});
             }
 
-            const data = await DataCliente.UpdateClientM(ci,nombre,apellido,telefono,email,id_cliente);
+            const data = await DataCliente.UpdateClientM(ci,nombre,apellido,telefono,email,idCliente);
 
             res.status(200).json(data);
         }catch(error){
@@ -61,8 +61,8 @@ export class ClienteControllers{
 
     static readonly DeleteClienteC= async(req:Request,res:Response)=>{
         try{
-            const {id_cliente}=req.params;
-            const data = await DataCliente.DeleteClientM(id_cliente);
+            const {idCliente}=req.params;
+            const data = await DataCliente.DeleteClientM(idCliente);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al eliminar al Cliente: ",error);

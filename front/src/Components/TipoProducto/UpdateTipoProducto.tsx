@@ -18,7 +18,7 @@ export default function UpdateTipoProducto({ SetVer, SendValor }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<UpdateTipoProd>({
     defaultValues: {
-      id_tipo_prod: SendValor?.id_tipo_prod,
+      idTipoProd: SendValor?.idTipoProd,
       nombre:       SendValor?.nombre,
     },
   });
@@ -97,7 +97,7 @@ export default function UpdateTipoProducto({ SetVer, SendValor }: Props) {
             <div className="px-6 py-8 space-y-6">
               
               {/* ID Oculto */}
-              <input type="hidden" {...register("id_tipo_prod", { valueAsNumber: true })} />
+              <input type="hidden" {...register("idTipoProd", { valueAsNumber: true })} />
 
               {/* Campo Nombre */}
               <div className="space-y-2">

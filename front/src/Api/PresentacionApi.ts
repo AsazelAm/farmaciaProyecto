@@ -30,7 +30,7 @@ export async function AddPresentaApi(formdata:CreatePresenta) {
 
 export async function UpdatePresentaApi(formdata:UpdatePresenta){
     try{
-        const {data}= await api.put(`/Presentacion/UpdatePresenta/${formdata.id_presentacion}`,formdata);
+        const {data}= await api.put(`/Presentacion/UpdatePresenta/${formdata.idPresentacion}`,formdata);
         return data;
     }catch(error){
         if(isAxiosError(error) && error.response){
@@ -39,9 +39,9 @@ export async function UpdatePresentaApi(formdata:UpdatePresenta){
     }
 }
 
-export async function DeletePresentaApi(id_presentacion:DeletePresenta['id_presentacion']){
+export async function DeletePresentaApi(idPresentacion:DeletePresenta['idPresentacion']){
     try{
-        const {data} = await api.delete(`/Presentacion/DeletePresenta/${id_presentacion}`);
+        const {data} = await api.delete(`/Presentacion/DeletePresenta/${idPresentacion}`);
         return data;
     }catch(error){
         if(isAxiosError(error)&& error.response){

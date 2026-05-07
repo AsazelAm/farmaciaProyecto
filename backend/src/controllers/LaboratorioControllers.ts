@@ -36,7 +36,7 @@ export class LaboratorioControllers{
             } 
             res.status(200).json({
                 message:'Laboratorio Agregado Exitosamente',
-                id_laboratorio:id_laboratorio
+                idLaboratorio:id_laboratorio
             });
         }catch(error){
             console.error("Error al Agregar Un Laboratorio: ", error);
@@ -46,21 +46,21 @@ export class LaboratorioControllers{
 
     static readonly UpdateLaboraC = async(req:Request,res:Response):Promise<any>=>{
         try{
-            const {id_laboratorio}=req.params;
+            const {idLaboratorio}=req.params;
             const {nombre}= req.body;
             const ImgFile= req.file;
             const fecha = GetDateToday()
 
-            const UpdaNomb = await DataLabora.VerificarUpdateNombreM(nombre,id_laboratorio);
+            const UpdaNomb = await DataLabora.VerificarUpdateNombreM(nombre,idLaboratorio);
             if(UpdaNomb !== 0){
                 return res.status(400).json({error:"El nombre ya esta registrado"});
             }
 
-            await DataLabora.UpdateLabM(id_laboratorio,nombre);
+            await DataLabora.UpdateLabM(idLaboratorio,nombre);
 
             if(ImgFile){
-                const rutaImg = await uploadImageGlobal(ImgFile,String(id_laboratorio),fecha,'Laboratorio');
-                await DataLabora.UpdateRutaimg(rutaImg,id_laboratorio);
+                const rutaImg = await uploadImageGlobal(ImgFile,String(idLaboratorio),fecha,'Laboratorio');
+                await DataLabora.UpdateRutaimg(rutaImg,idLaboratorio);
             }
             res.status(200).json("Laboratorio Actualizado Exitosamente");
         }catch(error){
@@ -71,8 +71,8 @@ export class LaboratorioControllers{
 
     static readonly DeleteLaboraC = async(req:Request,res:Response)=>{
         try{
-            const {id_laboratorio}=req.params;
-            const data = await DataLabora.DeleteLabM(id_laboratorio);
+            const {idLaboratorio}=req.params;
+            const data = await DataLabora.DeleteLabM(idLaboratorio);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al eliminar Un laboratorio: ",error);

@@ -13,11 +13,11 @@ router.post('/AddTipoProd',
     TipoProdControllers.AddTipoProdC
 )
 
-router.put('/UpdateTipoPro/:id_tipo_prod',
+router.put('/UpdateTipoPro/:idTipoProd',
     TipoProdControllers.UpdateTipoProdC
 )
 
-router.delete('/DeleteTipoProd/:id_tipo_prod',
+router.delete('/DeleteTipoProd/:idTipoProd',
     TipoProdControllers.DeleteTipoProdC
 )
 export default router;

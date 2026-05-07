@@ -19,8 +19,8 @@ type FormDataFields = {
     apellido: string;
     telefono: string;
     email: string;
-    id_tipo_us: string;
-    id_sucursal: string;
+    idTipoUs: string;
+    idSucursal: string;
     img: FileList | null;
 };
 
@@ -46,8 +46,8 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                 apellido: SendValor.apellido,
                 telefono: SendValor.telefono,
                 email: SendValor.email,
-                id_tipo_us: String(SendValor.id_tipo_us),
-                id_sucursal: String(SendValor.id_sucursal),
+                idTipoUs: String(SendValor.idTipoUs),
+                idSucursal: String(SendValor.idSucursal),
             });
             
             if (SendValor.img) {
@@ -93,10 +93,10 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
         formData.append("apellido", data.apellido);
         formData.append("telefono", data.telefono);
         formData.append("email", data.email);
-        formData.append("id_tipo_us", data.id_tipo_us);
-        formData.append("id_sucursal", data.id_sucursal);
+        formData.append("idTipoUs", data.idTipoUs);
+        formData.append("idSucursal", data.idSucursal);
         if (data.img && data.img[0]) formData.append("img", data.img[0]);
-        mutation.mutate({ formData, id: SendValor.id_usuario });
+        mutation.mutate({ formData, id: SendValor.idUsuario });
     };
 
     return (
@@ -145,19 +145,19 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                         <div className={sectionStyles}>
                             <div>
                                 <label className={labelStyles}>Tipo de Usuario</label>
-                                <select className={inputStyles} {...register("id_tipo_us", { required: "Seleccione un rol" })}>
+                                <select className={inputStyles} {...register("idTipoUs", { required: "Seleccione un rol" })}>
                                     <option value="">Seleccione...</option>
                                     {tiposUsuario?.map(tipo => (
-                                        <option key={tipo.id_tipo_us} value={tipo.id_tipo_us}>{tipo.name_rol}</option>
+                                        <option key={tipo.idTipoUs} value={tipo.idTipoUs}>{tipo.nameRol}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
                                 <label className={labelStyles}>Sucursal</label>
-                                <select className={inputStyles} {...register("id_sucursal", { required: "Seleccione una sucursal" })}>
+                                <select className={inputStyles} {...register("idSucursal", { required: "Seleccione una sucursal" })}>
                                     <option value="">Seleccione...</option>
                                     {sucursales?.map(suc => (
-                                        <option key={suc.id_sucursal} value={suc.id_sucursal}>{suc.nombre}</option>
+                                        <option key={suc.idSucursal} value={suc.idSucursal}>{suc.nombre}</option>
                                     ))}
                                 </select>
                             </div>

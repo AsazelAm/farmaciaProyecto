@@ -20,8 +20,8 @@ type FormDataFields = {
     Passwd_Confirmation: string;
     telefono: string;
     email: string;
-    id_tipo_us: string;
-    id_sucursal: string;
+    idTipoUs: string;
+    idSucursal: string;
     img: FileList | null;
 };
 
@@ -42,7 +42,7 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
     const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<FormDataFields>({
         defaultValues: {
             ci: "", nombre: "", apellido: "", passwd: "", Passwd_Confirmation: "",
-            telefono: "", email: "", id_tipo_us: "", id_sucursal: "", img: null,
+            telefono: "", email: "", idTipoUs: "", idSucursal: "", img: null,
         },
     });
 
@@ -177,20 +177,20 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
 
                         <div>
                             <label className={labelStyles}>Rol *</label>
-                            <select {...register("id_tipo_us", { required: "Selecciona un rol" })} className={inputStyles}>
+                            <select {...register("idTipoUs", { required: "Selecciona un rol" })} className={inputStyles}>
                                 <option value="">Seleccionar Rol</option>
                                 {tiposUsuario?.map((t: any) => (
-                                    <option key={t.id_tipo_us} value={t.id_tipo_us}>{t.name_rol}</option>
+                                    <option key={t.idTipoUs} value={t.idTipoUs}>{t.nameRol}</option>
                                 ))}
                             </select>
                         </div>
 
                         <div>
                             <label className={labelStyles}>Sucursal *</label>
-                            <select {...register("id_sucursal", { required: "Selecciona sucursal" })} className={inputStyles}>
+                            <select {...register("idSucursal", { required: "Selecciona sucursal" })} className={inputStyles}>
                                 <option value="">Seleccionar Sucursal</option>
                                 {sucursales?.map((s: any) => (
-                                    <option key={s.id_sucursal} value={s.id_sucursal}>{s.nombre}</option>
+                                    <option key={s.idSucursal} value={s.idSucursal}>{s.nombre}</option>
                                 ))}
                             </select>
                         </div>

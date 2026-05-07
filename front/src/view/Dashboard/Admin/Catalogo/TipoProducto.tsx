@@ -177,7 +177,7 @@ export default function TipoProducto() {
                 {/* LISTADO DE DATOS */}
                 {filteredRows.map((row, index) => (
                   <tr
-                    key={row.id_tipo_prod ?? index}
+                    key={row.idTipoProd ?? index}
                     className="hover:bg-purple-50/40 transition-colors"
                   >
                     {/* NRO */}
@@ -224,7 +224,7 @@ export default function TipoProducto() {
                         </button>
 
                         <button
-                          onClick={() => setConfirmId(row.id_tipo_prod)}
+                          onClick={() => setConfirmId(row.idTipoProd)}
                           title="Eliminar tipo de producto"
                           className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50 hover:text-red-700"
                         >

@@ -4,7 +4,7 @@ const DataPresentacion={
     async GetPresentaM(){
         const Conexion = await conectar.getConnection();
         const results = await Conexion.query(`
-            SELECT id_presentacion,nombre,fechaCreacion FROM presentacion WHERE estado = 1;`);
+            SELECT idPresentacion,nombre,fechaCreacion FROM presentacion WHERE estado = 1;`);
             Conexion.release();
             return results;
     },
@@ -15,21 +15,21 @@ const DataPresentacion={
         Conexion.release();
         return "Presentacion Registrado";
     },
-    async UpdatePresentaM(nombre,id_presentacion){
+    async UpdatePresentaM(nombre,idPresentacion){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
             UPDATE presentacion SET
             nombre = ?
-            WHERE id_presentacion = ? AND estado = 1;`,[nombre,id_presentacion]);
+            WHERE idPresentacion = ? AND estado = 1;`,[nombre,idPresentacion]);
         Conexion.release();
         return "Presentacion Actualizado";
     },
-    async DeletePresentaM(id_presentacion){
+    async DeletePresentaM(idPresentacion){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
             UPDATE presentacion SET
             estado = 0 
-            WHERE id_presentacion = ?;`,[id_presentacion]);
+            WHERE idPresentacion = ?;`,[idPresentacion]);
         Conexion.release();
         return "Presentacion Eliminado";
     },
@@ -49,10 +49,10 @@ const DataPresentacion={
             Conexion.release();
         }
     },
-    async VeriUpdaNombreM(nombre,id_presentacion){
+    async VeriUpdaNombreM(nombre,idPresentacion){
         const Conexion = await conectar.getConnection();
         const results = await Conexion.query(`
-            SELECT COUNT(*) AS existe FROM presentacion WHERE nombre = ? AND id_proveedor != ?  AND estado = 1;`,[nombre,id_presentacion]);
+            SELECT COUNT(*) AS existe FROM presentacion WHERE nombre = ? AND idPresentacion != ?  AND estado = 1;`,[nombre,idPresentacion]);
             const existeNombre = results[0].existe;
             const exisNomb = Number(existeNombre);
             Conexion.release();

@@ -29,7 +29,7 @@ export async function AddClienteApi(formData:CreateCliente){
 
 export async function UpdateClienteApi(formData:UpdateCliente){
     try{
-        const {data}=await api.put(`/Cliente/UpdateCliente/${formData.id_cliente}`,formData);
+        const {data}=await api.put(`/Cliente/UpdateCliente/${formData.idCliente}`,formData);
         return data;
     }catch(error){
         if(isAxiosError(error)&& error.response){
@@ -38,9 +38,9 @@ export async function UpdateClienteApi(formData:UpdateCliente){
     }
 }
 
-export async function DeleteClienteApi(id_cliente:DeleteCliente['id_cliente']) {
+export async function DeleteClienteApi(idCliente:DeleteCliente['idCliente']) {
     try{
-        const {data} = await api.delete(`/Cliente/DeleteCliente/${id_cliente}`);
+        const {data} = await api.delete(`/Cliente/DeleteCliente/${idCliente}`);
         return data;
     }catch(error){
         if(isAxiosError(error) && error.response){

@@ -4,31 +4,31 @@ const DataTipoProd = {
   async GetTipoProdM() {
     const Conexion = await conectar.getConnection();
     const results = await Conexion.query(
-      `SELECT id_tipo_prod,nombre,fechaCreacion FROM tipo_producto WHERE estado = 1;`,
+      `SELECT idTipoProd,nombre,fechaCreacion FROM tipoproducto WHERE estado = 1;`,
     );
     Conexion.release();
     return results;
   },
   async AddTipoProdM(nombre) {
     const Conexion = await conectar.getConnection();
-    await Conexion.query(`INSERT INTO tipo_producto(nombre) VALUE (?);`, [
+    await Conexion.query(`INSERT INTO tipoproducto(nombre) VALUE (?);`, [
       nombre,
     ]);
     Conexion.release();
     return "Tipo de Producto Registrado";
   },
-  async UpdateTipoProdM(nombre, id_tipo_prod) {
+  async UpdateTipoProdM(nombre, idTipoProd) {
     const Conexion = await conectar.getConnection();
     await Conexion.query(`
-            UPDATE tipo_producto SET
+            UPDATE tipoproducto SET
             nombre = ?
-            WHERE estado = 1 AND id_tipo_prod = ?;`,[nombre,id_tipo_prod]);
+            WHERE estado = 1 AND idTipoProd = ?;`,[nombre,idTipoProd]);
             Conexion.release();
             return "Tipo de Producto Actualizado";
   },
-  async DeleteTipoProdM(id_tipo_prod){
+  async DeleteTipoProdM(idTipoProd){
     const Conexion = await conectar.getConnection();
-    await Conexion.query(`UPDATE tipo_producto SET estado = 0 WHERE id_tipo_prod = ?;`,[id_tipo_prod]);
+    await Conexion.query(`UPDATE tipoproducto SET estado = 0 WHERE idTipoProd = ?;`,[idTipoProd]);
     Conexion.release();
     return "Tipo Producto Eliminado";
   }

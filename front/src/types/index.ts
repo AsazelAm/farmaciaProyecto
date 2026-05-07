@@ -108,7 +108,7 @@ export type DeleteSucursal = Pick<SucurType, "idSucursal">;
 
 //type LABORATORIO
 export const laboraArray = z.object({
-  id_laboratorio: z.number(),
+  idLaboratorio: z.number(),
   nombre: z.string(),
   img: z.string().nullable(),
   fechaCreacion: z.string(),
@@ -116,7 +116,7 @@ export const laboraArray = z.object({
 export const LaboraShcemas = z.array(laboraArray);
 
 const GetLaboraShcemass = z.object({
-  id_laboratorio: z.number(),
+  idLaboratorio: z.number(),
   nombre: z.string(),
   estado: z.string(),
   img: z.string().nullable(),
@@ -124,49 +124,49 @@ const GetLaboraShcemass = z.object({
 });
 type LaboraType = z.infer<typeof GetLaboraShcemass>;
 export type CreateLab = Pick<LaboraType,'nombre'> & { img: FileList | null };
-export type UpdateLabo = Pick<LaboraType, "nombre" | "img" | "id_laboratorio"|"fechaCreacion">;
-export type DeletLabora = Pick<LaboraType, "id_laboratorio">;
+export type UpdateLabo = Pick<LaboraType, "nombre" | "img" | "idLaboratorio"|"fechaCreacion">;
+export type DeletLabora = Pick<LaboraType, "idLaboratorio">;
 
 //Type Tipo Producto
 export const tipoProdArray = z.object({
-  id_tipo_prod: z.number(),
+  idTipoProd: z.number(),
   nombre: z.string(),
   fechaCreacion: z.string(),
 });
 export const TipoProdShcemas = z.array(tipoProdArray);
 
 const GetTipoProdShcemass = z.object({
-  id_tipo_prod: z.number(),
+  idTipoProd: z.number(),
   nombre: z.string(),
   estado: z.string(),
   fechaCreacion: z.string(),
 });
 type TipoProdType = z.infer<typeof GetTipoProdShcemass>;
 export type CreateTipoProd = Pick<TipoProdType, "nombre">;
-export type UpdateTipoProd = Pick<TipoProdType, "nombre" | "id_tipo_prod"|'fechaCreacion'>;
-export type DeleteTipoProd = Pick<TipoProdType, "id_tipo_prod">;
+export type UpdateTipoProd = Pick<TipoProdType, "nombre" | "idTipoProd"|'fechaCreacion'>;
+export type DeleteTipoProd = Pick<TipoProdType, "idTipoProd">;
 
 //Type Presentacion
 export const presentacionArray = z.object({
-  id_presentacion: z.number(),
+  idPresentacion: z.number(),
   nombre: z.string(),
   fechaCreacion: z.string(),
 });
 export const PresentaShcemas = z.array(presentacionArray);
 
 const GetPresentaShcemass = z.object({
-  id_presentacion: z.number(),
+  idPresentacion: z.number(),
   nombre: z.string(),
   fechaCreacion: z.string(),
 });
 type PresentaType = z.infer<typeof GetPresentaShcemass>;
 export type CreatePresenta = Pick<PresentaType, "nombre">;
-export type UpdatePresenta = Pick<PresentaType, "nombre" | "id_presentacion"|"fechaCreacion">;
-export type DeletePresenta = Pick<PresentaType, "id_presentacion">;
+export type UpdatePresenta = Pick<PresentaType, "nombre" | "idPresentacion"|"fechaCreacion">;
+export type DeletePresenta = Pick<PresentaType, "idPresentacion">;
 
 //Type Cliente
 export const ClienteArray = z.object({
-  id_cliente: z.number(),
+  idCliente: z.number(),
   ci: z.string().nullable(),
   nombre: z.string(),
   apellido: z.string().nullable(),
@@ -177,7 +177,7 @@ export const ClienteArray = z.object({
 export const ClienteShcemas = z.array(ClienteArray);
 
 const GetClienteShcemass = z.object({
-  id_cliente: z.number().nullable(),
+  idCliente: z.number().nullable(),
   ci: z.string().nullable(),
   nombre: z.string(),
   apellido: z.string().nullable(),
@@ -192,13 +192,13 @@ export type CreateCliente = Pick<
 >;
 export type UpdateCliente = Pick<
   ClienteType,
-  "ci" | "nombre" | "apellido" | "telefono" | "email" | "id_cliente"
+  "ci" | "nombre" | "apellido" | "telefono" | "email" | "idCliente"
 >;
-export type DeleteCliente = Pick<ClienteType, "id_cliente">;
+export type DeleteCliente = Pick<ClienteType, "idCliente">;
 
 //Type Proveedor
 export const ProveedorArray = z.object({
-  id_proveedor: z.number(),
+  idProveedor: z.number(),
   codigo: z.string(),
   nombre: z.string(),
   telefono: z.string().nullable(),
@@ -210,7 +210,7 @@ export const ProveedorArray = z.object({
 export const ProveedorShcemas = z.array(ProveedorArray);
 
 const GetProveedorShcemass = z.object({
-  id_proveedor: z.number(),
+  idProveedor: z.number(),
   codigo: z.string(),
   nombre: z.string(),
   telefono: z.string().nullable(),
@@ -237,6 +237,6 @@ export type UpdateProveedor = Pick<
   | "email"
   | "direccion"
   | "contactoPrincipal"
-  | "id_proveedor"
+  | "idProveedor"
 >;
-export type DeleteProveedor = Pick<ProveedorType, "id_proveedor">;
+export type DeleteProveedor = Pick<ProveedorType, "idProveedor">;

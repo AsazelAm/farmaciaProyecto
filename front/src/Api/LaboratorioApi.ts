@@ -31,9 +31,9 @@ export async function AddLaboraApi(formData:FormData) {
     }
 }
 
-export async function UpdateLaboraApi(formData: FormData,id_laboratorio:number){
+export async function UpdateLaboraApi(formData: FormData,idLaboratorio:number){
     try {
-        const {data}=await api.put(`/Laboratorio/UpdateLab/${id_laboratorio}`,formData,{
+        const {data}=await api.put(`/Laboratorio/UpdateLab/${idLaboratorio}`,formData,{
             headers:{
                 'Content-Type':'multipart/form-data'
             }
@@ -46,9 +46,9 @@ export async function UpdateLaboraApi(formData: FormData,id_laboratorio:number){
     }
 }
 
-export async function DeleteLaboraApi(id_laboratorio:DeletLabora['id_laboratorio']){
+export async function DeleteLaboraApi(idLaboratorio:DeletLabora['idLaboratorio']){
     try{
-        const {data} = await api.delete(`/Laboratorio/DeleteLab/${id_laboratorio}`);
+        const {data} = await api.delete(`/Laboratorio/DeleteLab/${idLaboratorio}`);
         return data;
     }catch(error){
         if(isAxiosError(error)&& error.response){

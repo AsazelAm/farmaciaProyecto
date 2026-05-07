@@ -18,7 +18,7 @@ export default function UpdatePresentacion({ SetVer, SendValor }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<UpdatePresenta>({
     defaultValues: {
-      id_presentacion: SendValor?.id_presentacion,
+      idPresentacion: SendValor?.idPresentacion,
       nombre:          SendValor?.nombre,
     },
   });
@@ -97,7 +97,7 @@ export default function UpdatePresentacion({ SetVer, SendValor }: Props) {
             <div className="px-6 py-6 space-y-5">
               
               {/* ID Oculto */}
-              <input type="hidden" {...register("id_presentacion", { valueAsNumber: true })} />
+              <input type="hidden" {...register("idPresentacion", { valueAsNumber: true })} />
 
               {/* Campo: Nombre de la Presentación */}
               <div className="space-y-1.5">

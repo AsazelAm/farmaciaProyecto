@@ -20,11 +20,11 @@ router.post('/AddLab',
 )
 
 
-router.delete('/DeleteLab/:id_laboratorio',
+router.delete('/DeleteLab/:idLaboratorio',
     LaboratorioControllers.DeleteLaboraC
 )
 
-router.put('/UpdateLab/:id_laboratorio',
+router.put('/UpdateLab/:idLaboratorio',
     upload.single('img'),
     LaboratorioControllers.UpdateLaboraC
 )

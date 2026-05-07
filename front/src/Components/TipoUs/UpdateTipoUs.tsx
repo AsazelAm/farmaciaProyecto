@@ -18,8 +18,8 @@ export default function UpdateTipoUs({ SetVer, SendValor }: Props){
     formState: { errors, isSubmitting },
   } = useForm<UpdateTipo_us>({
     defaultValues: {
-      id_tipo_us: SendValor?.id_tipo_us,
-      name_rol:   SendValor?.name_rol,
+      idTipoUs: SendValor?.idTipoUs,
+      nameRol:   SendValor?.nameRol,
     },
   });
 
@@ -95,10 +95,10 @@ export default function UpdateTipoUs({ SetVer, SendValor }: Props){
           <form onSubmit={handleSubmit(handleForm)}>
             <div className="px-6 py-6 space-y-5">
 
-              <input type="hidden" {...register("id_tipo_us", { valueAsNumber: true })} />
+              <input type="hidden" {...register("idTipoUs", { valueAsNumber: true })} />
               {/* Campo: Nombre del Rol */}
               <div className="space-y-1.5">
-                <label htmlFor="name_rol" className="block text-sm font-semibold" style={{ color: "#4A1A6E" }}>
+                <label htmlFor="nameRol" className="block text-sm font-semibold" style={{ color: "#4A1A6E" }}>
                   Nombre del Rol <span className="text-red-500">*</span>
                 </label>
 
@@ -111,20 +111,20 @@ export default function UpdateTipoUs({ SetVer, SendValor }: Props){
                     </svg>
                   </div>
                   <input
-                    id="name_rol"
+                    id="nameRol"
                     type="text"
                     placeholder="Ej: Administrador, Farmacéutico..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none text-sm transition-colors"
                     style={{ borderColor: "#D8B4F0", color: "#2D0A47" }}
-                    {...register("name_rol", {
+                    {...register("nameRol", {
                       required: "El nombre del rol es obligatorio",
                       minLength: { value: 2, message: "Debe tener al menos 2 caracteres" },
                     })}
                   />
                 </div>
 
-                {errors.name_rol && (
-                  <ErrorMessage>{errors.name_rol.message}</ErrorMessage>
+                {errors.nameRol && (
+                  <ErrorMessage>{errors.nameRol.message}</ErrorMessage>
                 )}
               </div>
 

@@ -8,7 +8,7 @@ import ErrorMessage from '../Error/ErrorMessage';
 
 type ResetPasswordProps = Readonly<{
     SetVer: React.Dispatch<React.SetStateAction<boolean>>;
-    SendValor: deleteuser['id_usuario'] | null;
+    SendValor: deleteuser['idUsuario'] | null;
 }>
 
 type ResetPasswordFormData = {
@@ -46,7 +46,7 @@ export default function ResetPassword({ SetVer, SendValor }: ResetPasswordProps)
         
         mutate({
             formData: { passwd: formData.passwd },
-            id_usuario: SendValor
+            idUsuario: SendValor
         });
     }
 

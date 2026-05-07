@@ -21,7 +21,7 @@ export default function TipoUsForm({ setIsOpen, isOpen }: Cua) {
     watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateTipo_us>({
-    defaultValues: { name_rol: "" },
+    defaultValues: { nameRol: "" },
   });
 
   // Al montar: restaura borrador guardado
@@ -60,7 +60,7 @@ export default function TipoUsForm({ setIsOpen, isOpen }: Cua) {
   const handleClose = () => setIsOpen(false);
 
   const handleReset = () => {
-    reset({ name_rol: "" }, { keepDefaultValues: true });
+    reset({ nameRol: "" }, { keepDefaultValues: true });
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     toast.info("Formulario limpiado");
   };
@@ -119,7 +119,7 @@ export default function TipoUsForm({ setIsOpen, isOpen }: Cua) {
 
               {/* Campo nombre */}
               <div className="space-y-1.5">
-                <label htmlFor="name_rol" className="block text-sm font-semibold" style={{ color: "#4A1A6E" }}>
+                <label htmlFor="nameRol" className="block text-sm font-semibold" style={{ color: "#4A1A6E" }}>
                   Nombre del Rol <span className="text-red-500">*</span>
                 </label>
 
@@ -132,20 +132,20 @@ export default function TipoUsForm({ setIsOpen, isOpen }: Cua) {
                     </svg>
                   </div>
                   <input
-                    id="name_rol"
+                    id="nameRol"
                     type="text"
                     placeholder="Ej: Administrador, Farmacéutico..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none text-sm transition-colors"
                     style={{ borderColor: "#D8B4F0", color: "#2D0A47" }}
-                    {...register("name_rol", {
+                    {...register("nameRol", {
                       required: "El nombre del rol es obligatorio",
                       minLength: { value: 2, message: "Debe tener al menos 2 caracteres" },
                     })}
                   />
                 </div>
 
-                {errors.name_rol && (
-                  <ErrorMessage>{errors.name_rol.message}</ErrorMessage>
+                {errors.nameRol && (
+                  <ErrorMessage>{errors.nameRol.message}</ErrorMessage>
                 )}
               </div>
 

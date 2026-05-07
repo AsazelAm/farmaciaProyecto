@@ -132,7 +132,7 @@ export default function Laboratorio() {
                 </tr>
               ) : (
                 filtered.map((item, index) => (
-                  <tr key={item.id_laboratorio} className="hover:bg-purple-50/40 transition-colors">
+                  <tr key={item.idLaboratorio} className="hover:bg-purple-50/40 transition-colors">
                     <td className="px-6 py-4 text-center font-semibold text-sm" style={{ color: COLORS.medium }}>
                       {index + 1}
                     </td>
@@ -169,7 +169,7 @@ export default function Laboratorio() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => setConfirmId(item.id_laboratorio)}
+                          onClick={() => setConfirmId(item.idLaboratorio)}
                           className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

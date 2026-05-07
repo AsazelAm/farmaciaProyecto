@@ -13,11 +13,11 @@ router.post('/AddPresenta',
     PresentaControllers.AddPresentaC
 )
 
-router.put('/UpdatePresenta/:id_presentacion',
+router.put('/UpdatePresenta/:idPresentacion',
     PresentaControllers.UpdatePresentaC
 )
 
-router.delete('/DeletePresenta/:id_presentacion',
+router.delete('/DeletePresenta/:idPresentacion',
     PresentaControllers.DeletePresentaC
 )
 

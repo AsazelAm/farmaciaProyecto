@@ -13,11 +13,11 @@ router.post('/AddCliente',
     ClienteControllers.AddClienteC
 )
 
-router.put('/UpdateCliente/:id_cliente',
+router.put('/UpdateCliente/:idCliente',
     ClienteControllers.UpdateClienteC
 )
 
-router.delete('/DeleteCliente/:id_cliente',
+router.delete('/DeleteCliente/:idCliente',
     ClienteControllers.DeleteClienteC
 )
 

@@ -176,7 +176,7 @@ export default function User() {
                 {/* LISTADO DE DATOS */}
                 {filtered.map((item, index) => (
                   <tr
-                    key={item.id_usuario ?? index}
+                    key={item.idUsuario ?? index}
                     className="hover:bg-purple-50/40 transition-colors"
                   >
                     {/* NRO */}
@@ -215,7 +215,7 @@ export default function User() {
                         className="px-3 py-1 rounded-lg text-xs font-semibold"
                         style={{ background: COLORS.light, color: COLORS.dark, border: `1px solid ${COLORS.border}` }}
                       >
-                        {item.name_rol ?? "Sin rol"}
+                        {item.nameRol ?? "Sin rol"}
                       </span>
                     </td>
 
@@ -249,7 +249,7 @@ export default function User() {
 
                         {/* RESET PASSWORD */}
                         <button
-                          onClick={() => setIsIdUsuario(item.id_usuario)}
+                          onClick={() => setIsIdUsuario(item.idUsuario)}
                           title="Resetear contraseña"
                           className="p-2 rounded-lg transition-colors hover:bg-amber-50"
                           style={{ color: "#B45309" }}
@@ -261,7 +261,7 @@ export default function User() {
 
                         {/* ELIMINAR */}
                         <button
-                          onClick={() => setConfirmId(item.id_usuario)}
+                          onClick={() => setConfirmId(item.idUsuario)}
                           title="Eliminar usuario"
                           className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50 hover:text-red-700"
                         >

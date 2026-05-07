@@ -1,7 +1,7 @@
 import conectar from "../config/db";
 
 interface Proveedores {
-    id_proveedor :number;
+    idProveedor :number;
     codigo :string;
     nombre:string;
     telefono :string;
@@ -44,14 +44,14 @@ async AddProveedorM(Proveedor:Proveedores){
             email= ?,
             direccion = ?,
             contactoPrincipal = ?
-            WHERE estado = 1 AND id_proveedor = ?;
-            `,[data.codigo,data.nombre,data.telefono,data.email,data.direccion,data.contactoPrincipal,data.id_proveedor]);
+            WHERE estado = 1 AND idProveedor = ?;
+            `,[data.codigo,data.nombre,data.telefono,data.email,data.direccion,data.contactoPrincipal,data.idProveedor]);
             conection.release();
             return "Proveedor Actualizado";    
     },
-    async DeleteProveedorM(id_proveedor){
+    async DeleteProveedorM(idProveedor){
         const conection = await conectar.getConnection();
-        await conection.query(`UPDATE proveedor SET estado = 0 WHERE id_proveedor = ?;`,[id_proveedor]);
+        await conection.query(`UPDATE proveedor SET estado = 0 WHERE idProveedor = ?;`,[idProveedor]);
         conection.release();
         return "Proveedor Eliminado";
     }

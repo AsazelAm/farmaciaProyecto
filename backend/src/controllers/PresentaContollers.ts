@@ -26,9 +26,9 @@ export class PresentaControllers{
 
     static readonly UpdatePresentaC= async(req:Request,res:Response)=>{
         try{
-            const {id_presentacion}=req.params;
+            const {idPresentacion}=req.params;
             const {nombre}=req.body;
-            const data= await DataPresentacion.UpdatePresentaM(nombre,id_presentacion);
+            const data= await DataPresentacion.UpdatePresentaM(nombre,idPresentacion);
             res.status(200).json(data);
         }catch(error){
             console.error("Error al Actualizar Presentacion: ",error);
@@ -38,8 +38,8 @@ export class PresentaControllers{
 
     static readonly DeletePresentaC= async(req:Request,res:Response)=>{
          try{
-            const {id_presentacion}=req.params;
-            const data = await DataPresentacion.DeletePresentaM(id_presentacion);
+            const {idPresentacion}=req.params;
+            const data = await DataPresentacion.DeletePresentaM(idPresentacion);
             res.status(200).json(data);
          }catch(error){
             console.error("Error al Eliminar Presentacion: ",error);

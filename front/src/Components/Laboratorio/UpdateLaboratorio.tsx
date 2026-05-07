@@ -80,7 +80,7 @@ export default function UpdateLaboratorio({ SetVer, SendValor }: Props) {
 
         mutation.mutate({ 
             formData, 
-            id: SendValor.id_laboratorio 
+            id: SendValor.idLaboratorio 
         });
     };
 

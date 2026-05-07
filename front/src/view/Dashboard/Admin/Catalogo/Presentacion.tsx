@@ -175,7 +175,7 @@ export default function Presentacion() {
                 {/* LISTADO DE DATOS */}
                 {filteredRows.map((row, index) => (
                   <tr
-                    key={row.id_presentacion ?? index}
+                    key={row.idPresentacion ?? index}
                     className="hover:bg-purple-50/40 transition-colors"
                   >
                     {/* NRO */}
@@ -222,7 +222,7 @@ export default function Presentacion() {
                         </button>
 
                         <button
-                          onClick={() => setConfirmId(row.id_presentacion)}
+                          onClick={() => setConfirmId(row.idPresentacion)}
                           title="Eliminar presentación"
                           className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50 hover:text-red-700"
                         >
