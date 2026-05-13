@@ -12,7 +12,7 @@ import PresentaRoutes from "./Routes/PresentaRoutes";
 import ClienteRoutes from "./Routes/ClienteRoutes";
 import TipoUsRoutes from "./Routes/TipoUsRoutes";
 import SucursalRoutes from "./Routes/SucursalRoutes";
-
+import ProveedoRoutes from "./Routes/ProveedoRoutes";
 
 import path from "path";
 
@@ -37,7 +37,7 @@ app.use('/api/Presentacion',PresentaRoutes);
 app.use('/api/Cliente',ClienteRoutes);
 app.use('/api/TipoUs',TipoUsRoutes);
 app.use('/api/Sucursal',SucursalRoutes);
-
+app.use('/api/Proveedor',ProveedoRoutes);
 
 
 export default app

@@ -4,14 +4,14 @@ const DataCliente={
     async GetClientM(){
         const Conexion = await conectar.getConnection();
         const results= await Conexion.query(`
-            SELECT idCliente,ci,nombre,apellido,telefono, email,fechaCreacion FROM cliente WHERE estado = 1;`)
+            SELECT idCliente,ci,nombre,apellido,telefono,email,fechaCreacion FROM cliente WHERE estado = 1;`)
         Conexion.release();
         return results;
     },
     async AddClientM(ci,nombre,apellido,telefono,email){
         const Conexion = await conectar.getConnection();
         await Conexion.query(`
-            INSERT INTO presentacion(ci,nombre,apellido,telefono,email) VALUES(?,?,?,?,?);`,[ci,nombre,apellido,telefono,email]);
+            INSERT INTO cliente(ci,nombre,apellido,telefono,email) VALUES(?,?,?,?,?);`,[ci,nombre,apellido,telefono,email]);
         Conexion.release();
         return "Cliente Registrado";
     },
