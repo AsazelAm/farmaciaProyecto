@@ -41,7 +41,7 @@ export default function TipoProducto() {
       toast.success(res);
       setConfirmId(null);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message);
     },
   });
@@ -262,6 +262,7 @@ export default function TipoProducto() {
           confirmLabel={deleting ? "Eliminando..." : "Sí, eliminar"}
           onConfirm={() => deleteMutate(confirmId)}
           onCancel={() => setConfirmId(null)}
+          disabled = {deleting}
         />
       )}
     </div>
@@ -269,7 +270,16 @@ export default function TipoProducto() {
 }
 
 // Sub-componente interno para confirmación
-function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: any) {
+function ConfirmDialog({ title, message, confirmLabel = "Confirmar", onConfirm, onCancel, disabled= false}: {
+  title:         string;
+  message:       string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+  onCancel:  () => void;
+  disabled?: boolean
+}
+
+) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel}></div>
@@ -286,12 +296,14 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: an
         <div className="p-4 bg-gray-50 flex gap-3">
           <button
             onClick={onCancel}
+
             className="flex-1 px-4 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
+            disabled={disabled}
             className="flex-1 px-4 py-3 rounded-xl font-bold text-white transition-all shadow-lg hover:brightness-110"
             style={{ backgroundColor: "#ef4444" }}
           >

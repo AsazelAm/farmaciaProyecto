@@ -27,7 +27,7 @@ export default function LaboratorioForm({ setIsOpen, isOpen }: Cua) {
 
     const mutation = useMutation({
         mutationFn: AddLaboraApi,
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error(error.message);
         },
         onSuccess: (data) => {

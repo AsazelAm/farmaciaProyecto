@@ -27,7 +27,7 @@ export default function UpdateTipoProducto({ SetVer, SendValor }: Props) {
 
   const { mutate, isPending } = useMutation({
     mutationFn: UpdateTipoProdApi,
-    onError: (error) => toast.error(error.message),
+    onError: (error:Error) => toast.error(error.message),
     onSuccess: (results) => {
       // Invalidamos la query de Tipo de Producto para refrescar la tabla
       queryClient.invalidateQueries({ queryKey: ["TipoProdAll"] });

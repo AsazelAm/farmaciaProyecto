@@ -30,10 +30,10 @@ export default function ResetPassword({ SetVer, SendValor }: ResetPasswordProps)
 
     const { mutate } = useMutation({
         mutationFn: ResetPasswd,
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error(error.message);
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             toast.success("Contraseña actualizada correctamente");
             queryClient.invalidateQueries({ queryKey: ['users'] }); 
             SetVer(false);

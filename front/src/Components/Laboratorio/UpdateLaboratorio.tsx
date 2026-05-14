@@ -41,7 +41,7 @@ export default function UpdateLaboratorio({ SetVer, SendValor }: Props) {
 
     const mutation = useMutation({
         mutationFn: ({ formData, id }: { formData: FormData, id: number }) => UpdateLaboraApi(formData, id),
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error(error.message);
         },
         onSuccess: (data) => {

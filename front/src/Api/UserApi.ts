@@ -35,7 +35,7 @@ export async function GetUserAllIdApi(idUsuario:number) {
     } 
 }
 
-export async function ResetPasswd({formData, idUsuario}:{formData:any;idUsuario:number}){
+export async function ResetPasswd({formData, idUsuario}:{formData:{ passwd: string };idUsuario:number}){
     try {
         const {data} = await api.put(`/Auth/reset-passwd/${idUsuario}`,formData)
         return data
@@ -46,7 +46,7 @@ export async function ResetPasswd({formData, idUsuario}:{formData:any;idUsuario:
     }
 }
 
-export async function AddUser(formdata:CreateAdmins){
+export async function AddUser(formdata:FormData){
     try {
         const {data} = await api.post('/user/addUser',formdata,{
             headers:{

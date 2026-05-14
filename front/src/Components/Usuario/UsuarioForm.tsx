@@ -18,7 +18,7 @@ type FormDataFields = {
     apellido: string;
     passwd: string;
     Passwd_Confirmation: string;
-    telefono: string;
+    telefono: string | null;
     email: string;
     idTipoUs: string;
     idSucursal: string;
@@ -73,7 +73,7 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
 
     const mutation = useMutation({
         mutationFn: AddUser,
-        onError: (error: any) => toast.error(error.message),
+        onError: (error: Error) => toast.error(error.message),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
             toast.success(data.message || "Usuario creado correctamente");
@@ -179,7 +179,7 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                             <label className={labelStyles}>Rol *</label>
                             <select {...register("idTipoUs", { required: "Selecciona un rol" })} className={inputStyles}>
                                 <option value="">Seleccionar Rol</option>
-                                {tiposUsuario?.map((t: any) => (
+                                {tiposUsuario?.map((t) => (
                                     <option key={t.idTipoUs} value={t.idTipoUs}>{t.nameRol}</option>
                                 ))}
                             </select>
@@ -189,7 +189,7 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                             <label className={labelStyles}>Sucursal *</label>
                             <select {...register("idSucursal", { required: "Selecciona sucursal" })} className={inputStyles}>
                                 <option value="">Seleccionar Sucursal</option>
-                                {sucursales?.map((s: any) => (
+                                {sucursales?.map((s) => (
                                     <option key={s.idSucursal} value={s.idSucursal}>{s.nombre}</option>
                                 ))}
                             </select>

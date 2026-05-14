@@ -44,7 +44,7 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                 ci: SendValor.ci,
                 nombre: SendValor.nombre,
                 apellido: SendValor.apellido,
-                telefono: SendValor.telefono,
+                telefono: SendValor.telefono ?? "",
                 email: SendValor.email,
                 idTipoUs: String(SendValor.idTipoUs),
                 idSucursal: String(SendValor.idSucursal),
@@ -77,7 +77,7 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
 
     const mutation = useMutation({
         mutationFn: ({ formData, id }: { formData: FormData; id: number }) => UpdateUserApi(formData, id),
-        onError: (error: any) => toast.error(error.message),
+        onError: (error: Error) => toast.error(error.message),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
             toast.success(data);
