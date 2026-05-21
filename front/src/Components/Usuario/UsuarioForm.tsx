@@ -122,8 +122,8 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                 <form onSubmit={handleSubmit(onSubmit)} className="p-8 overflow-y-auto space-y-6" noValidate>
                     
                     {/* Sección: Identidad */}
-                    <div className={sectionStyles}>
-                        <h3 className="md:col-span-2 text-lg font-bold text-[#4A1A6E] border-b border-[#D8B4F0] pb-2 text-purple-900">Datos de Identidad</h3>
+                    <div className={sectionStyles}> {/*text-[#4A1A6E] */}
+                        <h3 className="md:col-span-2 text-lg font-bold border-b border-[#D8B4F0] pb-2 text-purple-900">Datos de Identidad</h3>
                         
                         <div>
                             <label className={labelStyles}>C.I. *</label>

@@ -27,7 +27,7 @@ const DataUser = {
     const conection = await conectar.getConnection()
     const results = await conection.query(`
         SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado,
-               sucursal.idSucursal, sucursal.nombre AS nombre_sucursal,
+               sucursal.idSucursal, sucursal.nombre AS nombreSucursal,
                tipous.idTipoUs, tipous.nameRol
         FROM usuario usu
         LEFT JOIN sucursal ON usu.idSucursal = sucursal.idSucursal
@@ -41,7 +41,7 @@ async UserAllModelsId(idUsuario){
     const conection = await conectar.getConnection()
     const results = await conection.query(`
         SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado,
-               sucursal.idSucursal, sucursal.nombre AS nombre_sucursal,
+               sucursal.idSucursal, sucursal.nombre AS nombreSucursal,
                tipous.idTipoUs, tipous.nameRol
         FROM usuario usu
         LEFT JOIN sucursal ON usu.idSucursal = sucursal.idSucursal

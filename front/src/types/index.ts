@@ -38,11 +38,16 @@ const GetUsuarioSchema= z.object({
   ultimoAcceso: z.string().nullable(),
   idTipoUs: z.number(),
   idSucursal: z.number(),
+  nombreSucursal: z.string().optional(),
 });
 type Admins = z.infer<typeof GetUsuarioSchema>
 export type CreateAdmins = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'passwd'|'passwd_Confirmation'|'telefono'|'email'|'idTipoUs'|'idSucursal'>
 export type deleteuser = Pick<Admins,'idUsuario'>
-export type updateuser = Pick<Admins,'ci'|'nombre'|'apellido'|'img'|'telefono'|'email'|'idTipoUs'|'idSucursal'|'idUsuario'|'nameRol'>
+export type updateuser = Pick<
+  Admins,
+  'ci' | 'nombre' | 'apellido' | 'img' | 'telefono' | 'email' |
+  'idTipoUs' | 'idSucursal' | 'idUsuario' | 'nameRol'
+> & { nombreSucursal?: string };
 //Auth get user
 export const GetAuthUsers = z.object({
   idUsuario: z.number(),
