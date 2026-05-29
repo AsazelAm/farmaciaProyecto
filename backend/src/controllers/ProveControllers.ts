@@ -26,9 +26,10 @@ export class ProveedorControllers{
             }
 
             //OTRA FORMA DE HACERLO 
-            const data = await DataProveedor.AddProveedorM({codigo,nombre,telefono,email,direccion,contactoPrincipal});
+            const dat_a = await DataProveedor.AddProveedorM({codigo,nombre,telefono,email,direccion,contactoPrincipal});
 
-            res.status(200).json(data);
+            res.status(200).json({message:'Proveedor Agregado Exitosamente',
+                data:dat_a});
         }catch(error){
             console.error("Error al registra al Proveedor:",error);
             res.status(500).json({error:"ERROR al registrar el Proveedor"});

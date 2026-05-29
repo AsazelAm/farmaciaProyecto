@@ -209,7 +209,7 @@ export const ProveedorArray = z.object({
   telefono: z.string().nullable(),
   email: z.string().nullable(),
   direccion: z.string().nullable(),
-  contacto_principal: z.string().nullable(),
+  contactoPrincipal: z.string().nullable(),
   fechaCreacion: z.string(),
 });
 export const ProveedorShcemas = z.array(ProveedorArray);
@@ -241,7 +241,7 @@ export type UpdateProveedor = Pick<
   | "telefono"
   | "email"
   | "direccion"
-  | "contactoPrincipal"
+  | "contactoPrincipal"|"fechaCreacion"
   | "idProveedor"
 >;
 export type DeleteProveedor = Pick<ProveedorType, "idProveedor">;

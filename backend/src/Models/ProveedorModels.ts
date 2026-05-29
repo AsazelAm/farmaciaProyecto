@@ -22,7 +22,7 @@ async GetProveedorM(){
 async AddProveedorM(Proveedor:Proveedores){
     const conection = await conectar.getConnection();
     const results =await conection.query(`
-    INTO proveedor(codigo,nombre,telefono,email,direccion,contactoPrincipal) VALUES (?,?,?,?,?,?);
+    INSERT INTO proveedor(codigo,nombre,telefono,email,direccion,contactoPrincipal) VALUES (?,?,?,?,?,?);
     `,[Proveedor.codigo,
         Proveedor.nombre,
         Proveedor.telefono,
@@ -61,7 +61,7 @@ async AddProveedorM(Proveedor:Proveedores){
 },
     async VerificarCodigoUpdate(codigo, idProveedor){
         const conection = await conectar.getConnection();
-        const results = await conection.query(`SELECT COUTN(*) AS existe FROM proveedor WHERE codigo = ? AND idProveedor != ? AND estado = 1;`,[codigo,idProveedor]);
+        const results = await conection.query(`SELECT COUNT(*) AS existe FROM proveedor WHERE codigo = ? AND idProveedor != ? AND estado = 1;`,[codigo,idProveedor]);
         const existeCod= results[0].existe;
         const existCodi = Number(existeCod);
         conection.release();
@@ -78,13 +78,13 @@ async AddProveedorM(Proveedor:Proveedores){
             direccion = ?,
             contactoPrincipal = ?
             WHERE estado = 1 AND idProveedor = ?;
-            `,[data.codigo,data.nombre,data.telefono,data.email,data.direccion,data.contactoPrincipal,idProveedor]);
+            `,[data.codigo,data.nombre,data.telefono,data.email,data.direccion,data.contactoPrincipal,idProveedor]); 
             conection.release();
             return "Proveedor Actualizado";    
     },
     async DeleteProveedorM(idProveedor){
         const conection = await conectar.getConnection();
-        await conection.query(`UPDATE proveedor SET estado = 0 WHERE idProveedor = ?;`,[idProveedor]);
+        await conection.query(`UPDATE proveedor SET estado = 0, codigo = CONCAT(codigo, '_DELETED_', idProveedor) WHERE idProveedor = ?;`,[idProveedor]);
         conection.release();
         return "Proveedor Eliminado";
     }
