@@ -43,12 +43,12 @@ export class ProveedorControllers{
 
             const codiVeri= await DataProveedor.VerificarCodigoUpdate(codigo,idProveedor);
             if(codiVeri !== 0){
-                return res.status(200).json({error:"El codigo ya estaba registrado"});
+                return res.status(400).json({error:"El codigo ya estaba registrado"});
             }
 
             const EmailVeri= await DataProveedor.VerificarEmailUpdate(email,idProveedor);
             if(EmailVeri !== 0){
-                return res.status(200).json({error:"El email ya estaba registrado"});
+                return res.status(400).json({error:"El email ya estaba registrado"});
             }
 
             const data = await DataProveedor.UpdateProveedorM({codigo,nombre,telefono,email,direccion,contactoPrincipal},idProveedor);
