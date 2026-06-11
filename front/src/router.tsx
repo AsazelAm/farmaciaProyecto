@@ -13,7 +13,7 @@ import TipoProductos from "./view/Dashboard/Admin/Catalogo/TipoProducto";
 import Laboratorios from "./view/Dashboard/Admin/Catalogo/Laboratorio";
 
 import Proveedor from "./view/Dashboard/Admin/ContactosComerciales/Proveedor";
-
+import Cliente from "./view/Dashboard/Admin/ContactosComerciales/Cliente";
 export default function Router() {
   return (
     <HashRouter>
@@ -30,6 +30,7 @@ export default function Router() {
               <Route path="/Dashboard/TipoProductos" element={<TipoProductos/>}/>
               <Route path="/Dashboard/Laboratorios" element={<Laboratorios/>}/>
               <Route path="/Dashboard/Proveedor" element={<Proveedor/>}/>
+              <Route path="/Dashboard/Cliente" element={<Cliente/>}/>
             </Route>
 
 

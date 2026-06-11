@@ -44,28 +44,33 @@ export class LaboratorioControllers{
         }
     }
 
-    static readonly UpdateLaboraC = async(req:Request,res:Response):Promise<any>=>{
-        try{
-            const {idLaboratorio}=req.params;
-            const {nombre}= req.body;
-            const ImgFile= req.file;
-            const fecha = GetDateToday()
+    static readonly UpdateLaboraC = async(req: Request, res: Response): Promise<any> => {
+        try {
+            const { idLaboratorio } = req.params;
+            const { nombre } = req.body;
+            const ImgFile = req.file;
+            const fecha = GetDateToday();
 
-            const UpdaNomb = await DataLabora.VerificarUpdateNombreM(nombre,idLaboratorio);
+            // 1. Forzamos el tipo desde el principio (usa Number(idLaboratorio) si en tu BD es un entero)
+            const idLab = String(idLaboratorio); 
+
+            // 2. Usamos la nueva variable 'idLab' en todas las consultas
+            const UpdaNomb = await DataLabora.VerificarUpdateNombreM(nombre, idLab);
             if(UpdaNomb !== 0){
-                return res.status(400).json({error:"El nombre ya esta registrado"});
+                return res.status(400).json({ error: "El nombre ya esta registrado" });
             }
 
-            await DataLabora.UpdateLabM(idLaboratorio,nombre);
-
+            await DataLabora.UpdateLabM(idLab, nombre);
+            
             if(ImgFile){
-                const rutaImg = await uploadImageGlobal(ImgFile,String(idLaboratorio),fecha,'Laboratorio');
-                await DataLabora.UpdateRutaimg(rutaImg,idLaboratorio);
+                const rutaImg = await uploadImageGlobal(ImgFile, idLab, fecha, 'Laboratorio');
+                // 3. ¡Aquí es donde ocurría el error! Ahora recibe un 'string' garantizado
+                await DataLabora.UpdateRutaimg(rutaImg, idLab);
             }
             res.status(200).json("Laboratorio Actualizado Exitosamente");
-        }catch(error){
+        } catch(error) {
             console.error("Error al actualizar laboratorio: ", error);
-            res.status(500).json({error: "Error al Actulizar el Laboratorio"});
+            res.status(500).json({ error: "Error al Actualizar el Laboratorio" });
         }
     }
 

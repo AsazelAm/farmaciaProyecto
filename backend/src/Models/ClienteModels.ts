@@ -66,7 +66,7 @@ const DataCliente={
             nombre=?,
             apellido = ?,
             telefono = ?,
-            email = ?,
+            email = ?
             WHERE idCliente = ? AND estado = 1;`,[ci,nombre,apellido,telefono,email,idCliente]);
         Conexion.release();
         return "Cliente Actualizado";
