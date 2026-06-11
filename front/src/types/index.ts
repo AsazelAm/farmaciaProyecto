@@ -245,3 +245,5 @@ export type UpdateProveedor = Pick<
   | "idProveedor"
 >;
 export type DeleteProveedor = Pick<ProveedorType, "idProveedor">;
+
+//Type Producto

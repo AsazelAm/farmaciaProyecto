@@ -11,6 +11,8 @@ type Props = Readonly<{
 }>;
 export default function UpdateProveedorr({SetVer,SendValor}:Props){
     return(
-        <div></div>
+        <div>
+            
+        </div>
     )
 }
