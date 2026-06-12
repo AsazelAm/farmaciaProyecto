@@ -41,17 +41,18 @@ export class ProveedorControllers{
             const {idProveedor}=req.params;
             const {codigo,nombre,telefono,email,direccion,contactoPrincipal}=req.body;
 
-            const codiVeri= await DataProveedor.VerificarCodigoUpdate(codigo,idProveedor);
+            const idProv = String(idProveedor);
+            const codiVeri= await DataProveedor.VerificarCodigoUpdate(codigo,idProv);
             if(codiVeri !== 0){
                 return res.status(400).json({error:"El codigo ya estaba registrado"});
             }
 
-            const EmailVeri= await DataProveedor.VerificarEmailUpdate(email,idProveedor);
+            const EmailVeri= await DataProveedor.VerificarEmailUpdate(email,idProv);
             if(EmailVeri !== 0){
                 return res.status(400).json({error:"El email ya estaba registrado"});
             }
 
-            const data = await DataProveedor.UpdateProveedorM({codigo,nombre,telefono,email,direccion,contactoPrincipal},idProveedor);
+            const data = await DataProveedor.UpdateProveedorM({codigo,nombre,telefono,email,direccion,contactoPrincipal},idProv);
 
             res.status(200).json(data);
         }catch(error){  

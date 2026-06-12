@@ -388,4 +388,6 @@ export default function UpdateProveedorr({ SetVer, SendValor }: Props) {
       </div>
     </div>
   );
+
+
 }

@@ -35,27 +35,31 @@ export class ClienteControllers{
         }
     }
 
-    static readonly UpdateClienteC=async (req:Request,res:Response)=>{
-        try{
-            const {idCliente}= req.params;
-            const {ci,nombre,apellido,telefono,email}=req.body;
+    static readonly UpdateClienteC = async (req: Request, res: Response) => {
+        try {
+            const { idCliente } = req.params;
+            const { ci, nombre, apellido, telefono, email } = req.body;
 
-            const ciVeri= await DataCliente.VerificarCiUpdate(ci,idCliente);
-            if(ciVeri !==0){
-                return res.status(400).json({error:"El Carnet de identidad ya esta registrado"});
+            // 1. Garantizamos que el ID sea procesado como un texto único
+            const idCli = String(idCliente);
+
+            // 2. Usamos 'idCli' en las validaciones y actualizaciones
+            const ciVeri = await DataCliente.VerificarCiUpdate(ci, idCli);
+            if(ciVeri !== 0){
+                return res.status(400).json({ error: "El Carnet de identidad ya esta registrado" });
             }
 
-            const emailVeri = await DataCliente.VerificarEmailUpdate(email,idCliente);
-            if(emailVeri!== 0){
-                return res.status(400).json({error:"El email ya esta registrado"});
+            const emailVeri = await DataCliente.VerificarEmailUpdate(email, idCli);
+            if(emailVeri !== 0){
+                return res.status(400).json({ error: "El email ya esta registrado" });
             }
 
-            const data = await DataCliente.UpdateClientM(ci,nombre,apellido,telefono,email,idCliente);
+            const data = await DataCliente.UpdateClientM(ci, nombre, apellido, telefono, email, idCli);
 
             res.status(200).json(data);
-        }catch(error){
-            console.error("Error al Actualizar cliente: ",error);
-            res.status(500).json({error:"ERROR al actualizar Cliente"});
+        } catch(error) {
+            console.error("Error al Actualizar cliente: ", error);
+            res.status(500).json({ error: "ERROR al actualizar Cliente" });
         }
     }
 

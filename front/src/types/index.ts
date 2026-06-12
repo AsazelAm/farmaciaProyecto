@@ -197,7 +197,7 @@ export type CreateCliente = Pick<
 >;
 export type UpdateCliente = Pick<
   ClienteType,
-  "ci" | "nombre" | "apellido" | "telefono" | "email" | "idCliente"
+  "ci" | "nombre" | "apellido" | "telefono" | "email" | "idCliente" | "fechaCreacion"
 >;
 export type DeleteCliente = Pick<ClienteType, "idCliente">;
 
@@ -245,3 +245,5 @@ export type UpdateProveedor = Pick<
   | "idProveedor"
 >;
 export type DeleteProveedor = Pick<ProveedorType, "idProveedor">;
+
+//Type Producto
