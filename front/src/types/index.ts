@@ -247,3 +247,33 @@ export type UpdateProveedor = Pick<
 export type DeleteProveedor = Pick<ProveedorType, "idProveedor">;
 
 //Type Producto
+export const ProductoArray =z.object({
+  idProducto:z.number(),
+  nombreGenerico:z.string(),
+  nombreComercial:z.string(),
+  precio:z.number(),
+  concentracion:z.string(),
+  stockMinimo:z.string()
+});
+export const ProductoShcemass=z.array(ProductoArray);
+
+const GetProductoShcemass = z.object({
+  idProducto:z.number(),
+  codigoBarra:z.string(),
+  nombreGenerico:z.string(),
+  nombreComercial:z.string(),
+  concentracion:z.string(),
+  descripcion:z.string(),
+  precio:z.number(),
+  img:z.string(),
+  requiereReceta:z.string(),
+  fechaCreacion:z.string(),
+  contraindicaciones:z.string(),
+  viaAdministracion:z.string(),
+  stockMinimo:z.string(),
+  idLaboratorio:z.number(),
+  idTipoProd:z.number(),
+  idPresentacion:z.number()
+});
+type ProductoType = z.infer<typeof GetProductoShcemass>;
+export type CreateProducto = Pick< >;
