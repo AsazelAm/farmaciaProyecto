@@ -20,25 +20,22 @@ async function uploadImageGlobal(file, id, fecha, ruta) {
     if (file.size > 5 * 1024 * 1024) {
         throw new Error(`La imagen ${file.originalname} debe pesar máximo 5MB`);
     }
-    const fileName = `${id}-${fecha}${extension}`;
+    // Siempre será WEBP
+    const fileName = `${id}-${fecha}.webp`;
     const savePath = path_1.default.join(folderPath, fileName);
     try {
-        const image = (0, sharp_1.default)(file.buffer);
-        if (extension === '.png') {
-            await image
-                .png({ quality: 50, compressionLevel: 9 }) // optimiza PNG
-                .toFile(savePath);
-        }
-        else {
-            await image
-                .jpeg({ quality: 50 }) // optimiza JPG/JPEG
-                .toFile(savePath);
-        }
+        // Convertir y optimizar como WebP
+        await (0, sharp_1.default)(file.buffer)
+            .webp({
+            quality: 70, // calidad (ajustable)
+            effort: 6 // nivel de compresión (0–6, más alto = más lento pero mejor)
+        })
+            .toFile(savePath);
         return savePath;
     }
     catch (error) {
-        console.error('Error al optimizar la imagen:', error);
-        throw new Error('Error al optimizar la imagen.');
+        console.error('Error al convertir imagen a WebP:', error);
+        throw new Error('Error al convertir imagen a WebP.');
     }
 }
 //# sourceMappingURL=SaveImg.js.map

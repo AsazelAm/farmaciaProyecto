@@ -1,3 +1,2 @@
-import mariadb from "mariadb";
-declare const data: mariadb.Pool;
+declare const data: import("mariadb").Pool;
 export default data;

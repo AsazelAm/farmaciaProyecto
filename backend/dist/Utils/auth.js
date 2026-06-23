@@ -5,13 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckPassword = exports.HashPassword = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const HashPassword = async (Passwd) => {
+const HashPassword = async (passwd) => {
     const salt = await bcrypt_1.default.genSalt(10);
-    return await bcrypt_1.default.hash(Passwd, salt);
+    return await bcrypt_1.default.hash(passwd, salt);
 };
 exports.HashPassword = HashPassword;
-const CheckPassword = async (Passwd, Hash) => {
-    return await bcrypt_1.default.compare(Passwd, Hash);
+const CheckPassword = async (passwd, Hash) => {
+    return await bcrypt_1.default.compare(passwd, Hash);
 };
 exports.CheckPassword = CheckPassword;
 //# sourceMappingURL=auth.js.map

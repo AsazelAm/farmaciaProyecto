@@ -247,33 +247,71 @@ export type UpdateProveedor = Pick<
 export type DeleteProveedor = Pick<ProveedorType, "idProveedor">;
 
 //Type Producto
-export const ProductoArray =z.object({
-  idProducto:z.number(),
-  nombreGenerico:z.string(),
-  nombreComercial:z.string(),
-  precio:z.number(),
-  concentracion:z.string(),
-  stockMinimo:z.string()
+export const ProductoArray = z.object({
+  idProducto:          z.number(),
+  codigoBarra:         z.string(),
+  nombreGenerico:      z.string(),
+  nombreComercial:     z.string().nullable(),
+  concentracion:       z.string().nullable(),
+  descripcion:         z.string().nullable(),
+  precio:              z.union([z.number(), z.string()]).transform(Number),
+  img:                 z.string().nullable(),
+  requiereReceta:      z.union([z.number(), z.boolean()]).transform(Number),
+  fechaCreacion:       z.string(),
+  fechaModificacion:   z.string().optional(),
+  contraindicaciones:  z.string().nullable(),
+  viaAdministracion:   z.string().nullable(),
+  stockMinimo:         z.union([z.number(), z.string()]).transform(Number),
+  estado:              z.number().optional(),
+  idLaboratorio:       z.number(),
+  idTipoProd:          z.number(),
+  idPresentacion:      z.number(),
+  nombreLaboratorio:   z.string().optional(),
+  nombreTipoProd:      z.string().optional(),
+  nombrePresentacion:  z.string().optional(),
 });
-export const ProductoShcemass=z.array(ProductoArray);
+export const ProductoShcemass = z.array(ProductoArray);
 
-const GetProductoShcemass = z.object({
-  idProducto:z.number(),
-  codigoBarra:z.string(),
-  nombreGenerico:z.string(),
-  nombreComercial:z.string(),
-  concentracion:z.string(),
-  descripcion:z.string(),
-  precio:z.number(),
-  img:z.string(),
-  requiereReceta:z.string(),
-  fechaCreacion:z.string(),
-  contraindicaciones:z.string(),
-  viaAdministracion:z.string(),
-  stockMinimo:z.string(),
-  idLaboratorio:z.number(),
-  idTipoProd:z.number(),
-  idPresentacion:z.number()
-});
-type ProductoType = z.infer<typeof GetProductoShcemass>;
-export type CreateProducto = Pick< >;
+type ProductoType = z.infer<typeof ProductoArray>;
+
+export type CreateProducto = Pick<
+  ProductoType,
+  | 'codigoBarra'
+  | 'nombreGenerico'
+  | 'nombreComercial'
+  | 'concentracion'
+  | 'descripcion'
+  | 'precio'
+  | 'requiereReceta'
+  | 'contraindicaciones'
+  | 'viaAdministracion'
+  | 'stockMinimo'
+  | 'idLaboratorio'
+  | 'idTipoProd'
+  | 'idPresentacion'
+> & { img?: FileList | null };
+
+export type UpdateProducto = Pick<
+  ProductoType,
+  | 'idProducto'
+  | 'codigoBarra'
+  | 'nombreGenerico'
+  | 'nombreComercial'
+  | 'concentracion'
+  | 'descripcion'
+  | 'precio'
+  | 'requiereReceta'
+  | 'contraindicaciones'
+  | 'viaAdministracion'
+  | 'stockMinimo'
+  | 'idLaboratorio'
+  | 'idTipoProd'
+  | 'idPresentacion'
+  | 'img'
+  | 'fechaCreacion'
+  | 'nombreLaboratorio'
+  | 'nombreTipoProd'
+  | 'nombrePresentacion'
+> & { newImg?: FileList | null };
+
+export type DeleteProducto = Pick<ProductoType, 'idProducto'>;
