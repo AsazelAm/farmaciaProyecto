@@ -4,17 +4,17 @@ import Loading from "../../../../Helpers/Loading";
 import { toast } from "react-toastify";
 import { GetProductoApi, DeleteProductoApi } from "../../../../Api/ProductoApi";
 import type { UpdateProducto } from "../../../../types";
-import BarcodeRenderer from "../../../../Components/Barcode/BarcodeRenderer";
+import BarcodeRenderer from "../../../../lib/BarcodeRenderer";
 
 // ── Lazy loading de modales ────────────────────────────────────────────────────
-const ProductoForm      = lazy(() => import("../../../../Components/Producto/ProductoForm"));
+const ProductoForm = lazy(() => import("../../../../Components/Producto/ProductoForm"));
 const UpdateProductoModal = lazy(() => import("../../../../Components/Producto/UpdateProducto"));
 
 // ── Paleta (idéntica a Proveedor) ─────────────────────────────────────────────
 const COLORS = {
-  dark:   "#4A1A6E",
+  dark: "#4A1A6E",
   medium: "#7B3FA0",
-  light:  "#F3EBF9",
+  light: "#F3EBF9",
   border: "#D8B4F0",
 };
 
@@ -22,23 +22,23 @@ const COLORS = {
 const toPublicUrl = (ruta: string | null | undefined) => {
   if (!ruta) return null;
   const base = import.meta.env.VITE_API_URL?.replace('/api', '') ?? '';
-  return `${base}/${ruta.replace(/^\.\//,"").replace(/\\\\/g, "/")}`;
+  return `${base}/${ruta.replace(/^\.\//, "").replace(/\\\\/g, "/")}`;
 };
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 export default function Productos() {
   const queryClient = useQueryClient();
 
-  const [isOpen,    setIsOpen]    = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selected,  setSelected]  = useState<UpdateProducto | null>(null);
-  const [search,    setSearch]    = useState("");
+  const [selected, setSelected] = useState<UpdateProducto | null>(null);
+  const [search, setSearch] = useState("");
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
   // ── Fetch de productos ────────────────────────────────────────────────────
   const { data: rows, isLoading } = useQuery({
     queryKey: ["ProductoAll"],
-    queryFn:  GetProductoApi,
+    queryFn: GetProductoApi,
   });
 
   // ── Mutación de eliminar ──────────────────────────────────────────────────
@@ -371,12 +371,12 @@ function ConfirmDialog({
   onCancel,
   disabled = false,
 }: {
-  title:         string;
-  message:       string;
+  title: string;
+  message: string;
   confirmLabel?: string;
-  onConfirm:     () => void;
-  onCancel:      () => void;
-  disabled?:     boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

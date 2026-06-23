@@ -15,7 +15,7 @@ export async function GetProductoApi() {
     }
     console.warn("Zod parse warning (Producto):", response.error);
     // Si el parse falla devolvemos el array crudo para no bloquear la UI
-    return data as ReturnType<typeof response.data>;
+    return data as any;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);

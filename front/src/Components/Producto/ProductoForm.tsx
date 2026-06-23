@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import BarcodeRenderer from "../Barcode/BarcodeRenderer";
+import BarcodeRenderer from "../../lib/BarcodeRenderer";
 import { AddProductoApi } from "../../Api/ProductoApi";
 import { GetLaboratorioApi } from "../../Api/LaboratorioApi";
 import { GetTipoProdApi } from "../../Api/TipoProdApi";
@@ -18,11 +18,11 @@ type Props = Readonly<{
 
 // ─── Paleta (idéntica a Proveedor / ProveedorForm) ───────────────────────────
 const C = {
-  dark:   "#4A1A6E",
+  dark: "#4A1A6E",
   medium: "#7B3FA0",
-  light:  "#F3EBF9",
+  light: "#F3EBF9",
   border: "#D8B4F0",
-  text:   "#2D0A47",
+  text: "#2D0A47",
 };
 
 const LS_KEY = "ProductoFormDraft";
@@ -74,19 +74,19 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<CreateProducto>({
     defaultValues: {
-      codigoBarra:        "",
-      nombreGenerico:     "",
-      nombreComercial:    "",
-      concentracion:      "",
-      descripcion:        "",
-      precio:             0,
-      requiereReceta:     0,
+      codigoBarra: "",
+      nombreGenerico: "",
+      nombreComercial: "",
+      concentracion: "",
+      descripcion: "",
+      precio: 0,
+      requiereReceta: 0,
       contraindicaciones: "",
-      viaAdministracion:  "",
-      stockMinimo:        0,
-      idLaboratorio:      0,
-      idTipoProd:         0,
-      idPresentacion:     0,
+      viaAdministracion: "",
+      stockMinimo: 0,
+      idLaboratorio: 0,
+      idTipoProd: 0,
+      idPresentacion: 0,
     },
   });
 
@@ -110,21 +110,21 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
   // ── Queries para los selects relacionados ─────────────────────────────────
   const { data: laboratorios = [] } = useQuery({
     queryKey: ["LaboratorioAll"],
-    queryFn:  GetLaboratorioApi,
+    queryFn: GetLaboratorioApi,
   });
   const { data: tiposProducto = [] } = useQuery({
     queryKey: ["TipoProdAll"],
-    queryFn:  GetTipoProdApi,
+    queryFn: GetTipoProdApi,
   });
   const { data: presentaciones = [] } = useQuery({
     queryKey: ["PresentacionAll"],
-    queryFn:  GetPresentaApi,
+    queryFn: GetPresentaApi,
   });
 
   // ── Mutación ───────────────────────────────────────────────────────────────
   const { mutate, isPending } = useMutation({
     mutationFn: AddProductoApi,
-    onError:   (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(error.message),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["ProductoAll"] });
       toast.success(result?.message ?? "Producto registrado correctamente");

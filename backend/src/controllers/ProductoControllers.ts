@@ -5,7 +5,6 @@ import { GetDateToday } from '../lib/Time';
 
 export class ProductoControllers {
 
-    // ── GET: obtener todos los productos activos ───────────────────────────────
     static readonly GetProductoC = async (req: Request, res: Response) => {
         try {
             const data = await DataProducto.GetProductoM();
