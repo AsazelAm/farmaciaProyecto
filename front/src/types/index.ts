@@ -315,3 +315,21 @@ export type UpdateProducto = Pick<
 > & { newImg?: FileList | null };
 
 export type DeleteProducto = Pick<ProductoType, 'idProducto'>;
+
+
+//type Lote
+export const LoteArray = z.object({
+    idLote: z.number(),
+    codigo:z.string(),
+    numeroLote:z.string(),
+    stock:z.number(),
+    fechaVencimiento:z.string(),
+    precioCompra:z.number(),
+    fechaIngreso:z.string(),
+    fechaCreacion:z.string(),
+    fechaModificacion:z.string(),
+    fechaFabricacion:z.string(),
+    estado:z.number(),
+    idProducto:z.number(),
+    idProveedor:z.number(),
+});

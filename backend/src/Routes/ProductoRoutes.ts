@@ -5,7 +5,6 @@ import { ProductoControllers } from '../controllers/ProductoControllers';
 
 const router = Router();
 
-// ── Autenticación requerida en todas las rutas ────────────────────────────────
 router.use(authenticate);
 
 // ── Multer en memoria (igual que LaboratorioRoutes) ───────────────────────────
