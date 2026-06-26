@@ -333,3 +333,108 @@ export const LoteArray = z.object({
     idProducto:z.number(),
     idProveedor:z.number(),
 });
+
+
+// ========================================================================
+// TYPES: COMPRA, DETALLE COMPRA Y LOTES (MÓDULO DE COMPRAS)
+// ========================================================================
+
+// 1. Schema para DetalleCompra (Lo que devuelve el backend al consultar una compra)
+export const DetalleCompraSchema = z.object({
+  idDetalleCompra: z.number(),
+  cantidad: z.number(),
+  precioUnitario: z.union([z.number(), z.string()]).transform(Number),
+  descuento: z.union([z.number(), z.string()]).transform(Number),
+  subtotal: z.union([z.number(), z.string()]).transform(Number),
+  estadoDetalle: z.enum(['activo', 'anulado']).optional(),
+  // Campos extraídos del JOIN con Lote y Producto
+  idLote: z.number().optional(),
+  numeroLote: z.string().optional(),
+  codigo: z.string().optional(),
+  fechaVencimiento: z.string().optional(),
+  stock: z.number().optional(),
+  precioCompra: z.union([z.number(), z.string()]).transform(Number).optional(),
+  estadoLote: z.string().optional(),
+  nombreGenerico: z.string().optional(),
+  nombreComercial: z.string().nullable().optional(),
+});
+
+export type DetalleCompraType = z.infer<typeof DetalleCompraSchema>;
+
+// 2. Schema para la Compra (Lectura)
+export const CompraSchema = z.object({
+  idCompra: z.number(),
+  numeroFactura: z.string().nullable(),
+  fechaCreacion: z.string(),
+  fechaEntrega: z.string().nullable().optional(),
+  subtotal: z.union([z.number(), z.string()]).transform(Number),
+  descuento: z.union([z.number(), z.string()]).transform(Number),
+  impuesto: z.union([z.number(), z.string()]).transform(Number),
+  total: z.union([z.number(), z.string()]).transform(Number),
+  estado: z.enum(['pendiente', 'completado', 'cancelado']),
+  observaciones: z.string().nullable().optional(),
+  // Campos del JOIN
+  proveedor: z.string().optional(),
+  usuario: z.string().optional(),
+  sucursal: z.string().optional(),
+  totalLotes: z.number().optional(),
+  // Detalles (solo viene cuando pedimos por ID)
+  detalles: z.array(DetalleCompraSchema).optional(),
+});
+
+export const CompraListSchema = z.array(CompraSchema);
+export type CompraType = z.infer<typeof CompraSchema>;
+
+// 3. Schemas para Creación/Actualización (Inputs)
+export const LoteInputSchema = z.object({
+  idProducto: z.number(),
+  codigo: z.string(),
+  numeroLote: z.string(),
+  stock: z.number().min(1, 'El stock debe ser mayor a 0'),
+  precioCompra: z.number().min(0.01, 'El precio debe ser válido'),
+  descuento: z.number().default(0),
+  fechaVencimiento: z.string(),
+  fechaFabricacion: z.string().nullable().optional(),
+});
+
+export const CreateCompraSchema = z.object({
+  numeroFactura: z.string().optional(),
+  idProveedor: z.number(),
+  idSucursal: z.number(),
+  fechaEntrega: z.string().optional(),
+  descuento: z.number(),
+  impuesto: z.number(),
+  subtotal: z.number(),
+  total: z.number(),
+  observaciones: z.string().optional(),
+  lotes: z.array(LoteInputSchema).min(1, 'Debe agregar al menos un lote'),
+  idUsuario: z.number().optional(), // Opcional si el backend lo toma del token
+});
+
+export type ILoteInput = z.infer<typeof LoteInputSchema>;
+export type CreateCompraType = z.infer<typeof CreateCompraSchema>;
+export type UpdateCompraType = CreateCompraType; // La estructura de update es la misma en tu controlador
+
+// 4. Schema para Filtros de Búsqueda
+export const CompraFiltrosSchema = z.object({
+  estado: z.enum(['pendiente', 'completado', 'cancelado']).optional(),
+  idProveedor: z.number().optional(),
+  idSucursal: z.number().optional(),
+  fechaDesde: z.string().optional(),
+  fechaHasta: z.string().optional(),
+  pagina: z.number().optional(),
+  porPagina: z.number().optional(),
+});
+
+export type ICompraFiltros = z.infer<typeof CompraFiltrosSchema>;
+
+// 5. Schema para Estadísticas del Dashboard
+export const CompraEstadisticasSchema = z.object({
+  porEstado: z.array(z.any()), // array de {estado, cantidad, monto}
+  totalMes: z.number(),
+  totalMesAnterior: z.number(),
+  porProveedor: z.array(z.any()), // array de {nombre, cantidad, monto}
+  lotesProximosVencer: z.number(),
+});
+
+export type CompraEstadisticasType = z.infer<typeof CompraEstadisticasSchema>;

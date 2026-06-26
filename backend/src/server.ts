@@ -15,6 +15,8 @@ import SucursalRoutes from "./Routes/SucursalRoutes";
 import ProveedoRoutes from "./Routes/ProveedoRoutes";
 import ProductoRoutes from "./Routes/ProductoRoutes";
 
+import CompraLoteRoutes from "./Routes/CompraLoteRoutes";
+
 import path from "path";
 
 const app = express()
@@ -41,5 +43,6 @@ app.use('/api/Sucursal',SucursalRoutes);
 app.use('/api/Proveedor',ProveedoRoutes);
 app.use('/api/Producto',ProductoRoutes);
 
+app.use('/api/CompraLote', CompraLoteRoutes);
 
 export default app
