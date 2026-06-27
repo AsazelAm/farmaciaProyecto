@@ -341,7 +341,6 @@ export const LoteArray = z.object({
 
 // 1. Schema para DetalleCompra (Lo que devuelve el backend al consultar una compra)
 export const DetalleCompraSchema = z.object({
-  idDetalleCompra: z.number(),
   cantidad: z.number(),
   precioUnitario: z.union([z.number(), z.string()]).transform(Number),
   descuento: z.union([z.number(), z.string()]).transform(Number),

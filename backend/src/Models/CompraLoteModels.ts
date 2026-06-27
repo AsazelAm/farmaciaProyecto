@@ -130,7 +130,7 @@ const DataCompra = {
         // 2. Detalles (lotes y productos asociados)
         const detalles = await conection.query(`
             SELECT 
-                dc.idDetalleCompra, dc.cantidad, dc.precioUnitario,
+                dc.cantidad, dc.precioUnitario,
                 dc.descuento, dc.subtotal, dc.estado as estadoDetalle,
                 l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento, 
                 l.stock, l.precioCompra, l.estado as estadoLote,
@@ -139,7 +139,7 @@ const DataCompra = {
             INNER JOIN lote     l  ON l.idLote      = dc.idLote
             INNER JOIN producto pr ON pr.idProducto = l.idProducto
             WHERE dc.idCompra = ?
-            ORDER BY dc.idDetalleCompra ASC;
+            ORDER BY l.idLote ASC;
         `, [idCompra]);
 
         conection.release();
