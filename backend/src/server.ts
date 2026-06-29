@@ -43,6 +43,6 @@ app.use('/api/Sucursal',SucursalRoutes);
 app.use('/api/Proveedor',ProveedoRoutes);
 app.use('/api/Producto',ProductoRoutes);
 
-app.use('/api/CompraLote', CompraLoteRoutes);
+app.use('/api/Compra', CompraLoteRoutes);
 
 export default app

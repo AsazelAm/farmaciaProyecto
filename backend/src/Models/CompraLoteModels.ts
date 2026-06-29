@@ -102,7 +102,13 @@ const DataCompra = {
         const data = await conection.query(queryFinal, queryParams);
         conection.release();
 
-        return { data, total };
+        // MySQL2 devuelve COUNT(*) como BigInt → lo normalizamos a Number
+        const dataNormalizada = (data as any[]).map((row: any) => ({
+            ...row,
+            totalLotes: Number(row.totalLotes ?? 0),
+        }));
+
+        return { data: dataNormalizada, total };
     },
 
     // ── GET: Obtener el detalle de una compra específica con sus lotes ────────
@@ -320,11 +326,19 @@ const DataCompra = {
             ]);
 
             return {
-                porEstado: porEstado,
-                totalMes: Number(totalMes[0].totalMes),
-                totalMesAnterior: Number(totalMesAnterior[0].totalMesAnterior),
-                porProveedor: porProveedor,
-                lotesProximosVencer: Number(lotesVencer[0].lotesProximosVencer)
+                porEstado: (porEstado as any[]).map((s: any) => ({
+                    estado:   s.estado,
+                    cantidad: Number(s.cantidad ?? 0),
+                    monto:    Number(s.monto    ?? 0),
+                })),
+                totalMes:          Number((totalMes as any[])[0].totalMes),
+                totalMesAnterior:  Number((totalMesAnterior as any[])[0].totalMesAnterior),
+                porProveedor: (porProveedor as any[]).map((p: any) => ({
+                    nombre:   p.nombre,
+                    cantidad: Number(p.cantidad ?? 0),
+                    monto:    Number(p.monto    ?? 0),
+                })),
+                lotesProximosVencer: Number((lotesVencer as any[])[0].lotesProximosVencer),
             };
         } finally {
             conection.release();

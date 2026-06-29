@@ -14,6 +14,9 @@ import Laboratorios from "./view/Dashboard/Admin/Catalogo/Laboratorio";
 
 import Proveedor from "./view/Dashboard/Admin/ContactosComerciales/Proveedor";
 import Cliente from "./view/Dashboard/Admin/ContactosComerciales/Cliente";
+
+import Compra from "./view/Dashboard/Admin/CompraLote/Compra";
+import NewCompra from "./view/Dashboard/Admin/CompraLote/NewCompra";
 export default function Router() {
   return (
     <HashRouter>
@@ -31,6 +34,8 @@ export default function Router() {
               <Route path="/Dashboard/Laboratorios" element={<Laboratorios/>}/>
               <Route path="/Dashboard/Proveedor" element={<Proveedor/>}/>
               <Route path="/Dashboard/Cliente" element={<Cliente/>}/>
+              <Route path="/Dashboard/Compra" element={<Compra/>}/>
+              <Route path="/Dashboard/NewCompra" element={<NewCompra/>}/>
             </Route>
 
 

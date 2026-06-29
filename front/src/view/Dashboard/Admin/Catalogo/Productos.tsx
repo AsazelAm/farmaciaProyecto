@@ -12,9 +12,9 @@ const UpdateProductoModal = lazy(() => import("../../../../Components/Producto/U
 
 // ── Paleta (idéntica a Proveedor) ─────────────────────────────────────────────
 const COLORS = {
-  dark: "#4A1A6E",
-  medium: "#7B3FA0",
-  light: "#F3EBF9",
+  dark: "#4A1A6E",//LILA
+  medium: "#7B3FA0",//LILA SUAVECITO
+  light: "#F3EBF9",//BLANCO
   border: "#D8B4F0",
 };
 
