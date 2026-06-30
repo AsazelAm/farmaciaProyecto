@@ -16,6 +16,7 @@ import ProveedoRoutes from "./Routes/ProveedoRoutes";
 import ProductoRoutes from "./Routes/ProductoRoutes";
 
 import CompraLoteRoutes from "./Routes/CompraLoteRoutes";
+import LoteRoutes from "./Routes/LoteRoutes";
 
 import path from "path";
 
@@ -44,5 +45,6 @@ app.use('/api/Proveedor',ProveedoRoutes);
 app.use('/api/Producto',ProductoRoutes);
 
 app.use('/api/Compra', CompraLoteRoutes);
+app.use('/api/Lote', LoteRoutes);
 
 export default app

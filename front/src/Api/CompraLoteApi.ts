@@ -88,13 +88,27 @@ export async function UpdateCompraApi(idCompra: number, formData: UpdateCompraTy
 }
 
 // ── PATCH: Cambiar Estado (Completado / Cancelado) ───────────────────────────
-export async function ChangeEstadoCompraApi(idCompra: number, estado: 'completado' | 'cancelado') {
+/*export async function ChangeEstadoCompraApi(idCompra: number, estado: 'completado' | 'cancelado') {
   try {
     const { data } = await api.patch(`/Compra/ChangeEstadoCompra/${idCompra}`, { estado });
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error || `Error al cambiar el estado a ${estado}`);
+    }
+    throw error;
+  }
+}*/
+
+//En CompraLoteApi.ts
+export async function ChangeEstadoCompraApi(idCompra: number, estado: 'pendiente' | 'completado' | 'cancelado') {
+  try {
+    // Mandamos el estado en el body como lo espera tu controlador
+    const { data } = await api.patch(`/Compra/ChangeEstadoCompra/${idCompra}`, { estado });
+    return data; // { message: "..." }
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al cambiar el estado');
     }
     throw error;
   }

@@ -122,13 +122,14 @@ export class CompraLoteControllers {
             if (estado === 'completado') {
                 await DataCompra.completar(idCompra);
                 return res.status(200).json({ message: 'Compra completada e inventario actualizado' });
-                
             } else if (estado === 'cancelado') {
                 await DataCompra.cancelar(idCompra);
                 return res.status(200).json({ message: 'Compra cancelada exitosamente' });
-                
+            } else if (estado === 'pendiente') {
+                await DataCompra.cambiarAPendiente(idCompra);
+                return res.status(200).json({ message: 'Compra restablecida a pendiente exitosamente' });
             } else {
-                return res.status(400).json({ error: 'Estado no válido. Use "completado" o "cancelado".' });
+                return res.status(400).json({ error: 'Estado no válido.' });
             }
 
         } catch (error) {

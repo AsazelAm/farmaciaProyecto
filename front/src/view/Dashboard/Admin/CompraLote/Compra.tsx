@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; // Importado useMutation y useQueryClient para el cambio de estado
 import { useMemo, useState } from "react";
 import Loading from "../../../../Helpers/Loading";
 import {
   GetComprasApi,
   GetEstadisticasComprasApi,
+  ChangeEstadoCompraApi, // Importada la función de la API para alterar el estado
 } from "../../../../Api/CompraLoteApi";
 import type {
   CompraType,
@@ -31,7 +32,7 @@ const COLORS = {
   estadoCancelado:   { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" }, // Rojo
 };
 
-// ─── Helper: badge de estado ──────────────────────────────────────────────────
+// ─── Helper: badge de estado (Mantenido por compatibilidad) ───────────────────
 function EstadoBadge({ estado }: { estado: string }) {
   const cfg =
     estado === "completado"
@@ -117,6 +118,7 @@ function StatCard({
 }
 
 export default function Compra() {
+  const queryClient = useQueryClient(); // Instanciado el cliente para refrescar tablas
   const [search, setSearch] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState<
     "todos" | "pendiente" | "completado" | "cancelado"
@@ -141,6 +143,25 @@ export default function Compra() {
     queryKey: ["ComprasEstadisticas"],
     queryFn: GetEstadisticasComprasApi,
   });
+
+  // ── MUTACIÓN AGREGEGADA: Permite enviar de manera interactiva el cambio de estado ──
+  const mutationChangeEstado = useMutation({
+    mutationFn: ({ idCompra, estado }: { idCompra: number; estado: 'pendiente' | 'completado' | 'cancelado' }) =>
+      ChangeEstadoCompraApi(idCompra, estado),
+    onSuccess: () => {
+      // Invalida y recarga las consultas de compras y métricas al instante
+      queryClient.invalidateQueries({ queryKey: ["ComprasAll"] });
+      queryClient.invalidateQueries({ queryKey: ["ComprasEstadisticas"] });
+    },
+    onError: (error: any) => {
+      alert(error.message || "No se pudo cambiar el estado de la compra");
+    }
+  });
+
+  const handleEstadoChange = (idCompra: number, nuevoEstado: 'pendiente' | 'completado' | 'cancelado') => {
+    // Eliminada la confirmación visual para cambiar de estado al seleccionar directamente
+    mutationChangeEstado.mutate({ idCompra, estado: nuevoEstado });
+  };
 
   const comprasFiltradas = useMemo<CompraType[]>(() => {
     const lista: CompraType[] = comprasResponse?.data ?? [];
@@ -391,7 +412,7 @@ export default function Compra() {
                     </td>
                     </tr>
                 ) : (
-                    comprasFiltradas.map((compra, index) => (
+                    comprasFiltradas.map((compra) => (
                     <tr
                         key={compra.idCompra}
                         className="transition-colors hover:bg-gray-50/80"
@@ -443,9 +464,27 @@ export default function Compra() {
                         </span>
                         </td>
 
-                        {/* Estado Sanitario */}
+                        {/* Estado Sanitario - Selector Directo sin Ventana de Confirmación */}
                         <td className="px-5 py-4">
-                        <EstadoBadge estado={compra.estado} />
+                        <select
+                          value={compra.estado}
+                          onChange={(e) => handleEstadoChange(compra.idCompra, e.target.value as any)}
+                          disabled={mutationChangeEstado.isPending}
+                          className="px-2 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wide cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          style={{
+                            backgroundColor: 
+                              compra.estado === "completado" ? COLORS.estadoCompletado.bg : 
+                              compra.estado === "cancelado" ? COLORS.estadoCancelado.bg : COLORS.estadoPendiente.bg,
+                            color: 
+                              compra.estado === "completado" ? COLORS.estadoCompletado.color : 
+                              compra.estado === "cancelado" ? COLORS.estadoCancelado.color : COLORS.estadoPendiente.color,
+                            borderColor: COLORS.border
+                          }}
+                        >
+                          <option value="pendiente">pendiente</option>
+                          <option value="completado">completado</option>
+                          <option value="cancelado">cancelado</option>
+                        </select>
                         </td>
 
                         {/* Acciones */}

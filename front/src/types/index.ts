@@ -437,3 +437,46 @@ export const CompraEstadisticasSchema = z.object({
 });
 
 export type CompraEstadisticasType = z.infer<typeof CompraEstadisticasSchema>;
+
+// ========================================================================
+// AGREGAR ESTO A TU types/index.ts (reemplaza el LoteArray simple existente)
+// ========================================================================
+
+// ── Schema de Lote (listado, con datos de producto y proveedor) ────────────
+export const LoteListItemSchema = z.object({
+  idLote: z.number(),
+  codigo: z.string(),
+  numeroLote: z.string(),
+  stock: z.number(),
+  fechaVencimiento: z.string(),
+  precioCompra: z.union([z.number(), z.string()]).transform(Number),
+  fechaIngreso: z.string(),
+  fechaCreacion: z.string(),
+  fechaModificacion: z.string(),
+  fechaFabricacion: z.string().nullable(),
+  estado: z.enum(['pendiente', 'activo', 'vencido', 'cancelado']),
+  idProducto: z.number(),
+  idProveedor: z.number(),
+  // Datos del JOIN
+  nombreGenerico: z.string(),
+  nombreComercial: z.string().nullable(),
+  codigoBarra: z.string().optional(),
+  proveedor: z.string(),
+  diasParaVencer: z.number(),
+});
+
+export const LoteListSchema = z.array(LoteListItemSchema);
+export type LoteListItemType = z.infer<typeof LoteListItemSchema>;
+
+// ── Filtros de búsqueda de lotes ────────────────────────────────────────────
+export const LoteFiltrosSchema = z.object({
+  estado: z.enum(['pendiente', 'activo', 'vencido', 'cancelado']).optional(),
+  idProducto: z.number().optional(),
+  idProveedor: z.number().optional(),
+  soloProximosVencer: z.boolean().optional(),
+  busqueda: z.string().optional(),
+  pagina: z.number().optional(),
+  porPagina: z.number().optional(),
+});
+
+export type ILoteFiltros = z.infer<typeof LoteFiltrosSchema>;

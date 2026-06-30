@@ -27,6 +27,7 @@ const COLORS = {
   borderFocus:   "#4A1A6E", // Foco de inputs en morado oscuro (antes dark)
   required:      "#EF4444", // Rojo estándar de Tailwind para campos obligatorios
 };
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function FieldLabel({ text, required = false }: { text: string; required?: boolean }) {
   return (
@@ -109,7 +110,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
   const [lotes, setLotes] = useState<LoteRow[]>([]);
 
   // ── Estado: control del modal LotDetalleForm ──────────────────────────────
-  // Patrón idéntico a Proveedor.tsx: useState + Suspense + lazy
   const [showLoteModal, setShowLoteModal] = useState(false);
 
   // ── Queries ───────────────────────────────────────────────────────────────
@@ -123,15 +123,25 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
     queryFn:  GetSucursalApi,
   });
 
-  // Traemos los productos también a NewCompra para cruzar los nombres
-const { data: productos = [] } = useQuery({
-  queryKey: ["ProductoAll"],
-  queryFn: GetProductoApi,
-});
+  const { data: productos = [] } = useQuery({
+    queryKey: ["ProductoAll"],
+    queryFn: GetProductoApi,
+  });
+
+  // ── Función para limpiar todos los formularios ────────────────────────────
+  const resetForm = () => {
+    setIdProveedor("");
+    setNumeroFactura("");
+    setIdSucursal("");
+    setFechaEntrega(new Date().toISOString().split("T")[0]);
+    setObservaciones("");
+    setDescuentoGlobal("0");
+    setImpuesto("13");
+    setLotes([]);
+  };
 
   // ── Totales reactivos ─────────────────────────────────────────────────────
   const { subtotal, ivaCalculado, total } = useMemo(() => {
-    // Subtotal = suma de (precioCompra * stock) menos descuento por lote (%)
     const sub = lotes.reduce((acc, l) => {
       const bruto = l.precioCompra * l.stock;
       return acc + bruto - (bruto * l.descuento) / 100;
@@ -152,15 +162,14 @@ const { data: productos = [] } = useQuery({
       queryClient.invalidateQueries({ queryKey: ["ComprasAll"] });
       queryClient.invalidateQueries({ queryKey: ["ComprasEstadisticas"] });
       toast.success(data?.message ?? "Compra registrada exitosamente");
+      resetForm(); // <--- Se limpian los formularios automáticamente al guardar con éxito
       onBack?.();
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   // ── Callback: recibe un lote del modal y lo agrega a la lista ─────────────
-  // Esta función se pasa como prop al modal LotDetalleForm
   const handleLoteConfirmado = (lote: ILoteInput) => {
-    // Buscar nombre del producto en las queries cacheadas para mostrarlo en tabla
     const producto = (window as any).__productosCache?.find(
       (p: any) => p.idProducto === lote.idProducto
     );
@@ -194,7 +203,7 @@ const { data: productos = [] } = useQuery({
       impuesto:      parseFloat(impuesto) || 0,
       subtotal,
       total,
-      lotes: lotes.map(({ _id, nombreProducto, ...rest }) => rest), // strip campos UI
+      lotes: lotes.map(({ _id, nombreProducto, ...rest }) => rest),
     };
 
     crearCompra(payload);
@@ -204,7 +213,7 @@ const { data: productos = [] } = useQuery({
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen p-6" style={{color: COLORS.textPrimary }}>
+    <div className="min-h-screen p-6" style={{ color: COLORS.textPrimary }}>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -229,7 +238,17 @@ const { data: productos = [] } = useQuery({
           </p>
         </div>
 
-        
+        {/* ── Botón manual para limpiar el formulario ── */}
+        <button
+          onClick={resetForm}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:brightness-95 active:scale-95 border"
+          style={{ borderColor: COLORS.border, color: COLORS.textSecondary, backgroundColor: "transparent" }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16" />
+          </svg>
+          Limpiar Formulario
+        </button>
       </div>
 
       {/* ── LAYOUT 2 COLUMNAS ─────────────────────────────────────────────── */}
@@ -435,7 +454,7 @@ const { data: productos = [] } = useQuery({
                 </div>
               </div>
 
-              {/* ── Botón Agregar Medicamento — abre LotDetalleForm ── */}
+              {/* ── Botón Agregar Medicamento ── */}
               <button
                 onClick={() => setShowLoteModal(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:brightness-110 active:scale-95 flex-shrink-0"
@@ -448,9 +467,8 @@ const { data: productos = [] } = useQuery({
               </button>
             </div>
 
-            {/* ── Área de lotes ──────────────────────────────────────────── */}
+            {/* ── Área de lotes ── */}
             {lotes.length === 0 ? (
-              // Estado vacío
               <div
                 className="mt-4 rounded-2xl flex flex-col items-center justify-center py-14 gap-3"
                 style={{ border: `2px dashed ${COLORS.border}`, backgroundColor: `${COLORS.bgBase}66` }}
@@ -471,7 +489,6 @@ const { data: productos = [] } = useQuery({
                 </button>
               </div>
             ) : (
-              // Tabla de lotes
               <div className="mt-4 overflow-x-auto rounded-xl" style={{ border: `1px solid ${COLORS.border}` }}>
                 <table className="w-full text-xs">
                   <thead>
@@ -489,72 +506,68 @@ const { data: productos = [] } = useQuery({
                   </thead>
                   <tbody>
                     {lotes.map((lote, index) => {
-                        // BUSCAMOS EL PRODUCTO CORRESPONDIENTE EN EL ARRAY EN BASE AL ID
-                        const productoInfo = Array.isArray(productos) 
-                            ? productos.find((p: any) => p.idProducto === lote.idProducto)
-                            : null;
-                        return (
-                            <tr key={index} className="border-b" style={{ borderColor: COLORS.border }}>
-                            <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>{index + 1 }</td>
-                            {/* CELDA DEL PRODUCTO REPARADA */}
-                            <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>
-                                {productoInfo ? (
-                                <div>
-                                    <span className="font-bold">{productoInfo.nombreGenerico}</span>
-                                    {productoInfo.nombreComercial && (
-                                    <span className="text-xs block text-gray-500 font-normal">
-                                        {productoInfo.nombreComercial}
-                                    </span>
-                                    )}
-                                </div>
-                                ) : (
-                                <span className="text-xs text-red-400">ID Producto: {lote.idProducto} (Cargando...)</span>
+                      const productoInfo = Array.isArray(productos) 
+                        ? productos.find((p: any) => p.idProducto === lote.idProducto)
+                        : null;
+                      return (
+                        <tr key={index} className="border-b" style={{ borderColor: COLORS.border }}>
+                          <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>{index + 1 }</td>
+                          <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>
+                            {productoInfo ? (
+                              <div>
+                                <span className="font-bold">{productoInfo.nombreGenerico}</span>
+                                {productoInfo.nombreComercial && (
+                                  <span className="text-xs block text-gray-500 font-normal">
+                                    {productoInfo.nombreComercial}
+                                  </span>
                                 )}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm" style={{ color: COLORS.textPrimary }}>
-                                <span className="px-2 py-0.5 rounded text-xs font-mono bg-gray-100 border">
-                                {lote.numeroLote}
-                                </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm font-mono" style={{ color: COLORS.textPrimary }}>
-                                {lote.codigo}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-center font-bold" style={{ color: COLORS.textPrimary }}>
-                                {lote.stock}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right" style={{ color: COLORS.textPrimary }}>
-                                Bs. {Number(lote.precioCompra).toFixed(2)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right text-red-500">
-                                {lote.descuento}%
-                            </td>
-                            <td className="px-4 py-3 text-sm text-right font-bold" style={{ color: COLORS.textPrimary }}>
-                                Bs. {((lote.stock * lote.precioCompra) - (lote.stock * lote.precioCompra * lote.descuento / 100)).toFixed(2)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-center">
-                                <button
-                                type="button"
-                                onClick={() => {
-                                    // Tu lógica existente para eliminar el lote del array local
-                                    setLotes(lotes.filter((_, i) => i !== index));
-                                }}
-                                className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                </button>
-                            </td>
-                            </tr>
-                        );
-                        })}
-                    </tbody>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-red-400">ID Producto: {lote.idProducto} (Cargando...)</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm" style={{ color: COLORS.textPrimary }}>
+                            <span className="px-2 py-0.5 rounded text-xs font-mono bg-gray-100 border">
+                              {lote.numeroLote}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm font-mono" style={{ color: COLORS.textPrimary }}>
+                            {lote.codigo}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-center font-bold" style={{ color: COLORS.textPrimary }}>
+                            {lote.stock}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right" style={{ color: COLORS.textPrimary }}>
+                            Bs. {Number(lote.precioCompra).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-red-500">
+                            {lote.descuento}%
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right font-bold" style={{ color: COLORS.textPrimary }}>
+                            Bs. {((lote.stock * lote.precioCompra) - (lote.stock * lote.precioCompra * lote.descuento / 100)).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLotes(lotes.filter((_, i) => i !== index));
+                              }}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
                 </table>
               </div>
             )}
 
-            {/* ── Totales ────────────────────────────────────────────────── */}
+            {/* ── Totales ── */}
             <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${COLORS.border}` }}>
               <div className="flex justify-between items-center py-1.5 text-sm">
                 <span style={{ color: COLORS.textSecondary }}>Suma Subtotales Ítems</span>
@@ -577,7 +590,7 @@ const { data: productos = [] } = useQuery({
               </div>
             </div>
 
-            {/* ── Botones de acción ──────────────────────────────────────── */}
+            {/* ── Botones de acción ── */}
             <div className="flex justify-end gap-3 mt-5">
               <button
                 onClick={onBack}
@@ -617,7 +630,6 @@ const { data: productos = [] } = useQuery({
 
       {/* ══════════════════════════════════════════════════════════════════════
           MODAL: LotDetalleForm
-          Patrón idéntico a Proveedor.tsx: Suspense + lazy + estado isOpen
       ══════════════════════════════════════════════════════════════════════ */}
       <Suspense fallback={<Loading />}>
         {showLoteModal && (

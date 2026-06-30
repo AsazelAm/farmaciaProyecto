@@ -262,6 +262,28 @@ const DataCompra = {
         }
     },
 
+    // En tu CompraLoteModels.ts añade soporte para resetear a pendiente si es necesario:
+async cambiarAPendiente(idCompra: number) {
+    const conection = await conectar.getConnection();
+    await conection.beginTransaction();
+    try {
+        // Regresa la compra a pendiente
+        await conection.query(`UPDATE compra SET estado = 'pendiente' WHERE idCompra = ?`, [idCompra]);
+        // Regresa los lotes de esa compra a pendiente
+        await conection.query(`
+            UPDATE lote SET estado = 'pendiente' 
+            WHERE idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
+        `, [idCompra]);
+        await conection.commit();
+        return true;
+    } catch (error) {
+        await conection.rollback();
+        throw error;
+    } finally {
+        conection.release();
+    }
+},
+
     // ── CANCEL: Cancelar una compra pendiente ─────────────────────────────────
     async cancelar(idCompra: number) {
         const conection = await conectar.getConnection();
