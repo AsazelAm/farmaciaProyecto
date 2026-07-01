@@ -116,12 +116,21 @@ const DataCompra = {
         const conection = await conectar.getConnection();
         
         // 1. Cabecera de la compra
+        // NOTA: reemplazamos "c.*" por columnas explícitas + agregamos los JOINs
+        // necesarios para traer teléfono/contacto del proveedor, apellido+rol del
+        // usuario y dirección de la sucursal (datos que exige el modal de detalle).
         const compras = await conection.query(`
             SELECT 
-                c.*, p.nombre AS proveedor, u.nombre AS usuario, s.nombre AS sucursal
+                c.idCompra, c.numeroFactura, c.fechaCreacion, c.fechaModificacion, c.fechaEntrega,
+                c.subtotal, c.descuento, c.impuesto, c.total, c.estado, c.observaciones,
+                c.idProveedor, c.idUsuario, c.idSucursal,
+                p.nombre AS proveedor, p.telefono AS proveedorTelefono, p.contactoPrincipal AS proveedorContacto,
+                CONCAT(u.nombre, ' ', u.apellido) AS usuario, t.nameRol AS usuarioRol,
+                s.nombre AS sucursal, s.direccion AS sucursalDireccion
             FROM compra c
             INNER JOIN proveedor p ON p.idProveedor = c.idProveedor
             INNER JOIN usuario   u ON u.idUsuario   = c.idUsuario
+            INNER JOIN tipous    t ON t.idTipoUs    = u.idTipoUs
             INNER JOIN sucursal  s ON s.idSucursal  = c.idSucursal
             WHERE c.idCompra = ?
         `, [idCompra]);
@@ -134,22 +143,36 @@ const DataCompra = {
         const compra = compras[0];
 
         // 2. Detalles (lotes y productos asociados)
+        // Agregamos: codigoBarra y concentracion (producto), nombreLaboratorio,
+        // fechaFabricacion (lote) y diasParaVencer calculado con DATEDIFF,
+        // igual que ya haces en el listado de lotes (LoteListItemSchema).
         const detalles = await conection.query(`
             SELECT 
                 dc.cantidad, dc.precioUnitario,
                 dc.descuento, dc.subtotal, dc.estado as estadoDetalle,
-                l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento, 
+                l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento, l.fechaFabricacion,
                 l.stock, l.precioCompra, l.estado as estadoLote,
-                pr.nombreGenerico, pr.nombreComercial
+                DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasParaVencer,
+                pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial, pr.concentracion,
+                lab.nombre AS nombreLaboratorio
             FROM detallecompra dc
-            INNER JOIN lote     l  ON l.idLote      = dc.idLote
-            INNER JOIN producto pr ON pr.idProducto = l.idProducto
+            INNER JOIN lote        l   ON l.idLote        = dc.idLote
+            INNER JOIN producto    pr  ON pr.idProducto   = l.idProducto
+            INNER JOIN laboratorio lab ON lab.idLaboratorio = pr.idLaboratorio
             WHERE dc.idCompra = ?
             ORDER BY l.idLote ASC;
         `, [idCompra]);
 
         conection.release();
-        return { ...compra, detalles };
+
+        // diasParaVencer llega como BigInt en algunos drivers de MySQL2 al usar
+        // DATEDIFF; lo normalizamos a Number igual que haces con totalLotes en listar().
+        const detallesNormalizados = (detalles as any[]).map((d: any) => ({
+            ...d,
+            diasParaVencer: Number(d.diasParaVencer ?? 0),
+        }));
+
+        return { ...compra, detalles: detallesNormalizados };
     },
 
     // ── ADD: Crear una nueva compra (Transacción Completa) ────────────────────

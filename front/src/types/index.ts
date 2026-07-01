@@ -351,11 +351,16 @@ export const DetalleCompraSchema = z.object({
   numeroLote: z.string().optional(),
   codigo: z.string().optional(),
   fechaVencimiento: z.string().optional(),
+  fechaFabricacion: z.string().nullable().optional(),
+  diasParaVencer: z.number().optional(),
   stock: z.number().optional(),
   precioCompra: z.union([z.number(), z.string()]).transform(Number).optional(),
   estadoLote: z.string().optional(),
+  codigoBarra: z.string().optional(),
+  concentracion: z.string().nullable().optional(),
   nombreGenerico: z.string().optional(),
   nombreComercial: z.string().nullable().optional(),
+  nombreLaboratorio: z.string().optional(),
 });
 
 export type DetalleCompraType = z.infer<typeof DetalleCompraSchema>;
@@ -372,10 +377,15 @@ export const CompraSchema = z.object({
   total: z.union([z.number(), z.string()]).transform(Number),
   estado: z.enum(['pendiente', 'completado', 'cancelado']),
   observaciones: z.string().nullable().optional(),
+  fechaModificacion: z.string().optional(),
   // Campos del JOIN
   proveedor: z.string().optional(),
+  proveedorTelefono: z.string().nullable().optional(),
+  proveedorContacto: z.string().nullable().optional(),
   usuario: z.string().optional(),
+  usuarioRol: z.string().optional(),
   sucursal: z.string().optional(),
+  sucursalDireccion: z.string().nullable().optional(),
   totalLotes: z.number().optional(),
   // Detalles (solo viene cuando pedimos por ID)
   detalles: z.array(DetalleCompraSchema).optional(),
