@@ -12,14 +12,14 @@ const UpdateProductoModal = lazy(() => import("../../../../Components/Producto/U
 
 // ── Paleta (idéntica a Proveedor) ─────────────────────────────────────────────
 const COLORS = {
-  dark: "#4A1A6E",//LILA
-  medium: "#7B3FA0",//LILA SUAVECITO
-  light: "#F3EBF9",//BLANCO
+  dark: "#4A1A6E",
+  medium: "#7B3FA0",
+  light: "#F3EBF9",
   border: "#D8B4F0",
 };
 
 // ── Helper: URL pública de imagen ─────────────────────────────────────────────
-const toPublicUrl = (ruta: string | null | undefined) => {
+const toPublicUrl = (ruta?: string | null) => {
   if (!ruta) return null;
   const base = import.meta.env.VITE_API_URL?.replace('/api', '') ?? '';
   return `${base}/${ruta.replace(/^\.\//, "").replace(/\\\\/g, "/")}`;
@@ -35,8 +35,8 @@ export default function Productos() {
   const [search, setSearch] = useState("");
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
-  // ── Fetch de productos ────────────────────────────────────────────────────
-  const { data: rows, isLoading } = useQuery({
+  // ── Fetch de productos (Con valor por defecto []) ─────────────────────────
+  const { data: rows = [], isLoading } = useQuery<UpdateProducto[]>({
     queryKey: ["ProductoAll"],
     queryFn: GetProductoApi,
   });
@@ -46,23 +46,21 @@ export default function Productos() {
     mutationFn: DeleteProductoApi,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["ProductoAll"] });
-      toast.success(data);
+      toast.success(data as string);
       setConfirmId(null);
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
-  // ── Buscador ──────────────────────────────────────────────────────────────
+  // ── Buscador Optimizado (DRY) ───────────────────────────────────────────────
   const filteredRows = useMemo(() => {
-    const list: UpdateProducto[] = Array.isArray(rows) ? (rows as any) : [];
     const q = search.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(
-      (r) =>
-        String(r.nombreGenerico ?? "").toLowerCase().includes(q) ||
-        String(r.nombreComercial ?? "").toLowerCase().includes(q) ||
-        String(r.codigoBarra ?? "").toLowerCase().includes(q) ||
-        String(r.nombreLaboratorio ?? "").toLowerCase().includes(q)
+    if (!q) return rows;
+    
+    return rows.filter((r) =>
+      [r.nombreGenerico, r.nombreComercial, r.codigoBarra, r.nombreLaboratorio].some(
+        (field) => String(field ?? "").toLowerCase().includes(q)
+      )
     );
   }, [rows, search]);
 
@@ -208,9 +206,9 @@ export default function Productos() {
                 )}
 
                 {/* FILAS */}
-                {filteredRows.map((row: any, index: number) => {
+                {filteredRows.map((row: UpdateProducto, index: number) => {
                   const imgUrl = toPublicUrl(row.img);
-                  const inicial = String(row.nombreGenerico ?? "P")[0].toUpperCase();
+                  const inicial = String(row.nombreGenerico ?? "P").charAt(0).toUpperCase();
 
                   return (
                     <tr
@@ -263,7 +261,7 @@ export default function Productos() {
                       <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-500">
                         <div className="flex flex-col gap-1 items-start">
                           <div className="font-mono text-[11px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{row.codigoBarra}</div>
-                          <BarcodeRenderer value={row.codigoBarra} width={1.1} height={22} displayValue={false} />
+                          <BarcodeRenderer value={row.codigoBarra ?? ""} width={1.1} height={22} displayValue={false} />
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
                           {row.nombreTipoProd ?? "—"} · {row.nombrePresentacion ?? "—"}
@@ -317,7 +315,7 @@ export default function Productos() {
                             </svg>
                           </button>
                           <button
-                            onClick={() => setConfirmId(row.idProducto)}
+                            onClick={() => setConfirmId(row.idProducto ?? null)}
                             title="Eliminar producto"
                             className="p-2 rounded-lg transition-colors text-red-500 hover:bg-red-50 hover:text-red-700"
                           >

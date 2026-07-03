@@ -8,24 +8,24 @@ import { AddCompraApi } from "../../../../Api/CompraLoteApi";
 import { GetProductoApi } from "../../../../Api/ProductoApi";
 import type { CreateCompraType, ILoteInput } from "../../../../types";
 
-// ─── Lazy: modal de lote (igual patrón que Proveedor.tsx) ────────────────────
+// ─── Lazy: modal de lote ──────────────────────────────────────────────────────
 const LotDetalleForm = lazy(
   () => import("../../../../Components/CompraLote/LotDetalleForm")
 );
 
 // ─── Paleta dark farmacéutica ─────────────────────────────────────────────────
 const COLORS = {
-  bgBase:        "#F3EBF9", // Fondo claro lila (antes light)
-  bgCard:        "#FFFFFF", // Fondo de tarjetas limpio
-  bgInput:       "#FFFFFF", // Fondo de inputs limpio
-  green:         "#7B3FA0", // El color intermedio/primario pasa a ser el morado vital (antes medium)
-  greenDim:      "#F3EBF9", // Fondo suave para badges (antes light)
-  textPrimary:   "#4A1A6E", // Texto principal en morado oscuro (antes dark)
-  textSecondary: "#7B3FA0", // Texto secundario
-  textMuted:     "#9CA3AF", // Gris neutro para placeholders o bordes sutiles (Tailwind gray-400)
-  border:        "#D8B4F0", // Bordes lila (antes border)
-  borderFocus:   "#4A1A6E", // Foco de inputs en morado oscuro (antes dark)
-  required:      "#EF4444", // Rojo estándar de Tailwind para campos obligatorios
+  bgBase:        "#F3EBF9",
+  bgCard:        "#FFFFFF",
+  bgInput:       "#FFFFFF",
+  green:         "#7B3FA0",
+  greenDim:      "#F3EBF9",
+  textPrimary:   "#4A1A6E",
+  textSecondary: "#7B3FA0",
+  textMuted:     "#9CA3AF",
+  border:        "#D8B4F0",
+  borderFocus:   "#4A1A6E",
+  required:      "#EF4444",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -85,42 +85,44 @@ function DarkSelect({
   );
 }
 
-// ─── Tipo de fila en la tabla de lotes cargados ───────────────────────────────
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 type LoteRow = ILoteInput & {
-  _id:          number;    // ID temporal para la key de React
-  nombreProducto: string;  // Para mostrar en la tabla
+  _id: number;
+  productoInfo: any; // O el tipo de tu Producto si lo tienes exportado
+};
+
+const INITIAL_FORM_STATE = {
+  idProveedor: "",
+  numeroFactura: "",
+  idSucursal: "",
+  fechaEntrega: new Date().toISOString().split("T")[0],
+  observaciones: "",
+  descuentoGlobal: "0",
+  impuesto: "13",
 };
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function NewCompra({ onBack }: { onBack?: () => void }) {
   const queryClient = useQueryClient();
 
-  // ── Estado: Panel izquierdo ───────────────────────────────────────────────
-  const [idProveedor,     setIdProveedor]     = useState("");
-  const [numeroFactura,   setNumeroFactura]   = useState("");
-  const [idSucursal,      setIdSucursal]      = useState("");
-  const [fechaEntrega,    setFechaEntrega]    = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [observaciones,   setObservaciones]   = useState("");
-  const [descuentoGlobal, setDescuentoGlobal] = useState("0");
-  const [impuesto,        setImpuesto]        = useState("13");
-
-  // ── Estado: lotes acumulados ──────────────────────────────────────────────
+  // ── Estado Unificado ──────────────────────────────────────────────────────
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [lotes, setLotes] = useState<LoteRow[]>([]);
-
-  // ── Estado: control del modal LotDetalleForm ──────────────────────────────
   const [showLoteModal, setShowLoteModal] = useState(false);
 
-  // ── Queries ───────────────────────────────────────────────────────────────
-  const { data: proveedores, isLoading: loadingProv } = useQuery({
+  const handleInputChange = (field: keyof typeof INITIAL_FORM_STATE, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // ── Queries con defaults seguros ──────────────────────────────────────────
+  const { data: proveedores = [], isLoading: loadingProv } = useQuery({
     queryKey: ["ProveedorAll"],
-    queryFn:  GetProveedorApi,
+    queryFn: GetProveedorApi,
   });
 
-  const { data: sucursales, isLoading: loadingSuc } = useQuery({
+  const { data: sucursales = [], isLoading: loadingSuc } = useQuery({
     queryKey: ["SucursalAll"],
-    queryFn:  GetSucursalApi,
+    queryFn: GetSucursalApi,
   });
 
   const { data: productos = [] } = useQuery({
@@ -128,15 +130,9 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
     queryFn: GetProductoApi,
   });
 
-  // ── Función para limpiar todos los formularios ────────────────────────────
+  // ── Limpieza ──────────────────────────────────────────────────────────────
   const resetForm = () => {
-    setIdProveedor("");
-    setNumeroFactura("");
-    setIdSucursal("");
-    setFechaEntrega(new Date().toISOString().split("T")[0]);
-    setObservaciones("");
-    setDescuentoGlobal("0");
-    setImpuesto("13");
+    setFormData(INITIAL_FORM_STATE);
     setLotes([]);
   };
 
@@ -147,63 +143,59 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
       return acc + bruto - (bruto * l.descuento) / 100;
     }, 0);
 
-    const descPct    = parseFloat(descuentoGlobal) || 0;
+    const descPct    = parseFloat(formData.descuentoGlobal) || 0;
     const subConDesc = sub - (sub * descPct) / 100;
-    const ivaPct     = parseFloat(impuesto) || 0;
+    const ivaPct     = parseFloat(formData.impuesto) || 0;
     const iva        = subConDesc * ivaPct / 100;
 
     return { subtotal: subConDesc, ivaCalculado: iva, total: subConDesc + iva };
-  }, [lotes, descuentoGlobal, impuesto]);
+  }, [lotes, formData.descuentoGlobal, formData.impuesto]);
 
-  // ── Mutación: crear compra ────────────────────────────────────────────────
+  // ── Mutación ──────────────────────────────────────────────────────────────
   const { mutate: crearCompra, isPending: creando } = useMutation({
     mutationFn: AddCompraApi,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["ComprasAll"] });
       queryClient.invalidateQueries({ queryKey: ["ComprasEstadisticas"] });
       toast.success(data?.message ?? "Compra registrada exitosamente");
-      resetForm(); // <--- Se limpian los formularios automáticamente al guardar con éxito
+      resetForm();
       onBack?.();
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
-  // ── Callback: recibe un lote del modal y lo agrega a la lista ─────────────
+  // ── Lógica de Lotes ───────────────────────────────────────────────────────
   const handleLoteConfirmado = (lote: ILoteInput) => {
-    const producto = (window as any).__productosCache?.find(
-      (p: any) => p.idProducto === lote.idProducto
-    );
-    const nombreProducto = producto?.nombreGenerico ?? `Producto #${lote.idProducto}`;
-
+    const productoInfo = productos.find((p: any) => p.idProducto === lote.idProducto) || null;
+    
     setLotes((prev) => [
       ...prev,
-      { ...lote, _id: Date.now(), nombreProducto },
+      { ...lote, _id: Date.now(), productoInfo },
     ]);
     toast.success("Lote agregado a la compra");
   };
 
-  // ── Eliminar lote ─────────────────────────────────────────────────────────
   const handleEliminarLote = (_id: number) => {
     setLotes((prev) => prev.filter((l) => l._id !== _id));
   };
 
-  // ── Submit final ──────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = () => {
-    if (!idProveedor) { toast.error("Selecciona un proveedor"); return; }
-    if (!idSucursal)  { toast.error("Selecciona una sucursal de destino"); return; }
+    if (!formData.idProveedor) { toast.error("Selecciona un proveedor"); return; }
+    if (!formData.idSucursal)  { toast.error("Selecciona una sucursal de destino"); return; }
     if (lotes.length === 0) { toast.error("Agrega al menos un medicamento/lote"); return; }
 
     const payload: CreateCompraType = {
-      idProveedor:   parseInt(idProveedor),
-      idSucursal:    parseInt(idSucursal),
-      numeroFactura: numeroFactura || undefined,
-      fechaEntrega:  fechaEntrega  || undefined,
-      observaciones: observaciones || undefined,
-      descuento:     parseFloat(descuentoGlobal) || 0,
-      impuesto:      parseFloat(impuesto) || 0,
+      idProveedor:   parseInt(formData.idProveedor),
+      idSucursal:    parseInt(formData.idSucursal),
+      numeroFactura: formData.numeroFactura || undefined,
+      fechaEntrega:  formData.fechaEntrega  || undefined,
+      observaciones: formData.observaciones || undefined,
+      descuento:     parseFloat(formData.descuentoGlobal) || 0,
+      impuesto:      parseFloat(formData.impuesto) || 0,
       subtotal,
       total,
-      lotes: lotes.map(({ _id, nombreProducto, ...rest }) => rest),
+      lotes: lotes.map(({ _id, productoInfo, ...rest }) => rest), // Excluimos propiedades de UI
     };
 
     crearCompra(payload);
@@ -238,7 +230,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
           </p>
         </div>
 
-        {/* ── Botón manual para limpiar el formulario ── */}
         <button
           onClick={resetForm}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:brightness-95 active:scale-95 border"
@@ -258,13 +249,10 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
             PANEL IZQUIERDO — 1. Datos Generales
         ══════════════════════════════════════════════════════════════════ */}
         <div className="w-full lg:w-[310px] flex-shrink-0 flex flex-col gap-4">
-
-          {/* Tarjeta: Datos Generales */}
           <div
             className="rounded-2xl p-5"
             style={{ backgroundColor: COLORS.bgCard, border: `1px solid ${COLORS.border}` }}
           >
-            {/* Encabezado de tarjeta */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <div
@@ -289,13 +277,12 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
               </button>
             </div>
 
-            {/* Proveedor */}
             <div className="mb-4">
               <FieldLabel text="Proveedor de Medicamentos" required />
               <div className="relative">
-                <DarkSelect id="idProveedor" value={idProveedor} onChange={setIdProveedor}>
+                <DarkSelect id="idProveedor" value={formData.idProveedor} onChange={(v) => handleInputChange("idProveedor", v)}>
                   <option value="">Seleccione el proveedor...</option>
-                  {(Array.isArray(proveedores) ? proveedores : []).map((p: any) => (
+                  {proveedores.map((p: any) => (
                     <option key={p.idProveedor} value={p.idProveedor}>{p.nombre}</option>
                   ))}
                 </DarkSelect>
@@ -308,25 +295,23 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
               </div>
             </div>
 
-            {/* Número de Factura */}
             <div className="mb-4">
               <FieldLabel text="Número de Factura / Control" />
               <DarkInput
                 id="numeroFactura"
                 placeholder="Ejem: FAC-45892"
-                value={numeroFactura}
-                onChange={setNumeroFactura}
+                value={formData.numeroFactura}
+                onChange={(v) => handleInputChange("numeroFactura", v)}
               />
             </div>
 
-            {/* Sucursal + Fecha */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
                 <FieldLabel text="Sucursal Destino" required />
                 <div className="relative">
-                  <DarkSelect id="idSucursal" value={idSucursal} onChange={setIdSucursal}>
+                  <DarkSelect id="idSucursal" value={formData.idSucursal} onChange={(v) => handleInputChange("idSucursal", v)}>
                     <option value="">Seleccione...</option>
-                    {(Array.isArray(sucursales) ? sucursales : []).map((s: any) => (
+                    {sucursales.map((s: any) => (
                       <option key={s.idSucursal} value={s.idSucursal}>{s.nombre}</option>
                     ))}
                   </DarkSelect>
@@ -343,20 +328,19 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
                 <DarkInput
                   id="fechaEntrega"
                   type="date"
-                  value={fechaEntrega}
-                  onChange={setFechaEntrega}
+                  value={formData.fechaEntrega}
+                  onChange={(v) => handleInputChange("fechaEntrega", v)}
                 />
               </div>
             </div>
 
-            {/* Observaciones */}
             <div>
               <FieldLabel text="Observaciones Sanitarias / Recepción" />
               <textarea
                 rows={3}
                 placeholder="Ej: Cajas con control térmico intacto..."
-                value={observaciones}
-                onChange={(e) => setObservaciones(e.target.value)}
+                value={formData.observaciones}
+                onChange={(e) => handleInputChange("observaciones", e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all resize-none"
                 style={{
                   backgroundColor: COLORS.bgInput,
@@ -394,8 +378,8 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
                   <DarkInput
                     id="descuentoGlobal"
                     type="number"
-                    value={descuentoGlobal}
-                    onChange={setDescuentoGlobal}
+                    value={formData.descuentoGlobal}
+                    onChange={(v) => handleInputChange("descuentoGlobal", v)}
                     placeholder="0"
                   />
                   <span
@@ -410,8 +394,8 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
                   <DarkInput
                     id="impuesto"
                     type="number"
-                    value={impuesto}
-                    onChange={setImpuesto}
+                    value={formData.impuesto}
+                    onChange={(v) => handleInputChange("impuesto", v)}
                     placeholder="13"
                   />
                   <span
@@ -432,7 +416,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
             className="rounded-2xl p-5"
             style={{ backgroundColor: COLORS.bgCard, border: `1px solid ${COLORS.border}` }}
           >
-            {/* Cabecera panel derecho */}
             <div className="flex items-start justify-between mb-1">
               <div className="flex items-center gap-2.5">
                 <div
@@ -454,7 +437,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
                 </div>
               </div>
 
-              {/* ── Botón Agregar Medicamento ── */}
               <button
                 onClick={() => setShowLoteModal(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:brightness-110 active:scale-95 flex-shrink-0"
@@ -467,7 +449,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
               </button>
             </div>
 
-            {/* ── Área de lotes ── */}
             {lotes.length === 0 ? (
               <div
                 className="mt-4 rounded-2xl flex flex-col items-center justify-center py-14 gap-3"
@@ -505,76 +486,68 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {lotes.map((lote, index) => {
-                      const productoInfo = Array.isArray(productos) 
-                        ? productos.find((p: any) => p.idProducto === lote.idProducto)
-                        : null;
-                      return (
-                        <tr key={index} className="border-b" style={{ borderColor: COLORS.border }}>
-                          <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>{index + 1 }</td>
-                          <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>
-                            {productoInfo ? (
-                              <div>
-                                <span className="font-bold">{productoInfo.nombreGenerico}</span>
-                                {productoInfo.nombreComercial && (
-                                  <span className="text-xs block text-gray-500 font-normal">
-                                    {productoInfo.nombreComercial}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-red-400">ID Producto: {lote.idProducto} (Cargando...)</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-sm" style={{ color: COLORS.textPrimary }}>
-                            <span className="px-2 py-0.5 rounded text-xs font-mono bg-gray-100 border">
-                              {lote.numeroLote}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-mono" style={{ color: COLORS.textPrimary }}>
-                            {lote.codigo}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center font-bold" style={{ color: COLORS.textPrimary }}>
-                            {lote.stock}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-right" style={{ color: COLORS.textPrimary }}>
-                            Bs. {Number(lote.precioCompra).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-right text-red-500">
-                            {lote.descuento}%
-                          </td>
-                          <td className="px-4 py-3 text-sm text-right font-bold" style={{ color: COLORS.textPrimary }}>
-                            Bs. {((lote.stock * lote.precioCompra) - (lote.stock * lote.precioCompra * lote.descuento / 100)).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setLotes(lotes.filter((_, i) => i !== index));
-                              }}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {lotes.map((lote, index) => (
+                      <tr key={lote._id} className="border-b" style={{ borderColor: COLORS.border }}>
+                        <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>{index + 1 }</td>
+                        <td className="px-4 py-3 text-sm font-medium" style={{ color: COLORS.textPrimary }}>
+                          {lote.productoInfo ? (
+                            <div>
+                              <span className="font-bold">{lote.productoInfo.nombreGenerico}</span>
+                              {lote.productoInfo.nombreComercial && (
+                                <span className="text-xs block text-gray-500 font-normal">
+                                  {lote.productoInfo.nombreComercial}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-red-400">ID Producto: {lote.idProducto} (Cargando...)</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm" style={{ color: COLORS.textPrimary }}>
+                          <span className="px-2 py-0.5 rounded text-xs font-mono bg-gray-100 border">
+                            {lote.numeroLote}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-mono" style={{ color: COLORS.textPrimary }}>
+                          {lote.codigo}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center font-bold" style={{ color: COLORS.textPrimary }}>
+                          {lote.stock}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right" style={{ color: COLORS.textPrimary }}>
+                          Bs. {Number(lote.precioCompra).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right text-red-500">
+                          {lote.descuento}%
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-bold" style={{ color: COLORS.textPrimary }}>
+                          Bs. {((lote.stock * lote.precioCompra) - (lote.stock * lote.precioCompra * lote.descuento / 100)).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleEliminarLote(lote._id)}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             )}
 
-            {/* ── Totales ── */}
             <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${COLORS.border}` }}>
               <div className="flex justify-between items-center py-1.5 text-sm">
                 <span style={{ color: COLORS.textSecondary }}>Suma Subtotales Ítems</span>
                 <span className="font-bold" style={{ color: COLORS.textPrimary }}>Bs {subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-1.5 text-sm">
-                <span style={{ color: COLORS.textSecondary }}>IVA Calculado ({impuesto}%)</span>
+                <span style={{ color: COLORS.textSecondary }}>IVA Calculado ({formData.impuesto}%)</span>
                 <span className="font-bold" style={{ color: COLORS.textPrimary }}>Bs {ivaCalculado.toFixed(2)}</span>
               </div>
               <div
@@ -590,7 +563,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
               </div>
             </div>
 
-            {/* ── Botones de acción ── */}
             <div className="flex justify-end gap-3 mt-5">
               <button
                 onClick={onBack}
@@ -628,9 +600,6 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MODAL: LotDetalleForm
-      ══════════════════════════════════════════════════════════════════════ */}
       <Suspense fallback={<Loading />}>
         {showLoteModal && (
           <LotDetalleForm

@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useMemo, useState } from "react";
+import { useForm, FieldErrors } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { GetProductoApi } from "../../Api/ProductoApi";
@@ -11,34 +11,49 @@ type Props = Readonly<{
   onConfirm: (lote: ILoteInput) => void;
 }>;
 
-// PALETA DE COLORES HEREDADA DE PROVEEDORFORM
-const COLORS = {
-  bgBase:        "#F3EBF9",
-  bgCard:        "#FFFFFF",
-  bgInput:       "#FFFFFF",
-  purple:        "#7B3FA0",
-  purpleDark:    "#4A1A6E",
-  purpleDim:     "#F3EBF9",
-  textPrimary:   "#2D0A47",
-  textSecondary: "#7B3FA0",
-  textMuted:     "#9A7FA8",
-  border:        "#D8B4F0",
-  borderFocus:   "#7B3FA0",
-  required:      "#EF4444",
-};
+// ─── Interfaces y Tipos ──────────────────────────────────────────────────────
+interface IProducto {
+  idProducto: number;
+  nombreGenerico: string;
+  codigoBarra?: string;
+  nombreComercial?: string;
+  concentracion?: string;
+  precio: number | string;
+}
 
 type LoteFormValues = {
-  idProducto:       number;
-  searchProduct:    string;
-  codigo:           string;
-  numeroLote:       string;
-  stock:            number;
-  precioCompra:     number;
-  descuento:        number;
+  idProducto: number;
+  searchProduct: string;
+  codigo: string;
+  numeroLote: string;
+  stock: number;
+  precioCompra: number;
+  descuento: number;
   fechaVencimiento: string;
   fechaFabricacion: string;
 };
 
+// ─── Paleta de Colores ───────────────────────────────────────────────────────
+const COLORS = {
+  bgBase: "#F3EBF9",
+  bgCard: "#FFFFFF",
+  bgInput: "#FFFFFF",
+  purple: "#7B3FA0",
+  purpleDark: "#4A1A6E",
+  purpleDim: "#F3EBF9",
+  textPrimary: "#2D0A47",
+  textSecondary: "#7B3FA0",
+  textMuted: "#9A7FA8",
+  border: "#D8B4F0",
+  borderFocus: "#7B3FA0",
+  required: "#EF4444",
+};
+
+// ─── Clases y Estilos Compartidos (DRY) ──────────────────────────────────────
+const INPUT_CLASSES = "w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100";
+const INPUT_STYLES = { borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput };
+
+// ─── Subcomponentes ──────────────────────────────────────────────────────────
 function FieldLabel({ text, required = false }: { text: string; required?: boolean }) {
   return (
     <label className="block text-xs font-bold tracking-widest uppercase mb-1.5" style={{ color: COLORS.purpleDark }}>
@@ -47,6 +62,18 @@ function FieldLabel({ text, required = false }: { text: string; required?: boole
   );
 }
 
+function SectionTitle({ step, title, required }: { step: number; title: string; required?: boolean }) {
+  return (
+    <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: COLORS.textSecondary }}>
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold mr-1.5" style={{ backgroundColor: COLORS.purpleDim, color: COLORS.purple }}>
+        {step}
+      </span>
+      {title} {required && <span style={{ color: COLORS.required }}>*</span>}
+    </p>
+  );
+}
+
+// ─── Componente Principal ────────────────────────────────────────────────────
 export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) {
   const {
     register,
@@ -54,7 +81,6 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
     watch,
     setValue,
     reset,
-    formState: { errors },
   } = useForm<LoteFormValues>({
     defaultValues: {
       idProducto: 0,
@@ -70,9 +96,11 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
   });
 
   const searchValues = watch("searchProduct");
-  const stockValue = watch("stock") || 0;
-  const precioCompraValue = watch("precioCompra") || 0;
-  const descuentoValue = watch("descuento") || 0;
+  const stockValue = watch("stock");
+  const precioCompraValue = watch("precioCompra");
+  const descuentoValue = watch("descuento");
+
+  const [selectedProduct, setSelectedProduct] = useState<IProducto | null>(null);
 
   const { data: productos = [] } = useQuery({
     queryKey: ["ProductoAll"],
@@ -80,22 +108,22 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
     enabled: isOpen,
   });
 
-  const [selectedProduct, setSelectedProduct] = React.useState<any | null>(null);
+  // Memoización para evitar filtrados repetitivos en cada render
+  const filteredProductos = useMemo(() => {
+    if (!searchValues || !Array.isArray(productos)) return [];
+    const q = searchValues.toLowerCase();
+    return productos.filter((p: IProducto) =>
+      p.nombreGenerico?.toLowerCase().includes(q) ||
+      p.codigoBarra?.toLowerCase().includes(q) ||
+      p.nombreComercial?.toLowerCase().includes(q)
+    );
+  }, [productos, searchValues]);
 
-  const filteredProductos = Array.isArray(productos)
-    ? productos.filter((p: any) => {
-        const q = (searchValues || "").toLowerCase();
-        return (
-          p.nombreGenerico?.toLowerCase().includes(q) ||
-          p.codigoBarra?.toLowerCase().includes(q) ||
-          p.nombreComercial?.toLowerCase().includes(q)
-        );
-      })
-    : [];
-
-  const subtotal = React.useMemo(() => {
-    const bruto = stockValue * precioCompraValue;
-    return bruto - (bruto * descuentoValue) / 100;
+  // Cálculo seguro casteando a Number
+  const subtotal = useMemo(() => {
+    const bruto = (Number(stockValue) || 0) * (Number(precioCompraValue) || 0);
+    const desc = Number(descuentoValue) || 0;
+    return bruto - (bruto * desc) / 100;
   }, [stockValue, precioCompraValue, descuentoValue]);
 
   useEffect(() => {
@@ -105,20 +133,19 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
     }
   }, [isOpen, reset]);
 
-  const onError = (formErrors: any) => {
-    const firstError = Object.values(formErrors)[0] as any;
+  const onError = (formErrors: FieldErrors<LoteFormValues>) => {
+    const firstError = Object.values(formErrors)[0];
     if (firstError?.message) {
-      toast.error(firstError.message);
+      toast.error(firstError.message as string);
     }
   };
 
   const onSubmit = (data: LoteFormValues) => {
     if (!data.idProducto) {
-      toast.error("Debe seleccionar un producto");
-      return;
+      return toast.error("Debe seleccionar un producto");
     }
-    
-    const lote: ILoteInput = {
+
+    onConfirm({
       idProducto: Number(data.idProducto),
       codigo: data.codigo.trim(),
       numeroLote: data.numeroLote.trim(),
@@ -127,9 +154,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
       descuento: Number(data.descuento),
       fechaVencimiento: data.fechaVencimiento,
       fechaFabricacion: data.fechaFabricacion || null,
-    };
-
-    onConfirm(lote);
+    });
     setIsOpen(false);
   };
 
@@ -143,7 +168,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
         className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl z-10 border"
         style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.border }}
       >
-        {/* HEADER CON DEGRADADO VIOLETA */}
+        {/* HEADER */}
         <div
           className="flex items-center justify-between px-6 py-4 border-b"
           style={{ borderColor: COLORS.border, background: `linear-gradient(135deg, ${COLORS.purpleDark}, ${COLORS.purple})` }}
@@ -172,10 +197,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
             
             {/* SECCIÓN 1: BUSCADOR */}
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: COLORS.textSecondary }}>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold mr-1.5" style={{ backgroundColor: COLORS.purpleDim, color: COLORS.purple }}>1</span>
-                Buscar / Seleccionar Producto <span style={{ color: COLORS.required }}>*</span>
-              </p>
+              <SectionTitle step={1} title="Buscar / Seleccionar Producto" required />
 
               {!selectedProduct ? (
                 <div className="relative mb-2">
@@ -221,10 +243,10 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
               {searchValues?.length > 0 && !selectedProduct && (
                 <div className="rounded-xl overflow-hidden border bg-white" style={{ borderColor: COLORS.border }}>
                   {filteredProductos.length === 0 ? (
-                    <div className="px-4 py-3 text-sm text-center" style={{ color: COLORS.textMuted }}>Sin resultados para "{searchValues}"</div>
+                    <div className="px-4 py-3 text-sm text-center" style={{ color: COLORS.textMuted }}>Sin resultados para &quot;{searchValues}&quot;</div>
                   ) : (
                     <ul className="divide-y max-h-44 overflow-y-auto" style={{ borderColor: COLORS.border }}>
-                      {filteredProductos.map((p: any) => (
+                      {filteredProductos.map((p: IProducto) => (
                         <li
                           key={p.idProducto}
                           onClick={() => {
@@ -252,10 +274,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
 
             {/* SECCIÓN 2: ATRIBUTOS */}
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: COLORS.textSecondary }}>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold mr-1.5" style={{ backgroundColor: COLORS.purpleDim, color: COLORS.purple }}>2</span>
-                Atributos de Lote e Inventario
-              </p>
+              <SectionTitle step={2} title="Atributos de Lote e Inventario" />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <FieldLabel text="Número de Lote" required />
@@ -263,8 +282,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                     type="text"
                     placeholder="Ej: L-8892-01"
                     {...register("numeroLote", { required: "El número de lote es obligatorio" })}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                 </div>
                 <div>
@@ -273,8 +292,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                     type="text"
                     placeholder="LT-749946"
                     {...register("codigo", { required: "El código de lote es obligatorio" })}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                   <p className="text-[10px] mt-1" style={{ color: COLORS.textMuted }}>Código único de referencia.</p>
                 </div>
@@ -283,8 +302,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                   <input
                     type="date"
                     {...register("fechaFabricacion")}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                 </div>
                 <div>
@@ -292,8 +311,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                   <input
                     type="date"
                     {...register("fechaVencimiento", { required: "La fecha de vencimiento es obligatoria" })}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                 </div>
               </div>
@@ -301,10 +320,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
 
             {/* SECCIÓN 3: COSTOS */}
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: COLORS.textSecondary }}>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold mr-1.5" style={{ backgroundColor: COLORS.purpleDim, color: COLORS.purple }}>3</span>
-                Transacción y Costos
-              </p>
+              <SectionTitle step={3} title="Transacción y Costos" />
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <FieldLabel text="Cantidad Recibida" required />
@@ -312,8 +328,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                     type="number"
                     min={1}
                     {...register("stock", { required: "La cantidad es obligatoria", min: { value: 1, message: "La cantidad debe ser mayor a 0" } })}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                 </div>
                 <div>
@@ -322,8 +338,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                     type="number"
                     step="0.01"
                     {...register("precioCompra", { required: "El precio es obligatorio", min: { value: 0.01, message: "El precio debe ser mayor a 0" } })}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                 </div>
                 <div>
@@ -334,8 +350,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                     min={0}
                     max={100}
                     {...register("descuento", { min: 0, max: 100 })}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none border-2 focus:border-purple-600 transition-all focus:ring-4 focus:ring-purple-100"
-                    style={{ borderColor: COLORS.border, color: COLORS.textPrimary, backgroundColor: COLORS.bgInput }}
+                    className={INPUT_CLASSES}
+                    style={INPUT_STYLES}
                   />
                 </div>
               </div>
@@ -347,7 +363,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
             </div>
 
             {/* NOTA INFORMATIVA */}
-            <div className="flex items-start gap-3 p-3.5 rounded-xl border" style={{ backgroundColor: "#FAFXFF", borderColor: COLORS.border }}>
+            <div className="flex items-start gap-3 p-3.5 rounded-xl border" style={{ backgroundColor: "#FAFAFF", borderColor: COLORS.border }}>
               <svg className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: COLORS.purple }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
