@@ -1,0 +1,138 @@
+import api from "../lib/Axios";
+import { isAxiosError } from "axios";
+import {
+  VentaListSchema,
+  VentaSchema,
+  VentaEstadisticasSchema,
+  LotesDisponiblesSchema,
+  type CreateVentaType,
+  type UpdateVentaType,
+  type IVentaFiltros,
+  type IFacturaInput,
+} from "../types"; // Asumiendo que tu index.ts está en ../types/index.ts
+
+// ── GET: Obtener Estadísticas ────────────────────────────────────────────────
+export async function GetEstadisticasVentasApi() {
+  try {
+    const { data } = await api.get('/Venta/GetEstadisticasVentas');
+    const response = VentaEstadisticasSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error("Error en la validación de datos de estadísticas");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al obtener estadísticas');
+    }
+    throw error;
+  }
+}
+
+// ── GET: Listar Ventas (con filtros y paginación) ────────────────────────────
+export async function GetVentasApi(filtros?: IVentaFiltros) {
+  try {
+    const { data } = await api.get('/Venta/GetVentas', { params: filtros });
+    // Tu backend devuelve { data: [...], total: X }. Validamos el array interior.
+    const response = VentaListSchema.safeParse(data.data);
+    if (response.success) {
+      return { data: response.data, total: data.total };
+    }
+    throw new Error("Error en la validación de datos de la lista de ventas");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al obtener las ventas');
+    }
+    throw error;
+  }
+}
+
+// ── GET: Detalle de Venta por ID ──────────────────────────────────────────────
+export async function GetVentaByIdApi(idVenta: number) {
+  try {
+    const { data } = await api.get(`/Venta/GetVenta/${idVenta}`);
+    const response = VentaSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error("Error en la validación de datos del detalle de venta");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al obtener el detalle de la venta');
+    }
+    throw error;
+  }
+}
+
+// ── POST: Crear Nueva Venta ───────────────────────────────────────────────────
+export async function AddVentaApi(formData: CreateVentaType) {
+  try {
+    const { data } = await api.post('/Venta/AddVenta', formData);
+    return data; // Devuelve { message, idVenta }
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al crear la venta');
+    }
+    throw error;
+  }
+}
+
+// ── PUT: Actualizar Venta Pendiente ───────────────────────────────────────────
+export async function UpdateVentaApi(idVenta: number, formData: UpdateVentaType) {
+  try {
+    const { data } = await api.put(`/Venta/UpdateVenta/${idVenta}`, formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al actualizar la venta');
+    }
+    throw error;
+  }
+}
+
+// ── PATCH: Cambiar Estado (Pendiente / Completada / Anulada) ─────────────────
+export async function ChangeEstadoVentaApi(
+  idVenta: number,
+  estado: 'pendiente' | 'completada' | 'anulada',
+  motivo?: string
+) {
+  try {
+    // Mandamos el estado (y el motivo si es anulación) en el body como lo espera tu controlador
+    const { data } = await api.patch(`/Venta/ChangeEstadoVenta/${idVenta}`, { estado, motivo });
+    return data; // { message: "..." }
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al cambiar el estado');
+    }
+    throw error;
+  }
+}
+
+// ── POST: Emitir Factura de una Venta Completada ──────────────────────────────
+export async function EmitirFacturaApi(idVenta: number, formData: IFacturaInput) {
+  try {
+    const { data } = await api.post(`/Venta/EmitirFactura/${idVenta}`, formData);
+    return data; // { message, idFactura }
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al emitir la factura');
+    }
+    throw error;
+  }
+}
+
+// ── GET: Lotes Disponibles de un Producto (selector FEFO en el POS) ──────────
+export async function GetLotesDisponiblesApi(idProducto: number) {
+  try {
+    const { data } = await api.get(`/Venta/GetLotesDisponibles/${idProducto}`);
+    const response = LotesDisponiblesSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error("Error en la validación de datos de lotes disponibles");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al obtener los lotes disponibles');
+    }
+    throw error;
+  }
+}

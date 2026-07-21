@@ -490,3 +490,162 @@ export const LoteFiltrosSchema = z.object({
 });
 
 export type ILoteFiltros = z.infer<typeof LoteFiltrosSchema>;
+
+
+// ========================================================================
+// TYPES: VENTA, DETALLE VENTA Y FACTURA (MÓDULO DE VENTAS)
+// ========================================================================
+
+// 1. Schema para DetalleVenta (Lo que devuelve el backend al consultar una venta)
+export const DetalleVentaSchema = z.object({
+  cantidad: z.number(),
+  precioUnitario: z.union([z.number(), z.string()]).transform(Number),
+  descuento: z.union([z.number(), z.string()]).transform(Number),
+  subtotal: z.union([z.number(), z.string()]).transform(Number),
+  // Campos extraídos del JOIN con Lote y Producto
+  idLote: z.number().optional(),
+  numeroLote: z.string().optional(),
+  codigo: z.string().optional(),
+  fechaVencimiento: z.string().optional(),
+  diasParaVencer: z.number().optional(),
+  idProducto: z.number().optional(),
+  codigoBarra: z.string().optional(),
+  nombreGenerico: z.string().optional(),
+  nombreComercial: z.string().nullable().optional(),
+  concentracion: z.string().nullable().optional(),
+  requiereReceta: z.union([z.number(), z.boolean()]).optional(),
+  nombreLaboratorio: z.string().optional(),
+});
+
+export type DetalleVentaType = z.infer<typeof DetalleVentaSchema>;
+
+// 2. Schema para la Factura asociada a una venta
+export const FacturaSchema = z.object({
+  idFactura: z.number(),
+  numeroFactura: z.string(),
+  fechaEmision: z.string(),
+  tipoFactura: z.string(),
+  nitCliente: z.string().nullable().optional(),
+  razonSocial: z.string().nullable().optional(),
+  estado: z.enum(['emitida', 'anulada']),
+  fechaAnulacion: z.string().nullable().optional(),
+  motivoAnulacion: z.string().nullable().optional(),
+});
+
+export type FacturaType = z.infer<typeof FacturaSchema>;
+
+// 3. Schema para la Venta (Lectura)
+export const VentaSchema = z.object({
+  idVenta: z.number(),
+  fechaCreacion: z.string(),
+  fechaModificaion: z.string().optional(), // OJO: coincide con el typo de la tabla/model
+  subtotal: z.union([z.number(), z.string()]).transform(Number),
+  descuentoTotal: z.union([z.number(), z.string()]).transform(Number),
+  impuestos: z.union([z.number(), z.string()]).transform(Number),
+  total: z.union([z.number(), z.string()]).transform(Number),
+  estado: z.enum(['pendiente', 'completada', 'anulada']),
+  tipoPago: z.string().nullable().optional(),
+  observaciones: z.string().nullable().optional(),
+  // Campos del JOIN
+  cliente: z.string().optional(),
+  clienteNit: z.string().nullable().optional(),
+  clienteTelefono: z.string().nullable().optional(),
+  usuario: z.string().optional(),
+  usuarioRol: z.string().optional(),
+  sucursal: z.string().optional(),
+  sucursalDireccion: z.string().nullable().optional(),
+  // Campos calculados en listar()
+  totalItems: z.number().optional(),
+  idFactura: z.number().nullable().optional(),
+  // Detalles y factura (solo vienen cuando pedimos por ID)
+  detalles: z.array(DetalleVentaSchema).optional(),
+  factura: FacturaSchema.nullable().optional(),
+});
+
+export const VentaListSchema = z.array(VentaSchema);
+export type VentaType = z.infer<typeof VentaSchema>;
+
+// 4. Schemas para Creación/Actualización (Inputs)
+export const DetalleVentaInputSchema = z.object({
+  idProducto: z.number(),
+  idLote: z.number(),
+  cantidad: z.number().min(1, 'La cantidad debe ser mayor a 0'),
+  precioUnitario: z.number().min(0.01, 'El precio debe ser válido'),
+  descuento: z.number().default(0),
+});
+
+export const CreateVentaSchema = z.object({
+  idCliente: z.number(),
+  idSucursal: z.number(),
+  tipoPago: z.string().optional(),
+  descuentoTotal: z.number(),
+  impuestos: z.number(),
+  subtotal: z.number(),
+  total: z.number(),
+  observaciones: z.string().optional(),
+  detalles: z.array(DetalleVentaInputSchema).min(1, 'Debe agregar al menos un producto'),
+  idUsuario: z.number().optional(), // Opcional si el backend lo toma del token
+});
+
+export type IDetalleVentaInput = z.infer<typeof DetalleVentaInputSchema>;
+export type CreateVentaType = z.infer<typeof CreateVentaSchema>;
+export type UpdateVentaType = CreateVentaType; // La estructura de update es la misma en tu controlador
+
+// 5. Schema para cambio de estado (Completar / Anular / Volver a pendiente)
+export const ChangeEstadoVentaSchema = z.object({
+  estado: z.enum(['pendiente', 'completada', 'anulada']),
+  motivo: z.string().optional(), // Solo se usa cuando estado === 'anulada'
+});
+
+export type ChangeEstadoVentaType = z.infer<typeof ChangeEstadoVentaSchema>;
+
+// 6. Schema para emitir factura
+export const FacturaInputSchema = z.object({
+  tipoFactura: z.string().min(1, 'Debe especificar el tipo de factura'),
+  nitCliente: z.string().optional(),
+  razonSocial: z.string().optional(),
+});
+
+export type IFacturaInput = z.infer<typeof FacturaInputSchema>;
+
+// 7. Schema para Filtros de Búsqueda
+export const VentaFiltrosSchema = z.object({
+  estado: z.enum(['pendiente', 'completada', 'anulada']).optional(),
+  idCliente: z.number().optional(),
+  idUsuario: z.number().optional(),
+  idSucursal: z.number().optional(),
+  fechaDesde: z.string().optional(),
+  fechaHasta: z.string().optional(),
+  pagina: z.number().optional(),
+  porPagina: z.number().optional(),
+});
+
+export type IVentaFiltros = z.infer<typeof VentaFiltrosSchema>;
+
+// 8. Schema para Estadísticas del Dashboard
+export const VentaEstadisticasSchema = z.object({
+  porEstado: z.array(z.any()), // array de {estado, cantidad, monto}
+  totalMes: z.number(),
+  totalMesAnterior: z.number(),
+  porSucursal: z.array(z.any()), // array de {nombre, cantidad, monto}
+  masVendidos: z.array(z.any()), // array de {nombreGenerico, unidadesVendidas, monto}
+});
+
+export type VentaEstadisticasType = z.infer<typeof VentaEstadisticasSchema>;
+
+// ========================================================================
+// AGREGAR ESTO A TU types/index.ts (lotes disponibles para el POS)
+// ========================================================================
+
+// ── Schema de lote disponible para vender (selector FEFO en el POS) ────────
+export const LoteDisponibleSchema = z.object({
+  idLote: z.number(),
+  numeroLote: z.string(),
+  codigo: z.string(),
+  stock: z.number(),
+  fechaVencimiento: z.string(),
+  precioCompra: z.union([z.number(), z.string()]).transform(Number),
+});
+
+export const LotesDisponiblesSchema = z.array(LoteDisponibleSchema);
+export type LoteDisponibleType = z.infer<typeof LoteDisponibleSchema>;

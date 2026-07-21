@@ -18,6 +18,8 @@ import ProductoRoutes from "./Routes/ProductoRoutes";
 import CompraLoteRoutes from "./Routes/CompraLoteRoutes";
 import LoteRoutes from "./Routes/LoteRoutes";
 
+import VentaRoutes from "./Routes/VentaRoutes";
+
 import path from "path";
 
 const app = express()
@@ -46,5 +48,7 @@ app.use('/api/Producto',ProductoRoutes);
 
 app.use('/api/Compra', CompraLoteRoutes);
 app.use('/api/Lote', LoteRoutes);
+
+app.use('/api/Venta', VentaRoutes);
 
 export default app
