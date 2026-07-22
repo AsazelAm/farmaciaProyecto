@@ -538,7 +538,7 @@ export type FacturaType = z.infer<typeof FacturaSchema>;
 export const VentaSchema = z.object({
   idVenta: z.number(),
   fechaCreacion: z.string(),
-  fechaModificaion: z.string().optional(), // OJO: coincide con el typo de la tabla/model
+  fechaModificacion: z.string().optional(), // OJO: coincide con el typo de la tabla/model
   subtotal: z.union([z.number(), z.string()]).transform(Number),
   descuentoTotal: z.union([z.number(), z.string()]).transform(Number),
   impuestos: z.union([z.number(), z.string()]).transform(Number),

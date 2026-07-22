@@ -72,6 +72,13 @@ export default function Aside() {
               <NavItem to="/Dashboard/NewCompra" icon={user} label="Nueva Compra" />
               <NavItem to="/Dashboard/Lote" icon={user} label="Lotes" />
             </SubMenu>
+
+            <SubMenu label="Venta" icon={user}>
+              <NavItem to="/Dashboard/Venta" icon={user} label="Venta"/>
+              <NavItem to="/Dashboard/NewVenta" icon={user} label="Nueva Venta" />
+              <NavItem to="/Dashboard/Factura" icon={user} label="Factura" />
+            </SubMenu>
+  
           </div>
         </nav>
 

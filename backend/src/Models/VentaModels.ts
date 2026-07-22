@@ -96,7 +96,7 @@ const DataVenta = {
             SELECT 
                 v.idVenta, v.fechaCreacion, v.subtotal, v.descuentoTotal,
                 v.impuestos, v.total, v.estado, v.tipoPago,
-                cl.nombre AS cliente,
+                cl.nombre AS cliente, cl.ci AS clienteNit,
                 u.nombre  AS usuario,
                 s.nombre  AS sucursal,
                 (SELECT idFactura FROM factura f WHERE f.idVenta = v.idVenta LIMIT 1) AS idFactura,
@@ -126,10 +126,10 @@ const DataVenta = {
         // 1. Cabecera de la venta
         const ventas = await conection.query(`
             SELECT 
-                v.idVenta, v.fechaCreacion, v.fechaModificaion, v.subtotal, v.descuentoTotal,
+                v.idVenta, v.fechaCreacion, v.fechaModificacion, v.subtotal, v.descuentoTotal,
                 v.impuestos, v.total, v.estado, v.tipoPago, v.observaciones,
                 v.idCliente, v.idUsuario, v.idSucursal,
-                cl.nombre AS cliente, cl.nit AS clienteNit, cl.telefono AS clienteTelefono,
+                cl.nombre AS cliente, cl.ci AS clienteNit, cl.telefono AS clienteTelefono,
                 CONCAT(u.nombre, ' ', u.apellido) AS usuario, t.nameRol AS usuarioRol,
                 s.nombre AS sucursal, s.direccion AS sucursalDireccion
             FROM venta v
