@@ -16,6 +16,11 @@ type Props = Readonly<{
   isOpen: boolean;
 }>;
 
+// ─── Interfaces de Catálogos ─────────────────────────────────────────────────
+interface ILaboratorio { idLaboratorio: number; nombre: string; }
+interface ITipoProducto { idTipoProd: number; nombre: string; }
+interface IPresentacion { idPresentacion: number; nombre: string; }
+
 // ─── Paleta (idéntica a Proveedor / ProveedorForm) ───────────────────────────
 const C = {
   dark: "#4A1A6E",
@@ -31,7 +36,7 @@ const LS_KEY = "ProductoFormDraft";
 function buildFormData(values: CreateProducto, file?: File | null): FormData {
   const fd = new FormData();
   (Object.keys(values) as (keyof CreateProducto)[]).forEach((k) => {
-    if (k === "img") return; // la imagen se agrega aparte
+    if (k === "img") return;
     const v = values[k];
     if (v !== null && v !== undefined) fd.append(k, String(v));
   });
@@ -55,6 +60,40 @@ const Field = ({
   </div>
 );
 
+// ── Select field reutilizable (DRY) ───────────────────────────────────────
+interface SelectFieldProps {
+  id: string;
+  label: string;
+  options: { value: number; label: string }[];
+  placeholder: string;
+  error?: string;
+  registration: any;
+}
+
+const SelectField = ({ id, label, options, placeholder, error, registration }: SelectFieldProps) => (
+  <Field id={id} label={label} required>
+    <div className="relative group">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+        <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+      </div>
+      <select
+        id={id}
+        className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
+        style={{ borderColor: C.border, color: C.text }}
+        {...registration}
+      >
+        <option value="0">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+    </div>
+    {error && <ErrorMessage>{error}</ErrorMessage>}
+  </Field>
+);
+
 export default function ProductoForm({ setIsOpen, isOpen }: Props) {
   const queryClient = useQueryClient();
 
@@ -62,16 +101,13 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
   const [imgPreview, setImgPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  // ── Ref para el SVG del código de barra ───────────────────────────────
-  const barcodeRef = useRef<SVGSVGElement | null>(null);
-
   // ── react-hook-form ───────────────────────────────────────────────────────
   const {
     register,
     handleSubmit,
     reset,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateProducto>({
     defaultValues: {
       codigoBarra: "",
@@ -108,15 +144,15 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
   }, [watch, isOpen]);
 
   // ── Queries para los selects relacionados ─────────────────────────────────
-  const { data: laboratorios = [] } = useQuery({
+  const { data: laboratorios = [] } = useQuery<ILaboratorio[]>({
     queryKey: ["LaboratorioAll"],
     queryFn: GetLaboratorioApi,
   });
-  const { data: tiposProducto = [] } = useQuery({
+  const { data: tiposProducto = [] } = useQuery<ITipoProducto[]>({
     queryKey: ["TipoProdAll"],
     queryFn: GetTipoProdApi,
   });
-  const { data: presentaciones = [] } = useQuery({
+  const { data: presentaciones = [] } = useQuery<IPresentacion[]>({
     queryKey: ["PresentacionAll"],
     queryFn: GetPresentaApi,
   });
@@ -128,10 +164,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["ProductoAll"] });
       toast.success(result?.message ?? "Producto registrado correctamente");
-      reset();
-      setImgPreview(null);
-      localStorage.removeItem(LS_KEY);
-      setIsOpen(false);
+      handleCleanUp();
     },
   });
 
@@ -140,18 +173,24 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
     mutate(buildFormData(values, file));
   };
 
-  const handleClose = () => {
+  const handleCleanUp = () => {
+    if (imgPreview) {
+      URL.revokeObjectURL(imgPreview);
+    }
     localStorage.removeItem(LS_KEY);
     reset();
     setImgPreview(null);
     setIsOpen(false);
   };
 
-  // Field helper se movió afuera del componente para evitar que se recree en cada render y cause pérdida de focus.
+  // Mapeos limpios de los catálogos para el subcomponente DRY
+  const labOptions = useMemo(() => laboratorios.map(l => ({ value: l.idLaboratorio, label: l.nombre })), [laboratorios]);
+  const tipoOptions = useMemo(() => tiposProducto.map(t => ({ value: t.idTipoProd, label: t.nombre })), [tiposProducto]);
+  const presentaOptions = useMemo(() => presentaciones.map(p => ({ value: p.idPresentacion, label: p.nombre })), [presentaciones]);
 
   return (
     <div className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="absolute inset-0" onClick={handleClose} />
+      <div className="absolute inset-0" onClick={handleCleanUp} />
 
       <div
         role="dialog"
@@ -182,7 +221,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
             </div>
             <button
               type="button"
-              onClick={handleClose}
+              onClick={handleCleanUp}
               className="p-2 px-4 flex items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/25 transition-colors text-white text-sm font-semibold"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +237,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
           <div className="px-6 py-6 overflow-y-auto max-h-[65vh]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-              {/* ── Código de barra + preview JsBarcode (ancho completo) ────── */}
+              {/* ── Código de barra + preview JsBarcode ────────────────────── */}
               <div className="md:col-span-2">
                 <Field id="codigoBarra" label="Código de Barra" required>
                   <div className="relative group">
@@ -222,7 +261,6 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                   </div>
                   {errors.codigoBarra && <ErrorMessage>{errors.codigoBarra.message}</ErrorMessage>}
                 </Field>
-                {/* Preview del Código de Barra */}
                 {watch("codigoBarra") && (
                   <div className="mt-2 flex flex-col items-center p-2.5 bg-purple-50/50 rounded-xl border border-dashed border-purple-200">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-purple-700 mb-1">Vista Previa del Código</span>
@@ -380,85 +418,44 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                 {errors.requiereReceta && <ErrorMessage>{errors.requiereReceta.message}</ErrorMessage>}
               </Field>
 
-              {/* ── Laboratorio ──────────────────────────────────────────── */}
-              <Field id="idLaboratorio" label="Laboratorio" required>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                  </div>
-                  <select
-                    id="idLaboratorio"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-                    style={{ borderColor: C.border, color: C.text }}
-                    {...register("idLaboratorio", {
-                      required: "Seleccione un laboratorio",
-                      validate: (v) => Number(v) > 0 || "Seleccione un laboratorio",
-                    })}
-                  >
-                    <option value="0">-- Seleccione un laboratorio --</option>
-                    {Array.isArray(laboratorios) && laboratorios.map((l: any) => (
-                      <option key={l.idLaboratorio} value={l.idLaboratorio}>{l.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                {errors.idLaboratorio && <ErrorMessage>{errors.idLaboratorio.message}</ErrorMessage>}
-              </Field>
+              {/* ── Catálogos Abstraídos (DRY) ────────────────────────────── */}
+              <SelectField
+                id="idLaboratorio"
+                label="Laboratorio"
+                placeholder="-- Seleccione un laboratorio --"
+                options={labOptions}
+                error={errors.idLaboratorio?.message}
+                registration={register("idLaboratorio", {
+                  required: "Seleccione un laboratorio",
+                  validate: (v) => Number(v) > 0 || "Seleccione un laboratorio",
+                })}
+              />
 
-              {/* ── Tipo de Producto ─────────────────────────────────────── */}
-              <Field id="idTipoProd" label="Tipo de Producto" required>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    </svg>
-                  </div>
-                  <select
-                    id="idTipoProd"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-                    style={{ borderColor: C.border, color: C.text }}
-                    {...register("idTipoProd", {
-                      required: "Seleccione un tipo",
-                      validate: (v) => Number(v) > 0 || "Seleccione un tipo de producto",
-                    })}
-                  >
-                    <option value="0">-- Seleccione un tipo --</option>
-                    {Array.isArray(tiposProducto) && tiposProducto.map((t: any) => (
-                      <option key={t.idTipoProd} value={t.idTipoProd}>{t.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                {errors.idTipoProd && <ErrorMessage>{errors.idTipoProd.message}</ErrorMessage>}
-              </Field>
+              <SelectField
+                id="idTipoProd"
+                label="Tipo de Producto"
+                placeholder="-- Seleccione un tipo --"
+                options={tipoOptions}
+                error={errors.idTipoProd?.message}
+                registration={register("idTipoProd", {
+                  required: "Seleccione un tipo",
+                  validate: (v) => Number(v) > 0 || "Seleccione un tipo de producto",
+                })}
+              />
 
-              {/* ── Presentación ─────────────────────────────────────────── */}
-              <Field id="idPresentacion" label="Presentación" required>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                  <select
-                    id="idPresentacion"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-                    style={{ borderColor: C.border, color: C.text }}
-                    {...register("idPresentacion", {
-                      required: "Seleccione una presentación",
-                      validate: (v) => Number(v) > 0 || "Seleccione una presentación",
-                    })}
-                  >
-                    <option value="0">-- Seleccione presentación --</option>
-                    {Array.isArray(presentaciones) && presentaciones.map((p: any) => (
-                      <option key={p.idPresentacion} value={p.idPresentacion}>{p.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                {errors.idPresentacion && <ErrorMessage>{errors.idPresentacion.message}</ErrorMessage>}
-              </Field>
+              <SelectField
+                id="idPresentacion"
+                label="Presentación"
+                placeholder="-- Seleccione presentación --"
+                options={presentaOptions}
+                error={errors.idPresentacion?.message}
+                registration={register("idPresentacion", {
+                  required: "Seleccione una presentación",
+                  validate: (v) => Number(v) > 0 || "Seleccione una presentación",
+                })}
+              />
 
-              {/* ── Descripción (ancho completo) ─────────────────────────── */}
+              {/* ── Descripción ─────────────────────────────────────────── */}
               <div className="space-y-1.5 md:col-span-2">
                 <label htmlFor="descripcion" className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
                   Descripción <span className="ml-1 text-gray-400 font-normal normal-case text-xs">(opcional)</span>
@@ -473,7 +470,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                 />
               </div>
 
-              {/* ── Contraindicaciones (ancho completo) ─────────────────── */}
+              {/* ── Contraindicaciones ─────────────────────────────────── */}
               <div className="space-y-1.5 md:col-span-2">
                 <label htmlFor="contraindicaciones" className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
                   Contraindicaciones <span className="ml-1 text-gray-400 font-normal normal-case text-xs">(opcional)</span>
@@ -521,14 +518,14 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                     ref={fileRef}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) setImgPreview(URL.createObjectURL(file));
-                      else setImgPreview(null);
+                      if (imgPreview) URL.revokeObjectURL(imgPreview);
+                      setImgPreview(file ? URL.createObjectURL(file) : null);
                     }}
                   />
                 </div>
               </div>
 
-            </div>{/* fin grid */}
+            </div>
 
             {/* ── Caja informativa ─────────────────────────────────────── */}
             <div
@@ -555,7 +552,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
           >
             <button
               type="button"
-              onClick={handleClose}
+              onClick={handleCleanUp}
               className="px-5 py-2.5 rounded-xl border-2 font-bold text-sm transition-all hover:bg-gray-100 active:scale-95"
               style={{ borderColor: C.border, color: C.dark }}
             >
@@ -563,11 +560,11 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
             </button>
             <button
               type="submit"
-              disabled={isPending || isSubmitting}
+              disabled={isPending}
               className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-bold transition-all shadow-lg hover:shadow-purple-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ background: "linear-gradient(135deg, #4A1A6E, #7B3FA0)" }}
             >
-              {isPending || isSubmitting ? (
+              {isPending ? (
                 <>
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
