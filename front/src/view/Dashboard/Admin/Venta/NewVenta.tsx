@@ -15,21 +15,21 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
-import { GetProductoApi } from "../api/ProductoApi";
+import { GetProductoApi } from "../../../../Api/ProductoApi";
 import {
   AddVentaApi,
   ChangeEstadoVentaApi,
   EmitirFacturaApi,
   GetLotesDisponiblesApi,
-} from "../api/VentaApi";
+} from "../../../../Api/VentaApi";
 // TODO: estos dos archivos API no venían en lo que compartiste. Los asumo
 // con la misma forma que ProductoApi/VentaApi (axios + safeParse con Zod).
 // Si aún no existen, créalos siguiendo ese mismo patrón.
-import { GetClienteApi } from "../api/ClienteApi";
-import { GetSucursalApi } from "../api/SucursalApi";
+import { GetClienteApi } from "../../../../Api/ClienteApi";
+import { GetSucursalApi } from "../../../../Api/SucursalApi";
 // TODO: ajusta la ruta/forma de tu hook de autenticación real. Aquí solo
 // necesito idUsuario, idSucursal, nombre y nameRol del usuario logueado.
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../../../Hook/UseAuth";
 
 import {
   ClienteArray,
@@ -37,7 +37,7 @@ import {
   sucursalArray,
   type CreateVentaType,
   type LoteDisponibleType,
-} from "../types";
+} from "../../../../types";
 import Factura, { type IDatosCobro } from "./Factura";
 
 // ── Tipos derivados de los schemas de Zod que ya tienes en types/index.ts ──
@@ -101,12 +101,12 @@ export default function NewVenta() {
 
   // ── Data fetching ───────────────────────────────────────────────────────
   const { data: productos = [], isLoading: cargandoProductos } = useQuery({
-    queryKey: ["productos"],
+    queryKey: ["ProductoAll"],
     queryFn: GetProductoApi,
   });
 
   const { data: clientes = [] } = useQuery({
-    queryKey: ["clientes"],
+    queryKey: ["ClienteAll"],
     queryFn: GetClienteApi,
   });
 

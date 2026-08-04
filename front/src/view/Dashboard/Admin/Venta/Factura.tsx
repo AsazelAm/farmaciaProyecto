@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import type { IFacturaInput } from "../types";
+import type { IFacturaInput } from "../../../../types";
 
 // ── Tipo de datos que este modal le entrega a NewVenta.tsx al confirmar ──────
 // NewVenta.tsx es quien realmente ejecuta la creación de la venta; este
