@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import {
@@ -90,6 +90,14 @@ export default function NewVenta() {
   const [idSucursalSeleccionada, setIdSucursalSeleccionada] = useState<number | null>(null);
   const [modalFacturaAbierto, setModalFacturaAbierto] = useState(false);
 
+  // ── Buscador de cliente (reemplaza el <select> por un autocompletado) ──
+  // Texto que el cajero está escribiendo mientras busca un cliente.
+  const [busquedaCliente, setBusquedaCliente] = useState("");
+  // Controla si el dropdown de sugerencias está visible.
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  // Referencia al contenedor del buscador, para cerrar el dropdown al hacer clic afuera.
+  const clienteInputRef = useRef<HTMLDivElement>(null);
+
   // En cuanto sepamos qué usuario está logueado, preseleccionamos SU
   // sucursal como punto de venta por defecto (el cajero puede cambiarla
   // manualmente si atiende otra sucursal ese día).
@@ -98,6 +106,19 @@ export default function NewVenta() {
       setIdSucursalSeleccionada(user.idSucursal);
     }
   }, [user, idSucursalSeleccionada]);
+
+  // Cierra el dropdown de sugerencias de cliente cuando el usuario hace clic
+  // en cualquier parte fuera del buscador. Usamos "mousedown" (no "click")
+  // para que este cierre no le gane la carrera al onClick de una sugerencia.
+  useEffect(() => {
+    function handleClickFuera(e: MouseEvent) {
+      if (clienteInputRef.current && !clienteInputRef.current.contains(e.target as Node)) {
+        setMostrarSugerencias(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickFuera);
+    return () => document.removeEventListener("mousedown", handleClickFuera);
+  }, []);
 
   // ── Data fetching ───────────────────────────────────────────────────────
   const { data: productos = [], isLoading: cargandoProductos } = useQuery({
@@ -135,6 +156,31 @@ export default function NewVenta() {
     });
     return mapa;
   }, [productos, lotesQueries]);
+
+  // ── Cliente actualmente seleccionado (para mostrar su nombre en el input) ──
+  const clienteSeleccionado = useMemo(
+    () =>
+      idClienteSeleccionado === ID_CLIENTE_PUBLICO_GENERAL
+        ? null
+        : (clientes as ClienteType[]).find((c) => c.idCliente === idClienteSeleccionado) ?? null,
+    [clientes, idClienteSeleccionado]
+  );
+
+  // ── Filtro de clientes por nombre, apellido o CI ────────────────────────
+  // Sin texto: muestra los primeros 8 como sugerencia inicial (evita listas
+  // interminables). Con texto: filtra por coincidencia.
+  const clientesFiltrados = useMemo(() => {
+    const termino = busquedaCliente.trim().toLowerCase();
+    const lista = clientes as ClienteType[];
+    if (!termino) return lista.slice(0, 8);
+    return lista
+      .filter(
+        (c) =>
+          `${c.nombre} ${c.apellido ?? ""}`.toLowerCase().includes(termino) ||
+          c.ci?.toLowerCase().includes(termino)
+      )
+      .slice(0, 8);
+  }, [clientes, busquedaCliente]);
 
   // ── Filtro de búsqueda (nombre genérico, comercial o código de barras) ──
   const productosFiltrados = useMemo(() => {
@@ -265,6 +311,18 @@ export default function NewVenta() {
         return { ...item, descuento };
       })
     );
+  }
+
+  // Selecciona un cliente desde el dropdown (o null = "Público General"),
+  // y cierra + limpia el buscador.
+  function seleccionarCliente(cliente: ClienteType | null) {
+    if (cliente === null) {
+      setIdClienteSeleccionado(ID_CLIENTE_PUBLICO_GENERAL);
+    } else {
+      setIdClienteSeleccionado(cliente.idCliente);
+    }
+    setBusquedaCliente("");
+    setMostrarSugerencias(false);
   }
 
   function quitarDelCarrito(idProducto: number, idLote: number) {
@@ -497,24 +555,59 @@ export default function NewVenta() {
 
         {/* ═══════════════ COLUMNA DERECHA: CLIENTE + CARRITO ═══════════════ */}
         <section className="flex flex-col rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-          {/* ── Cliente asociado ── */}
-          <div className="mb-4">
+          {/* ── Cliente asociado (buscador con sugerencias) ── */}
+          <div className="mb-4" ref={clienteInputRef}>
             <label className="mb-1 block text-xs font-bold text-violet-500">
               CLIENTE ASOCIADO (&apos;idCliente&apos;)
             </label>
             <div className="flex gap-2">
-              <select
-                value={idClienteSeleccionado}
-                onChange={(e) => setIdClienteSeleccionado(Number(e.target.value))}
-                className="flex-1 rounded-xl border border-violet-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-              >
-                <option value={ID_CLIENTE_PUBLICO_GENERAL}>Sin Nombre / Público General</option>
-                {(clientes as ClienteType[]).map((c) => (
-                  <option key={c.idCliente} value={c.idCliente}>
-                    {c.nombre} {c.apellido ?? ""}
-                  </option>
-                ))}
-              </select>
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-300" />
+                <input
+                  type="text"
+                  value={
+                    mostrarSugerencias
+                      ? busquedaCliente
+                      : clienteSeleccionado
+                      ? `${clienteSeleccionado.nombre} ${clienteSeleccionado.apellido ?? ""}`.trim()
+                      : "Sin Nombre / Público General"
+                  }
+                  onFocus={() => {
+                    setMostrarSugerencias(true);
+                    setBusquedaCliente("");
+                  }}
+                  onChange={(e) => setBusquedaCliente(e.target.value)}
+                  placeholder="Buscar cliente por nombre o CI..."
+                  className="w-full rounded-xl border border-violet-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                />
+
+                {mostrarSugerencias && (
+                  <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-violet-200 bg-white shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => seleccionarCliente(null)}
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-violet-50"
+                    >
+                      Sin Nombre / Público General
+                    </button>
+                    {clientesFiltrados.length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-gray-400">Sin resultados</p>
+                    ) : (
+                      clientesFiltrados.map((c) => (
+                        <button
+                          key={c.idCliente}
+                          type="button"
+                          onClick={() => seleccionarCliente(c)}
+                          className="block w-full px-3 py-2 text-left text-sm hover:bg-violet-50"
+                        >
+                          {c.nombre} {c.apellido ?? ""}
+                          {c.ci ? <span className="ml-2 text-xs text-gray-400">CI: {c.ci}</span> : null}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 // TODO: conecta esto a tu futuro modal de registro de
