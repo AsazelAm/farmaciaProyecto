@@ -61,3 +61,18 @@ export async function GetAuthRol(id:AuthRol['idTipoUs']){
         } 
     }
 }
+
+// ── GET: Datos completos del usuario actualmente logueado ─────────────────
+// Llama a /Auth/GetMe (protegida por el middleware "authenticate" en el
+// backend, que identifica al usuario a partir del token JWT guardado en
+// localStorage, no de ningún parámetro que mande el frontend).
+export async function GetMeApi() {
+    try {
+        const {data} = await api.get('/Auth/GetMe')
+        return data
+    } catch (error) {
+        if(isAxiosError(error) && error.response){
+            throw new Error(error.response.data.error)
+        } 
+    }
+}

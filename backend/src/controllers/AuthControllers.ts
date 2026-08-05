@@ -61,4 +61,32 @@ export class AuthControllers {
         }
     }
 
+    // ── GET: Datos completos del usuario actualmente logueado ─────────────────
+    // A diferencia de GetAuthUser (que solo reenvía lo que el middleware
+    // guardó en req.user: idUsuario, idTipoUs, nameRol), este método consulta
+    // la fila completa del usuario -incluyendo nombre, apellido e idSucursal-
+    // que es lo que necesita el frontend para mostrar "Atendido por" en el POS.
+    static readonly GetMe = async (req: Request, res: Response): Promise<any> => {
+        try {
+            // idUsuario viene del token ya verificado por el middleware "authenticate",
+            // nunca de req.params/body -> así nadie puede pedir datos de otro usuario.
+            if (!req.user?.idUsuario) {
+                return res.status(401).json({ error: 'No autenticado' });
+            }
+
+            // Reutilizamos la función que ya existía en UserModels.ts
+            const rows = await DataUsers.UserAllModelsId(req.user.idUsuario);
+            const usuario = Array.isArray(rows) ? rows[0] : rows;
+
+            if (!usuario) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+
+            return res.json(usuario);
+        } catch (error) {
+            console.error("Error al obtener el usuario actual:", error);
+            res.status(500).json({ error: "Error al obtener el usuario actual" });
+        }
+    }
+
 }

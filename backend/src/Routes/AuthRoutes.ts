@@ -25,5 +25,12 @@ router.get('/GetUsers',
     AuthControllers.GetAuthUser
 )
 
+// Devuelve los datos completos (nombre, apellido, idSucursal, nameRol, etc.)
+// del usuario actualmente logueado, identificado por el token JWT.
+router.get('/GetMe',
+    authenticate,
+    AuthControllers.GetMe
+)
+
 
 export default router

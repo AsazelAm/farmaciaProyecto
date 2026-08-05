@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { useNavigate, Navigate, Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { useAuth } from "../Hook/UseAuth";
 import Loading from "../Helpers/Loading";
-import user from "../assets/group.png"
+import iconuser from "../assets/group.png";
 import rol from "../assets/gestion.png";
 import 'react-toastify/dist/ReactToastify.css';
 import NavItem from "./Admin/NavItem";
@@ -10,8 +11,22 @@ import SubMenu from "./Admin/SubMenu";
 
 export default function Aside() {
   const navigate = useNavigate();
-  const { data, isError, isLoading } = useAuth();
-  const Rol = data?.nameRol;
+  // "user" (antes "data") -> el hook useAuth ya no expone "data",
+  // expone "user" con los datos completos del usuario logueado.
+  const { user, isError, isLoading } = useAuth();
+  const Rol = user?.nameRol;
+
+  // Redirige a los usuarios sin rol Admin fuera de este layout.
+  // IMPORTANTE: esto va en un useEffect, no en el cuerpo del componente.
+  // Llamar a navigate() directamente durante el render intenta actualizar
+  // el estado del <HashRouter> mientras <Aside> todavía se está renderizando,
+  // lo cual React prohíbe (es el error que viste: "Cannot update a component
+  // (HashRouter) while rendering a different component (Aside)").
+  useEffect(() => {
+    if (!isLoading && !isError && user && Rol !== 'Admin') {
+      navigate("/");
+    }
+  }, [isLoading, isError, user, Rol, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('AUTH_TOKEN');
@@ -22,10 +37,10 @@ export default function Aside() {
   if (isLoading) return <Loading />;
   if (isError) return <Navigate to="/" />;
 
-  if (Rol !== 'Admin') {
-    navigate("/");
-    return;
-  }
+  // Mientras el useEffect de arriba dispara la redirección (es asíncrono,
+  // no instantáneo), no renderizamos el contenido de Admin para un usuario
+  // sin ese rol. Evita el parpadeo del menú antes de navegar.
+  if (Rol !== 'Admin') return null;
 
   return (
     <div className="flex min-h-screen bg-[#DEEAFF] overflow-x-hidden" >
@@ -50,32 +65,32 @@ export default function Aside() {
           </div>
 
           <div className="px-2 space-y-1">
-            <SubMenu icon={user} label="Usuarios">
-              <NavItem to="/Dashboard/Usuarios" icon={user} label="Usuarios" />
+            <SubMenu icon={iconuser} label="Usuarios">
+              <NavItem to="/Dashboard/Usuarios" icon={iconuser} label="Usuarios" />
               <NavItem to="/Dashboard/TipoUs" icon={rol} label="Roles" />
             </SubMenu>
 
-            <SubMenu icon={user} label="Catálogo">
-              <NavItem to="/Dashboard/Productos" icon={user} label="Productos" />
-              <NavItem to="/Dashboard/Presentacion" icon={user} label="Presentación" />
-              <NavItem to="/Dashboard/TipoProductos" icon={user} label="Tipos" />
-              <NavItem to="/Dashboard/Laboratorios" icon={user} label="Laboratorios" />
+            <SubMenu icon={iconuser} label="Catálogo">
+              <NavItem to="/Dashboard/Productos" icon={iconuser} label="Productos" />
+              <NavItem to="/Dashboard/Presentacion" icon={iconuser} label="Presentación" />
+              <NavItem to="/Dashboard/TipoProductos" icon={iconuser} label="Tipos" />
+              <NavItem to="/Dashboard/Laboratorios" icon={iconuser} label="Laboratorios" />
             </SubMenu>
 
-            <SubMenu label="Contactos Comerciales" icon={user}>
-              <NavItem to="/Dashboard/Proveedor" icon={user} label="Proveedores" />
-              <NavItem to="/Dashboard/Cliente" icon={user} label="Clientes" />
+            <SubMenu label="Contactos Comerciales" icon={iconuser}>
+              <NavItem to="/Dashboard/Proveedor" icon={iconuser} label="Proveedores" />
+              <NavItem to="/Dashboard/Cliente" icon={iconuser} label="Clientes" />
             </SubMenu>
 
-            <SubMenu label="Compra de Lotes" icon={user}>
-              <NavItem to="/Dashboard/Compra" icon={user} label="Compra" />
-              <NavItem to="/Dashboard/NewCompra" icon={user} label="Nueva Compra" />
-              <NavItem to="/Dashboard/Lote" icon={user} label="Lotes" />
+            <SubMenu label="Compra de Lotes" icon={iconuser}>
+              <NavItem to="/Dashboard/Compra" icon={iconuser} label="Compra" />
+              <NavItem to="/Dashboard/NewCompra" icon={iconuser} label="Nueva Compra" />
+              <NavItem to="/Dashboard/Lote" icon={iconuser} label="Lotes" />
             </SubMenu>
 
-            <SubMenu label="Venta" icon={user}>
-              <NavItem to="/Dashboard/Venta" icon={user} label="Venta"/>
-              <NavItem to="/Dashboard/NewVenta" icon={user} label="Nueva Venta" />
+            <SubMenu label="Venta" icon={iconuser}>
+              <NavItem to="/Dashboard/Venta" icon={iconuser} label="Venta"/>
+              <NavItem to="/Dashboard/NewVenta" icon={iconuser} label="Nueva Venta" />
               
             </SubMenu>
   
