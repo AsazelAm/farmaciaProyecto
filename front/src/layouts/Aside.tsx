@@ -11,17 +11,11 @@ import SubMenu from "./Admin/SubMenu";
 
 export default function Aside() {
   const navigate = useNavigate();
-  // "user" (antes "data") -> el hook useAuth ya no expone "data",
-  // expone "user" con los datos completos del usuario logueado.
+ 
   const { user, isError, isLoading } = useAuth();
   const Rol = user?.nameRol;
 
-  // Redirige a los usuarios sin rol Admin fuera de este layout.
-  // IMPORTANTE: esto va en un useEffect, no en el cuerpo del componente.
-  // Llamar a navigate() directamente durante el render intenta actualizar
-  // el estado del <HashRouter> mientras <Aside> todavía se está renderizando,
-  // lo cual React prohíbe (es el error que viste: "Cannot update a component
-  // (HashRouter) while rendering a different component (Aside)").
+  
   useEffect(() => {
     if (!isLoading && !isError && user && Rol !== 'Admin') {
       navigate("/");
@@ -37,9 +31,6 @@ export default function Aside() {
   if (isLoading) return <Loading />;
   if (isError) return <Navigate to="/" />;
 
-  // Mientras el useEffect de arriba dispara la redirección (es asíncrono,
-  // no instantáneo), no renderizamos el contenido de Admin para un usuario
-  // sin ese rol. Evita el parpadeo del menú antes de navegar.
   if (Rol !== 'Admin') return null;
 
   return (

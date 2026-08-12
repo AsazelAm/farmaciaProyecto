@@ -5,6 +5,7 @@ import {
   VentaSchema,
   VentaEstadisticasSchema,
   LotesDisponiblesSchema,
+  DatosFacturacionClienteSchema,
   type CreateVentaType,
   type UpdateVentaType,
   type IVentaFiltros,
@@ -132,6 +133,23 @@ export async function GetLotesDisponiblesApi(idProducto: number) {
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error || 'Error al obtener los lotes disponibles');
+    }
+    throw error;
+  }
+}
+
+// ── GET: Datos de facturación (NIT/razón social) usados antes por un cliente ──
+export async function GetDatosFacturacionClienteApi(idCliente: number) {
+  try {
+    const { data } = await api.get(`/Venta/GetDatosFacturacionCliente/${idCliente}`);
+    const response = DatosFacturacionClienteSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error("Error en la validación de los datos de facturación del cliente");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al obtener los datos de facturación del cliente');
     }
     throw error;
   }

@@ -21,6 +21,7 @@ import {
   ChangeEstadoVentaApi,
   EmitirFacturaApi,
   GetLotesDisponiblesApi,
+  GetDatosFacturacionClienteApi,
 } from "../../../../Api/VentaApi";
 // TODO: estos dos archivos API no venían en lo que compartiste. Los asumo
 // con la misma forma que ProductoApi/VentaApi (axios + safeParse con Zod).
@@ -120,7 +121,7 @@ export default function NewVenta() {
     return () => document.removeEventListener("mousedown", handleClickFuera);
   }, []);
 
-  // ── Data fetching ───────────────────────────────────────────────────────
+  // ── Data fetching 
   const { data: productos = [], isLoading: cargandoProductos } = useQuery({
     queryKey: ["ProductoAll"],
     queryFn: GetProductoApi,
@@ -129,6 +130,17 @@ export default function NewVenta() {
   const { data: clientes = [] } = useQuery({
     queryKey: ["ClienteAll"],
     queryFn: GetClienteApi,
+  });
+
+  // Combinaciones de NIT/razón social que el cliente seleccionado ya usó en
+  // facturas anteriores (para autocompletar/sugerir en el modal de Factura).
+  // "enabled" evita pedirlo para "Sin Nombre / Público General" (no tiene
+  // historial propio) y se re-dispara solo cuando cambia el cliente porque
+  // idClienteSeleccionado forma parte de la queryKey.
+  const { data: datosFacturacionCliente = [] } = useQuery({
+    queryKey: ["datosFacturacionCliente", idClienteSeleccionado],
+    queryFn: () => GetDatosFacturacionClienteApi(idClienteSeleccionado),
+    enabled: idClienteSeleccionado !== ID_CLIENTE_PUBLICO_GENERAL,
   });
 
   const { data: sucursales = [] } = useQuery({
@@ -370,10 +382,8 @@ export default function NewVenta() {
       // 2) Como ya se cobró en el modal, la pasamos a 'completada'
       await ChangeEstadoVentaApi(idVenta, "completada");
 
-      // 3) Si el cajero marcó "Registrar Factura Asociada", la emitimos
-      if (datosCobro.registrarFactura && datosCobro.facturaInput) {
-        await EmitirFacturaApi(idVenta, datosCobro.facturaInput);
-      }
+      // 3) La factura ya no es opcional: se emite siempre al confirmar
+      await EmitirFacturaApi(idVenta, datosCobro.facturaInput);
 
       return idVenta;
     },
@@ -533,7 +543,7 @@ export default function NewVenta() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <span className={`font-bold ${COLORS.textoPrimario}`}>
-                          ${producto.precio.toFixed(2)}
+                          Bs {producto.precio.toFixed(2)}
                         </span>
                         <Info className="h-3 w-3 text-gray-300" />
                       </div>
@@ -558,7 +568,7 @@ export default function NewVenta() {
           {/* ── Cliente asociado (buscador con sugerencias) ── */}
           <div className="mb-4" ref={clienteInputRef}>
             <label className="mb-1 block text-xs font-bold text-violet-500">
-              CLIENTE ASOCIADO (&apos;idCliente&apos;)
+              CLIENTE ASOCIADO 
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -718,7 +728,7 @@ export default function NewVenta() {
 
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1">
-                        <span className="text-gray-400">Descuento ($)</span>
+                        <span className="text-gray-400">Descuento (Bs)</span>
                         <input
                           type="number"
                           min={0}
@@ -732,10 +742,10 @@ export default function NewVenta() {
                       </div>
                       <div className="text-right">
                         <p className="text-gray-400">
-                          Unitario: ${item.precioUnitario.toFixed(2)}
+                          Unitario: Bs {item.precioUnitario.toFixed(2)}
                         </p>
                         <p className={`font-bold ${COLORS.textoPrimario}`}>
-                          Subtotal: $
+                          Subtotal: Bs
                           {(item.cantidad * item.precioUnitario - item.descuento).toFixed(2)}
                         </p>
                       </div>
@@ -749,19 +759,19 @@ export default function NewVenta() {
             <div className="mt-3 space-y-1 border-t border-violet-100 pt-3 text-sm">
               <div className="flex justify-between text-gray-500">
                 <span>Subtotal Bruto:</span>
-                <span>${subtotalBruto.toFixed(2)}</span>
+                <span>Bs {subtotalBruto.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>Descuentos Aplicados:</span>
-                <span>-${descuentosAplicados.toFixed(2)}</span>
+                <span>-Bs {descuentosAplicados.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>Impuestos Declarados (IVA 13%):</span>
-                <span>${impuestos.toFixed(2)}</span>
+                <span>Bs {impuestos.toFixed(2)}</span>
               </div>
               <div className={`flex justify-between pt-1 text-lg font-bold ${COLORS.textoPrimario}`}>
                 <span>TOTAL A PAGAR:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>Bs {total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -793,6 +803,7 @@ export default function NewVenta() {
         isOpen={modalFacturaAbierto}
         total={total}
         isLoading={registrarVentaMutation.isPending}
+        datosFacturacionPrevios={datosFacturacionCliente}
         onClose={() => setModalFacturaAbierto(false)}
         onConfirm={(datos) => registrarVentaMutation.mutate(datos)}
       />

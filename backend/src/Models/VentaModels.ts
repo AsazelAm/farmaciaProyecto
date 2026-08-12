@@ -514,6 +514,30 @@ const DataVenta = {
         }
     },
 
+    // ── GET: Datos de facturación (NIT / Razón Social) usados antes por un cliente ──
+    // Un cliente puede haber facturado antes con distintos NIT/razón social
+    // (ej. a veces con su CI personal, a veces con el NIT de su empresa).
+    // Buscamos en el histórico de facturas de SUS ventas, agrupando
+    // combinaciones repetidas y trayendo la más reciente primero.
+    async obtenerDatosFacturacionPorCliente(idCliente: number) {
+        const conection = await conectar.getConnection();
+        try {
+            const results = await conection.query(`
+                SELECT f.nitCliente, f.razonSocial, MAX(f.fechaEmision) AS ultimaVez
+                FROM factura f
+                INNER JOIN venta v ON v.idVenta = f.idVenta
+                WHERE v.idCliente = ?
+                  AND f.estado != 'anulada'
+                  AND (f.nitCliente IS NOT NULL OR f.razonSocial IS NOT NULL)
+                GROUP BY f.nitCliente, f.razonSocial
+                ORDER BY ultimaVez DESC
+            `, [idCliente]);
+            return results;
+        } finally {
+            conection.release();
+        }
+    },
+
     // ── DASHBOARD: Estadísticas Generales ─────────────────────────────────────
     async estadisticas() {
         const conection = await conectar.getConnection();

@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import type { IFacturaInput } from "../../../../types";
+import type { IFacturaInput, DatosFacturacionClienteType } from "../../../../types";
 
 // ── Tipo de datos que este modal le entrega a NewVenta.tsx al confirmar ──────
 // NewVenta.tsx es quien realmente ejecuta la creación de la venta; este
 // componente solo recolecta los datos de cobro y factura.
+// "registrarFactura" ya no existe: la factura se registra siempre al
+// confirmar la transacción, así que facturaInput ya no es opcional.
 export interface IDatosCobro {
   tipoPago: "Efectivo" | "Tarjeta de Crédito" | "QR Directo";
-  registrarFactura: boolean;
-  facturaInput?: IFacturaInput;
+  facturaInput: IFacturaInput;
   observaciones?: string;
 }
 
@@ -16,6 +17,10 @@ interface FacturaProps {
   isOpen: boolean;
   total: number;
   isLoading?: boolean;
+  // Combinaciones de NIT/razón social que este cliente ya usó en facturas
+  // anteriores (la más reciente primero). Vacío si es cliente nuevo o
+  // "Público General".
+  datosFacturacionPrevios?: DatosFacturacionClienteType[];
   onClose: () => void;
   onConfirm: (datos: IDatosCobro) => void;
 }
@@ -29,16 +34,28 @@ export default function Factura({
   isOpen,
   total,
   isLoading = false,
+  datosFacturacionPrevios = [],
   onClose,
   onConfirm,
 }: FacturaProps) {
   // ── Estado local del formulario de cobro ──────────────────────────────
   const [tipoPago, setTipoPago] = useState<IDatosCobro["tipoPago"]>("Efectivo");
-  const [registrarFactura, setRegistrarFactura] = useState(true);
   const [nitCliente, setNitCliente] = useState("");
   const [razonSocial, setRazonSocial] = useState("");
   const [tipoFactura, setTipoFactura] = useState(TIPOS_FACTURA[0]);
   const [observaciones, setObservaciones] = useState("");
+
+  // ── Autocompletar con el dato de facturación más reciente del cliente ──
+  // Cada vez que el modal se abre (o cambian los datos previos, porque
+  // NewVenta.tsx los recarga al cambiar de cliente), si existe al menos un
+  // NIT/razón social usado antes, lo precargamos. El cajero igual puede
+  // editarlo a mano o elegir otro de los chips de abajo.
+  useEffect(() => {
+    if (isOpen && datosFacturacionPrevios.length > 0) {
+      setNitCliente(datosFacturacionPrevios[0].nitCliente ?? "");
+      setRazonSocial(datosFacturacionPrevios[0].razonSocial ?? "");
+    }
+  }, [isOpen, datosFacturacionPrevios]);
 
   // Modal controlado: si el padre dice que no está abierto, no renderizamos nada.
   // Así NewVenta.tsx decide cuándo aparece, y este componente no necesita
@@ -47,17 +64,15 @@ export default function Factura({
 
   function handleConfirmar() {
     // Empaquetamos exactamente lo que el padre necesita para llamar
-    // AddVentaApi / ChangeEstadoVentaApi / EmitirFacturaApi.
+    // AddVentaApi / ChangeEstadoVentaApi / EmitirFacturaApi. La factura
+    // siempre se envía (ya no depende de un checkbox).
     onConfirm({
       tipoPago,
-      registrarFactura,
-      facturaInput: registrarFactura
-        ? {
-            tipoFactura,
-            nitCliente: nitCliente.trim() || undefined,
-            razonSocial: razonSocial.trim() || undefined,
-          }
-        : undefined,
+      facturaInput: {
+        tipoFactura,
+        nitCliente: nitCliente.trim() || undefined,
+        razonSocial: razonSocial.trim() || undefined,
+      },
       observaciones: observaciones.trim() || undefined,
     });
   }
@@ -66,7 +81,6 @@ export default function Factura({
     // Reseteamos el formulario para que la próxima venta no arrastre datos
     // de la anterior (NIT, razón social, observaciones, etc).
     setTipoPago("Efectivo");
-    setRegistrarFactura(true);
     setNitCliente("");
     setRazonSocial("");
     setTipoFactura(TIPOS_FACTURA[0]);
@@ -118,68 +132,95 @@ export default function Factura({
             </div>
           </div>
 
-          {/* ── Checkbox: ¿emitir factura ahora? ── */}
-          <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-violet-50 p-3">
-            <input
-              type="checkbox"
-              checked={registrarFactura}
-              onChange={(e) => setRegistrarFactura(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-violet-600"
-            />
-            <span className="text-xs">
-              <span className="block font-semibold text-gray-700">
-                ¿Registrar Factura Asociada?
-              </span>
-              <span className="text-gray-400">
-                Inserta registro correspondiente en la tabla &apos;factura&apos; de tu DB.
-              </span>
-            </span>
-          </label>
+          {/* ── Atributos de factura: siempre visibles, se registra siempre ── */}
+          <div className="space-y-3 rounded-xl border border-violet-100 p-3">
+            <p className="text-xs font-bold text-gray-500">
+              ATRIBUTOS DE FACTURA RELACIONADA
+            </p>
 
-          {/* ── Campos de factura: solo visibles si registrarFactura = true ── */}
-          {registrarFactura && (
-            <div className="space-y-3 rounded-xl border border-violet-100 p-3">
-              <p className="text-xs font-bold text-gray-500">
-                ATRIBUTOS DE FACTURA RELACIONADA
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] text-gray-400">
-                    NIT / CI Facturado
-                  </label>
-                  <input
-                    value={nitCliente}
-                    onChange={(e) => setNitCliente(e.target.value)}
-                    className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-gray-400">Razón Social</label>
-                  <input
-                    value={razonSocial}
-                    onChange={(e) => setRazonSocial(e.target.value)}
-                    className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                  />
+            {/* Chips con las combinaciones de NIT/razón social que este
+                cliente ya usó antes. Si hay más de una, el cajero elige;
+                "+ Nuevo" limpia los campos para cargar una combinación
+                distinta a mano. */}
+            {datosFacturacionPrevios.length > 0 && (
+              <div>
+                <p className="mb-1 text-[11px] text-gray-400">
+                  Datos usados antes por este cliente
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {datosFacturacionPrevios.map((d, i) => {
+                    const activo =
+                      nitCliente === (d.nitCliente ?? "") &&
+                      razonSocial === (d.razonSocial ?? "");
+                    return (
+                      <button
+                        key={`${d.nitCliente ?? "sn"}-${d.razonSocial ?? "sr"}-${i}`}
+                        type="button"
+                        onClick={() => {
+                          setNitCliente(d.nitCliente ?? "");
+                          setRazonSocial(d.razonSocial ?? "");
+                        }}
+                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                          activo
+                            ? "border-violet-600 bg-violet-600 text-white"
+                            : "border-violet-200 text-gray-500 hover:bg-violet-50"
+                        }`}
+                      >
+                        {d.razonSocial || d.nitCliente || "Sin datos"}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNitCliente("");
+                      setRazonSocial("");
+                    }}
+                    className="rounded-full border border-dashed border-violet-300 px-3 py-1 text-xs text-violet-500 hover:bg-violet-50"
+                  >
+                    + Nuevo
+                  </button>
                 </div>
               </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] text-gray-400">
-                  Modalidad de Facturación (&apos;tipoFactura&apos;)
+                  NIT / CI Facturado
                 </label>
-                <select
-                  value={tipoFactura}
-                  onChange={(e) => setTipoFactura(e.target.value)}
+                <input
+                  value={nitCliente}
+                  onChange={(e) => setNitCliente(e.target.value)}
                   className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                >
-                  {TIPOS_FACTURA.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400">Razón Social</label>
+                <input
+                  value={razonSocial}
+                  onChange={(e) => setRazonSocial(e.target.value)}
+                  className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                />
               </div>
             </div>
-          )}
+            <div>
+              <label className="text-[11px] text-gray-400">
+                Modalidad de Facturación (&apos;tipoFactura&apos;)
+              </label>
+              <select
+                value={tipoFactura}
+                onChange={(e) => setTipoFactura(e.target.value)}
+                className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              >
+                {TIPOS_FACTURA.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* ── Observaciones de venta ── */}
           <div>

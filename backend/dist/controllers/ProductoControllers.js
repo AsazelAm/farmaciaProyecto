@@ -8,7 +8,6 @@ const ProductoModels_1 = __importDefault(require("../Models/ProductoModels"));
 const SaveImg_1 = require("../Middleware/SaveImg");
 const Time_1 = require("../lib/Time");
 class ProductoControllers {
-    // ── GET: obtener todos los productos activos ───────────────────────────────
     static GetProductoC = async (req, res) => {
         try {
             const data = await ProductoModels_1.default.GetProductoM();

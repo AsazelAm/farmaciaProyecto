@@ -608,6 +608,19 @@ export const FacturaInputSchema = z.object({
 
 export type IFacturaInput = z.infer<typeof FacturaInputSchema>;
 
+// 6.1 Schema para datos de facturación previos de un cliente (histórico)
+export const DatosFacturacionClienteSchema = z.array(
+  z.object({
+    nitCliente: z.string().nullable(),
+    razonSocial: z.string().nullable(),
+    ultimaVez: z.string(),
+  })
+);
+
+export type DatosFacturacionClienteType = z.infer<
+  typeof DatosFacturacionClienteSchema
+>[number];
+
 // 7. Schema para Filtros de Búsqueda
 export const VentaFiltrosSchema = z.object({
   estado: z.enum(['pendiente', 'completada', 'anulada']).optional(),

@@ -17,6 +17,9 @@ const TipoUsRoutes_1 = __importDefault(require("./Routes/TipoUsRoutes"));
 const SucursalRoutes_1 = __importDefault(require("./Routes/SucursalRoutes"));
 const ProveedoRoutes_1 = __importDefault(require("./Routes/ProveedoRoutes"));
 const ProductoRoutes_1 = __importDefault(require("./Routes/ProductoRoutes"));
+const CompraLoteRoutes_1 = __importDefault(require("./Routes/CompraLoteRoutes"));
+const LoteRoutes_1 = __importDefault(require("./Routes/LoteRoutes"));
+const VentaRoutes_1 = __importDefault(require("./Routes/VentaRoutes"));
 const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use((0, morgan_1.default)('dev'));
@@ -37,5 +40,8 @@ app.use('/api/TipoUs', TipoUsRoutes_1.default);
 app.use('/api/Sucursal', SucursalRoutes_1.default);
 app.use('/api/Proveedor', ProveedoRoutes_1.default);
 app.use('/api/Producto', ProductoRoutes_1.default);
+app.use('/api/Compra', CompraLoteRoutes_1.default);
+app.use('/api/Lote', LoteRoutes_1.default);
+app.use('/api/Venta', VentaRoutes_1.default);
 exports.default = app;
 //# sourceMappingURL=server.js.map

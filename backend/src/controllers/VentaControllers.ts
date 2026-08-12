@@ -170,6 +170,18 @@ export class VentaControllers {
         }
     };
 
+    // ── GET: Datos de facturación (NIT/razón social) previos de un cliente ────
+    static readonly GetDatosFacturacionClienteC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const idCliente = Number(req.params.idCliente);
+            const data = await DataVenta.obtenerDatosFacturacionPorCliente(idCliente);
+            res.status(200).json(data);
+        } catch (error) {
+            console.error('Error al obtener los datos de facturación del cliente:', error);
+            res.status(500).json({ error: 'Error al obtener los datos de facturación del cliente' });
+        }
+    };
+
     // ── GET: Obtener estadísticas del Dashboard ───────────────────────────────
     static readonly GetEstadisticasC = async (req: Request, res: Response): Promise<any> => {
         try {

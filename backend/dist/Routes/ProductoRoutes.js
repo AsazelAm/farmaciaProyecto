@@ -8,7 +8,6 @@ const auth_1 = require("../Middleware/auth");
 const multer_1 = __importDefault(require("multer"));
 const ProductoControllers_1 = require("../controllers/ProductoControllers");
 const router = (0, express_1.Router)();
-// ── Autenticación requerida en todas las rutas ────────────────────────────────
 router.use(auth_1.authenticate);
 // ── Multer en memoria (igual que LaboratorioRoutes) ───────────────────────────
 const storage = multer_1.default.memoryStorage();

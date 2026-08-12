@@ -88,7 +88,7 @@ function DarkSelect({
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type LoteRow = ILoteInput & {
   _id: number;
-  productoInfo: any; // O el tipo de tu Producto si lo tienes exportado
+  productoInfo: any; //
 };
 
 const INITIAL_FORM_STATE = {
@@ -195,7 +195,7 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
       impuesto:      parseFloat(formData.impuesto) || 0,
       subtotal,
       total,
-      lotes: lotes.map(({ _id, productoInfo, ...rest }) => rest), // Excluimos propiedades de UI
+      lotes: lotes.map(({ _id, productoInfo, ...rest }) => rest), // 
     };
 
     crearCompra(payload);
