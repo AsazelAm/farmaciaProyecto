@@ -1,12 +1,15 @@
 import api from "../lib/Axios";
 import { isAxiosError } from "axios";
+import { z } from "zod";
 import {
   ProductoShcemass,
   type DeleteProducto,
 } from "../types";
 
+type Productos = z.infer<typeof ProductoShcemass>;
+
 // ── GET: obtener todos los productos activos ───────────────────────────────────
-export async function GetProductoApi() {
+export async function GetProductoApi(): Promise<Productos> {
   try {
     const { data } = await api.get("/Producto/GetProducto");
     const response = ProductoShcemass.safeParse(data);
@@ -15,7 +18,7 @@ export async function GetProductoApi() {
     }
     console.warn("Zod parse warning (Producto):", response.error);
     // Si el parse falla devolvemos el array crudo para no bloquear la UI
-    return data as any;
+    return data as Productos;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);

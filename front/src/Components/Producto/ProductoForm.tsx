@@ -1,9 +1,9 @@
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import BarcodeRenderer from "../../lib/BarcodeRenderer";
-import { AddProductoApi } from "../../Api/ProductoApi";
+import { AddProductoApi, GetProductoApi } from "../../Api/ProductoApi";
 import { GetLaboratorioApi } from "../../Api/LaboratorioApi";
 import { GetTipoProdApi } from "../../Api/TipoProdApi";
 import { GetPresentaApi } from "../../Api/PresentacionApi";
@@ -67,7 +67,7 @@ interface SelectFieldProps {
   options: { value: number; label: string }[];
   placeholder: string;
   error?: string;
-  registration: any;
+  registration: UseFormRegisterReturn;
 }
 
 const SelectField = ({ id, label, options, placeholder, error, registration }: SelectFieldProps) => (
@@ -144,17 +144,23 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
   }, [watch, isOpen]);
 
   // ── Queries para los selects relacionados ─────────────────────────────────
-  const { data: laboratorios = [] } = useQuery<ILaboratorio[]>({
+  const { data: laboratorios = [] } = useQuery<ILaboratorio[] | undefined>({
     queryKey: ["LaboratorioAll"],
     queryFn: GetLaboratorioApi,
   });
-  const { data: tiposProducto = [] } = useQuery<ITipoProducto[]>({
+  const { data: tiposProducto = [] } = useQuery<ITipoProducto[] | undefined>({
     queryKey: ["TipoProdAll"],
     queryFn: GetTipoProdApi,
   });
-  const { data: presentaciones = [] } = useQuery<IPresentacion[]>({
+  const { data: presentaciones = [] } = useQuery<IPresentacion[] | undefined>({
     queryKey: ["PresentacionAll"],
     queryFn: GetPresentaApi,
+  });
+
+  // ── Productos existentes (para validar código de barra único) ──────────────
+  const { data: productos = [] } = useQuery({
+    queryKey: ["ProductoAll"],
+    queryFn: GetProductoApi,
   });
 
   // ── Mutación ───────────────────────────────────────────────────────────────
@@ -170,6 +176,14 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
 
   const handleForm = (values: CreateProducto) => {
     const file = fileRef.current?.files?.[0] ?? null;
+
+    const codigo = String(values.codigoBarra ?? "").trim();
+    const yaExiste = productos.some((p) => String(p.codigoBarra).trim() === codigo);
+    if (yaExiste) {
+      toast.warning("El código de barra ya está registrado");
+      return;
+    }
+
     mutate(buildFormData(values, file));
   };
 

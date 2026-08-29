@@ -14,7 +14,7 @@ import Moda from "../assets/lista-modal.png";
 export default function AsideD() {
   const navigate = useNavigate();
   const { data, isError, isLoading } = useAuth();
-  const Rol = data?.namQe_rol;
+  const Rol = data?.nameq_rol;
 
   
 

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import BarcodeRenderer from "../../lib/BarcodeRenderer";
-import { UpdateProductoApi } from "../../Api/ProductoApi";
+import { UpdateProductoApi, GetProductoApi } from "../../Api/ProductoApi";
 import { GetLaboratorioApi } from "../../Api/LaboratorioApi";
 import { GetTipoProdApi } from "../../Api/TipoProdApi";
 import { GetPresentaApi } from "../../Api/PresentacionApi";
@@ -35,8 +35,9 @@ const toPublicUrl = (ruta: string | null | undefined): string | null => {
 // ─── Helper: arma FormData ───────────────────────────────────────────────────
 function buildFormData(values: Omit<UpdateProducto, "img" | "newImg">, file?: File | null): FormData {
     const fd = new FormData();
-    (Object.keys(values) as string[]).forEach((k) => {
-        const v = (values as any)[k];
+    const record = values as Record<string, unknown>;
+    (Object.keys(record) as string[]).forEach((k) => {
+        const v = record[k];
         if (v !== null && v !== undefined && k !== "img" && k !== "newImg") {
             fd.append(k, String(v));
         }
@@ -105,6 +106,9 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
     const { data: tiposProducto = [] } = useQuery({ queryKey: ["TipoProdAll"], queryFn: GetTipoProdApi });
     const { data: presentaciones = [] } = useQuery({ queryKey: ["PresentacionAll"], queryFn: GetPresentaApi });
 
+    // ── Productos existentes (para validar código de barra único) ─────────────
+    const { data: productos = [] } = useQuery({ queryKey: ["ProductoAll"], queryFn: GetProductoApi });
+
     // ── Mutación ───────────────────────────────────────────────────────────────
     const { mutate, isPending } = useMutation({
         mutationFn: ({ fd, id }: { fd: FormData; id: number }) => UpdateProductoApi(fd, id),
@@ -118,6 +122,18 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
 
     const handleForm = (values: UpdateProducto) => {
         if (!SendValor) return;
+
+        // ── Validar código de barra único (excluyendo este mismo producto) ─────
+        const codigo = String(values.codigoBarra ?? "").trim();
+        const yaExiste = Array.isArray(productos) && productos.some(
+            (p: UpdateProducto) => Number(p.idProducto) !== Number(SendValor.idProducto) &&
+                String(p.codigoBarra).trim() === codigo
+        );
+        if (yaExiste) {
+            toast.warning("El código de barra ya está registrado en otro producto");
+            return;
+        }
+
         const file = fileRef.current?.files?.[0] ?? null;
         mutate({ fd: buildFormData(values, file), id: SendValor.idProducto });
     };
@@ -301,7 +317,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                     })}
                                 >
                                     <option value="0">-- Seleccione --</option>
-                                    {Array.isArray(laboratorios) && laboratorios.map((l: any) => (
+                                    {Array.isArray(laboratorios) && laboratorios.map((l: { idLaboratorio: number; nombre: string }) => (
                                         <option key={l.idLaboratorio} value={l.idLaboratorio}>{l.nombre}</option>
                                     ))}
                                 </select>
@@ -320,7 +336,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                     })}
                                 >
                                     <option value="0">-- Seleccione --</option>
-                                    {Array.isArray(tiposProducto) && tiposProducto.map((t: any) => (
+                                    {Array.isArray(tiposProducto) && tiposProducto.map((t: { idTipoProd: number; nombre: string }) => (
                                         <option key={t.idTipoProd} value={t.idTipoProd}>{t.nombre}</option>
                                     ))}
                                 </select>
@@ -339,7 +355,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                     })}
                                 >
                                     <option value="0">-- Seleccione --</option>
-                                    {Array.isArray(presentaciones) && presentaciones.map((p: any) => (
+                                    {Array.isArray(presentaciones) && presentaciones.map((p: { idPresentacion: number; nombre: string }) => (
                                         <option key={p.idPresentacion} value={p.idPresentacion}>{p.nombre}</option>
                                     ))}
                                 </select>

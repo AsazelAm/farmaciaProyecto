@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import type { IFacturaInput, DatosFacturacionClienteType } from "../../../../types";
 
-// ── Tipo de datos que este modal le entrega a NewVenta.tsx al confirmar ──────
-// NewVenta.tsx es quien realmente ejecuta la creación de la venta; este
-// componente solo recolecta los datos de cobro y factura.
-// "registrarFactura" ya no existe: la factura se registra siempre al
-// confirmar la transacción, así que facturaInput ya no es opcional.
+
 export interface IDatosCobro {
   tipoPago: "Efectivo" | "Tarjeta de Crédito" | "QR Directo";
   facturaInput: IFacturaInput;
@@ -17,17 +13,13 @@ interface FacturaProps {
   isOpen: boolean;
   total: number;
   isLoading?: boolean;
-  // Combinaciones de NIT/razón social que este cliente ya usó en facturas
-  // anteriores (la más reciente primero). Vacío si es cliente nuevo o
-  // "Público General".
+
   datosFacturacionPrevios?: DatosFacturacionClienteType[];
   onClose: () => void;
   onConfirm: (datos: IDatosCobro) => void;
 }
 
-// TODO: ajusta esta lista a los tipos de factura reales que emite tu régimen
-// tributario (en Bolivia normalmente: Factura con Derecho a Crédito Fiscal,
-// Factura sin Derecho a Crédito Fiscal, etc). La dejo genérica.
+
 const TIPOS_FACTURA = ["Electrónica Digital", "Manual", "Factura Exenta"];
 
 export default function Factura({
@@ -45,11 +37,7 @@ export default function Factura({
   const [tipoFactura, setTipoFactura] = useState(TIPOS_FACTURA[0]);
   const [observaciones, setObservaciones] = useState("");
 
-  // ── Autocompletar con el dato de facturación más reciente del cliente ──
-  // Cada vez que el modal se abre (o cambian los datos previos, porque
-  // NewVenta.tsx los recarga al cambiar de cliente), si existe al menos un
-  // NIT/razón social usado antes, lo precargamos. El cajero igual puede
-  // editarlo a mano o elegir otro de los chips de abajo.
+  
   useEffect(() => {
     if (isOpen && datosFacturacionPrevios.length > 0) {
       setNitCliente(datosFacturacionPrevios[0].nitCliente ?? "");
