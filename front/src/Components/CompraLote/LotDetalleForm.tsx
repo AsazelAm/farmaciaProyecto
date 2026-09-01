@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useForm, FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { GetProductoApi } from "../../Api/ProductoApi";
@@ -15,10 +16,10 @@ type Props = Readonly<{
 interface IProducto {
   idProducto: number;
   nombreGenerico: string;
-  codigoBarra?: string;
-  nombreComercial?: string;
-  concentracion?: string;
-  precio: number | string;
+  codigoBarra: string;
+  nombreComercial: string | null;
+  concentracion: string | null;
+  precio: number;
 }
 
 type LoteFormValues = {
