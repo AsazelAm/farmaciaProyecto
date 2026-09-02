@@ -807,3 +807,69 @@ export const DashboardSchema = z.object({
 });
 
 export type DashboardType = z.infer<typeof DashboardSchema>;
+
+// ========================================================================
+// TYPES: REPORTES DE VENTAS (diario / semanal / mensual + Excel y PDF)
+// ========================================================================
+
+export const FrecuenciaReporteSchema = z.enum(["diario", "semanal", "mensual"]);
+export type FrecuenciaReporte = z.infer<typeof FrecuenciaReporteSchema>;
+
+export const MESES: Record<FrecuenciaReporte, string> = {
+  diario: "Día",
+  semanal: "Semana",
+  mensual: "Mes",
+};
+
+// ── Fila de resumen agrupada por periodo ──────────────────────────────────────
+export const ReportePeriodoSchema = z.object({
+  unidad: z.string(),
+  etiqueta: z.string(),
+  cantidad: z.number(),
+  subtotal: MontoLike,
+  descuentoTotal: MontoLike,
+  impuestos: MontoLike,
+  total: MontoLike,
+});
+export const ReportePeriodosSchema = z.array(ReportePeriodoSchema);
+export type ReportePeriodoType = z.infer<typeof ReportePeriodoSchema>;
+
+// ── Venta individual del detalle del reporte ──────────────────────────────────
+export const ReporteVentaDetalleSchema = z.object({
+  idVenta: z.number(),
+  numeroFactura: z.string().nullable(),
+  fechaCreacion: z.string(),
+  cliente: z.string().nullable(),
+  usuario: z.string().nullable(),
+  sucursal: z.string().nullable(),
+  tipoPago: z.string().nullable(),
+  estado: z.string(),
+  subtotal: MontoLike,
+  descuentoTotal: MontoLike,
+  impuestos: MontoLike,
+  total: MontoLike,
+});
+export const ReporteVentasDetalleSchema = z.array(ReporteVentaDetalleSchema);
+export type ReporteVentaDetalleType = z.infer<typeof ReporteVentaDetalleSchema>;
+export type ReporteVentasDetalleType = z.infer<typeof ReporteVentasDetalleSchema>;
+
+// ── Totales del periodo (solo ventas completadas) ─────────────────────────────
+export const ReporteTotalesSchema = z.object({
+  cantidad: z.number(),
+  subtotal: MontoLike,
+  descuentoTotal: MontoLike,
+  impuestos: MontoLike,
+  total: MontoLike,
+});
+export type ReporteTotalesType = z.infer<typeof ReporteTotalesSchema>;
+
+// ── Respuesta completa de /Reporte/GetDatos ───────────────────────────────────
+export const ReporteDatosSchema = z.object({
+  frecuencia: FrecuenciaReporteSchema,
+  fechaInicio: z.string(),
+  fechaFin: z.string(),
+  periodos: ReportePeriodosSchema,
+  ventas: ReporteVentasDetalleSchema,
+  totales: ReporteTotalesSchema,
+});
+export type ReporteDatosType = z.infer<typeof ReporteDatosSchema>;

@@ -5,6 +5,7 @@ import { useAuth } from "../Hook/UseAuth";
 import Loading from "../Helpers/Loading";
 import iconuser from "../assets/group.png";
 import rol from "../assets/gestion.png";
+import icondoc from "../assets/doc.png";
 import 'react-toastify/dist/ReactToastify.css';
 import NavItem from "./Admin/NavItem";
 import SubMenu from "./Admin/SubMenu";
@@ -82,6 +83,10 @@ export default function Aside() {
             <SubMenu label="Venta" icon={iconuser}>
               <NavItem to="/Dashboard/Venta" icon={iconuser} label="Venta"/>
               <NavItem to="/Dashboard/NewVenta" icon={iconuser} label="Nueva Venta" />
+            </SubMenu>
+
+            <SubMenu label="Reportes" icon={icondoc}>
+              <NavItem to="/Dashboard/Reportes" icon={icondoc} label="Ventas" />
             </SubMenu>
 
   

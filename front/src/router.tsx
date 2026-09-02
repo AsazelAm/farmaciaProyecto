@@ -22,6 +22,10 @@ import Lote from "./view/Dashboard/Admin/CompraLote/Lote";
 import Venta from "./view/Dashboard/Admin/Venta/Venta";
 import NewVenta from "./view/Dashboard/Admin/Venta/NewVenta";
 
+import Reportes from "./view/Dashboard/Admin/Reportes/Reporte";
+
+
+
 
 export default function Router() {
   return (
@@ -45,6 +49,7 @@ export default function Router() {
               <Route path="/Dashboard/Lote" element={<Lote/>}/>
               <Route path="/Dashboard/Venta" element={<Venta/>}/>
               <Route path="/Dashboard/NewVenta" element={<NewVenta/>}/>
+              <Route path="/Dashboard/Reportes" element={<Reportes/>}/>
             </Route>
 
 
