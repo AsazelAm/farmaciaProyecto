@@ -19,6 +19,7 @@ import CompraLoteRoutes from "./Routes/CompraLoteRoutes";
 import LoteRoutes from "./Routes/LoteRoutes";
 
 import VentaRoutes from "./Routes/VentaRoutes";
+import DashboardRoutes from "./Routes/DashboardRoutes";
 
 import path from "path";
 
@@ -50,5 +51,7 @@ app.use('/api/Compra', CompraLoteRoutes);
 app.use('/api/Lote', LoteRoutes);
 
 app.use('/api/Venta', VentaRoutes);
+
+app.use('/api/Dashboard', DashboardRoutes);
 
 export default app

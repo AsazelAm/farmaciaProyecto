@@ -82,8 +82,8 @@ export default function Aside() {
             <SubMenu label="Venta" icon={iconuser}>
               <NavItem to="/Dashboard/Venta" icon={iconuser} label="Venta"/>
               <NavItem to="/Dashboard/NewVenta" icon={iconuser} label="Nueva Venta" />
-              
             </SubMenu>
+
   
           </div>
         </nav>

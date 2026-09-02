@@ -43,6 +43,7 @@ declare const DataVenta: {
     anular(idVenta: number, motivo?: string): Promise<boolean>;
     actualizar(idVenta: number, datos: IVentaInput): Promise<boolean>;
     emitirFactura(idVenta: number, datosFactura: IFacturaInput): Promise<number>;
+    obtenerDatosFacturacionPorCliente(idCliente: number): Promise<any>;
     estadisticas(): Promise<{
         porEstado: {
             estado: any;

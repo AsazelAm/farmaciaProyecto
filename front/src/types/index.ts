@@ -662,3 +662,148 @@ export const LoteDisponibleSchema = z.object({
 
 export const LotesDisponiblesSchema = z.array(LoteDisponibleSchema);
 export type LoteDisponibleType = z.infer<typeof LoteDisponibleSchema>;
+
+// ========================================================================
+// TYPES: DASHBOARD PRINCIPAL (MÉTRICAS, GRÁFICOS Y ALERTAS)
+// ========================================================================
+
+// Valores DECIMAL/SUM llegan como string según el driver de MariaDB
+const MontoLike = z.union([z.number(), z.string()]).transform(Number);
+
+// ── Resumen de indicadores (KPIs) ────────────────────────────────────────────
+export const DashboardKpisSchema = z.object({
+  kpis: z.object({
+    ventasTotales: z.object({
+      cantidad: z.number(),
+      monto: MontoLike,
+    }),
+    ventasHoy: z.object({
+      cantidad: z.number(),
+      monto: MontoLike,
+    }),
+    ventasMes: z.object({
+      cantidad: z.number(),
+      monto: MontoLike,
+      comparativoMesAnterior: MontoLike,
+    }),
+    ventasPendientes: z.number(),
+    ventasAnuladas: z.number(),
+    totalClientes: z.number(),
+    totalProductos: z.number(),
+    totalUsuarios: z.number(),
+    stockBajo: z.number(),
+    lotesPorVencer: z.number(),
+    lotesVencidos: z.number(),
+  }),
+});
+
+export type DashboardKpisType = z.infer<typeof DashboardKpisSchema>;
+
+// ── Serie de ventas por mes ──────────────────────────────────────────────────
+export const VentaPorMesSchema = z.object({
+  mes: z.string(),
+  cantidad: z.number(),
+  monto: MontoLike,
+});
+export const VentasPorMesesSchema = z.array(VentaPorMesSchema);
+export type VentasPorMesesType = z.infer<typeof VentasPorMesesSchema>;
+
+// ── Productos más vendidos ───────────────────────────────────────────────────
+export const ProductoMasVendidoSchema = z.object({
+  idProducto: z.number(),
+  codigoBarra: z.string(),
+  nombreGenerico: z.string(),
+  nombreComercial: z.string().nullable(),
+  unidades: z.number(),
+  monto: MontoLike,
+});
+export const ProductosMasVendidosSchema = z.array(ProductoMasVendidoSchema);
+export type ProductosMasVendidosType = z.infer<typeof ProductosMasVendidosSchema>;
+
+// ── Ventas por estado ────────────────────────────────────────────────────────
+export const VentaPorEstadoSchema = z.object({
+  estado: z.string(),
+  cantidad: z.number(),
+  monto: MontoLike,
+});
+export const VentasPorEstadoSchema = z.array(VentaPorEstadoSchema);
+export type VentasPorEstadoType = z.infer<typeof VentasPorEstadoSchema>;
+
+// ── Ventas por sucursal ──────────────────────────────────────────────────────
+export const VentaPorSucursalSchema = z.object({
+  idSucursal: z.number(),
+  nombre: z.string(),
+  cantidad: z.number(),
+  monto: MontoLike,
+});
+export const VentasPorSucursalSchema = z.array(VentaPorSucursalSchema);
+export type VentasPorSucursalType = z.infer<typeof VentasPorSucursalSchema>;
+
+// ── Ventas por forma de pago ─────────────────────────────────────────────────
+export const VentaPorFormaPagoSchema = z.object({
+  tipoPago: z.string(),
+  cantidad: z.number(),
+  monto: MontoLike,
+});
+export const VentasPorFormaPagoSchema = z.array(VentaPorFormaPagoSchema);
+export type VentasPorFormaPagoType = z.infer<typeof VentasPorFormaPagoSchema>;
+
+// ── Productos con stock bajo ─────────────────────────────────────────────────
+export const StockBajoItemSchema = z.object({
+  idProducto: z.number(),
+  codigoBarra: z.string(),
+  nombreGenerico: z.string(),
+  nombreComercial: z.string().nullable(),
+  stockMinimo: z.number(),
+  stockTotal: z.number(),
+});
+export const StockBajoSchema = z.array(StockBajoItemSchema);
+export type StockBajoType = z.infer<typeof StockBajoSchema>;
+
+// ── Lotes próximos a vencer ──────────────────────────────────────────────────
+export const LotePorVencerSchema = z.object({
+  idLote: z.number(),
+  numeroLote: z.string(),
+  codigoLote: z.string(),
+  stock: z.number(),
+  fechaVencimiento: z.string(),
+  diasParaVencer: z.number(),
+  idProducto: z.number(),
+  nombreGenerico: z.string(),
+  nombreComercial: z.string().nullable(),
+  concentracion: z.string().nullable(),
+});
+export const LotesPorVencerSchema = z.array(LotePorVencerSchema);
+export type LotesPorVencerType = z.infer<typeof LotesPorVencerSchema>;
+
+// ── Últimas ventas registradas ───────────────────────────────────────────────
+export const UltimaVentaSchema = z.object({
+  idVenta: z.number(),
+  fechaCreacion: z.string(),
+  subtotal: MontoLike,
+  descuentoTotal: MontoLike,
+  impuestos: MontoLike,
+  total: MontoLike,
+  estado: z.string(),
+  tipoPago: z.string().nullable(),
+  cliente: z.string().nullable(),
+  usuario: z.string().nullable(),
+  sucursal: z.string().nullable(),
+});
+export const UltimasVentasSchema = z.array(UltimaVentaSchema);
+export type UltimasVentasType = z.infer<typeof UltimasVentasSchema>;
+
+// ── Dashboard completo (respuesta de /GetDashboard) ──────────────────────────
+export const DashboardSchema = z.object({
+  resumen: DashboardKpisSchema,
+  ventasPorMeses: VentasPorMesesSchema,
+  productosMasVendidos: ProductosMasVendidosSchema,
+  porEstado: VentasPorEstadoSchema,
+  porSucursal: VentasPorSucursalSchema,
+  porFormaPago: VentasPorFormaPagoSchema,
+  stockBajo: StockBajoSchema,
+  lotesPorVencer: LotesPorVencerSchema,
+  ultimasVentas: UltimasVentasSchema,
+});
+
+export type DashboardType = z.infer<typeof DashboardSchema>;
