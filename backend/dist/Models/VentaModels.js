@@ -387,14 +387,17 @@ const DataVenta = {
             if (facturaExistente.length > 0) {
                 throw new Error('Esta venta ya tiene una factura emitida.');
             }
-            // 3. Generar el número de factura correlativo
-            const ultimaFactura = await conection.query(`
-                SELECT numeroFactura FROM factura ORDER BY idFactura DESC LIMIT 1
-            `);
-            const siguienteNumero = ultimaFactura.length > 0
-                ? Number(ultimaFactura[0].numeroFactura) + 1
-                : 1;
-            const numeroFactura = String(siguienteNumero).padStart(7, '0');
+            // 3. Generar el número de factura correlativo con formato FAC-<año><consecutivo>
+            //    (ej. FAC-20260041). Se calcula el máximo consecutivo del año vigente,
+            //    extrayendo sólo los dígitos del patrón (ignora filas corruptas como '0000NaN').
+            const anio = new Date().getFullYear();
+            const consecutivoFilas = await conection.query(`
+                SELECT MAX(CAST(SUBSTRING(numeroFactura, 9) AS UNSIGNED)) AS maxNumero
+                FROM factura
+                WHERE numeroFactura REGEXP CONCAT('^FAC-', ?, '[0-9]+$')
+            `, [anio]);
+            const siguienteNumero = Number(consecutivoFilas[0]?.maxNumero ?? 0) + 1;
+            const numeroFactura = `FAC-${anio}${String(siguienteNumero).padStart(5, '0')}`;
             // 4. Insertar la factura
             const total = Number(check[0].total);
             const insertFactura = await conection.query(`

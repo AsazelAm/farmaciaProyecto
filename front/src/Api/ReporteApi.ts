@@ -1,7 +1,7 @@
 import api from "../lib/Axios";
 import { isAxiosError } from "axios";
-import { ReporteDatosSchema } from "../types";
-import type { FrecuenciaReporte, ReporteDatosType } from "../types";
+import { ReporteDatosSchema, ReporteCompraDatosSchema } from "../types";
+import type { FrecuenciaReporte, ReporteDatosType, ReporteCompraDatosType } from "../types";
 
 // Extrae el mensaje de error del backend o lanza un fallback genérico
 function mensajeError(error: unknown, fallback: string): Error {
@@ -34,6 +34,11 @@ function validar<T>(schema: { safeParse(value: unknown): ResultadoValido<T> }, d
 function nombreArchivoReporte(frecuencia: FrecuenciaReporte, fechaInicio: string, fechaFin: string, ext: string): string {
   const capitalizado = frecuencia.charAt(0).toUpperCase() + frecuencia.slice(1);
   return `Reporte_Ventas_${capitalizado}_${fechaInicio}_al_${fechaFin}.${ext}`;
+}
+
+function nombreArchivoReporteCompra(frecuencia: FrecuenciaReporte, fechaInicio: string, fechaFin: string, ext: string): string {
+  const capitalizado = frecuencia.charAt(0).toUpperCase() + frecuencia.slice(1);
+  return `Reporte_Compras_${capitalizado}_${fechaInicio}_al_${fechaFin}.${ext}`;
 }
 
 // ── GET: Datos del reporte de ventas (JSON) para previsualización ─────────────
@@ -85,5 +90,57 @@ export async function DescargarReportePdfApi(
     descargarBlob(blob, nombreArchivoReporte(frecuencia, fechaInicio ?? 'todo', fechaFin ?? 'todo', 'pdf'));
   } catch (error) {
     throw mensajeError(error, "Error al descargar el reporte de ventas en PDF");
+  }
+}
+
+// ── GET: Datos del reporte de compras (JSON) para previsualización ────────────
+export async function GetReporteCompraDatosApi(
+  frecuencia: FrecuenciaReporte,
+  fechaInicio?: string,
+  fechaFin?: string
+): Promise<ReporteCompraDatosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetDatosCompra', {
+      params: { frecuencia, fechaInicio, fechaFin },
+    });
+    return validar(ReporteCompraDatosSchema, data, "Error en la validación de los datos del reporte de compras");
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los datos del reporte de compras");
+  }
+}
+
+// ── GET: Descargar reporte de compras en Excel (.xlsx) ────────────────────────
+export async function DescargarReporteCompraExcelApi(
+  frecuencia: FrecuenciaReporte,
+  fechaInicio?: string,
+  fechaFin?: string
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarExcelCompra', {
+      params: { frecuencia, fechaInicio, fechaFin },
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoReporteCompra(frecuencia, fechaInicio ?? 'todo', fechaFin ?? 'todo', 'xlsx'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de compras en Excel");
+  }
+}
+
+// ── GET: Descargar reporte de compras en PDF ──────────────────────────────────
+export async function DescargarReporteCompraPdfApi(
+  frecuencia: FrecuenciaReporte,
+  fechaInicio?: string,
+  fechaFin?: string
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarPdfCompra', {
+      params: { frecuencia, fechaInicio, fechaFin },
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoReporteCompra(frecuencia, fechaInicio ?? 'todo', fechaFin ?? 'todo', 'pdf'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de compras en PDF");
   }
 }

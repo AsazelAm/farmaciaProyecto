@@ -5,6 +5,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
 const FRECUENCIAS = ['diario', 'semanal', 'mensual'];
+const CONFIGS = {
+    venta: {
+        tabla: 'venta',
+        alias: 'v',
+        estadoCompletado: 'completada',
+        campoId: 'idVenta',
+        colDescuento: 'descuentoTotal',
+        colImpuesto: 'impuestos',
+        joinPagador: `INNER JOIN cliente cl ON cl.idCliente = v.idCliente`,
+        campoPagador: 'cl.nombre',
+        aliasPagador: 'cliente',
+        campoNumero: `(SELECT f.numeroFactura FROM factura f
+             WHERE f.idVenta = v.idVenta
+             ORDER BY f.fechaEmision ASC LIMIT 1)`,
+        columnaExtra: 'v.tipoPago AS tipoPago',
+    },
+    compra: {
+        tabla: 'compra',
+        alias: 'c',
+        estadoCompletado: 'completado',
+        campoId: 'idCompra',
+        colDescuento: 'descuento',
+        colImpuesto: 'impuesto',
+        joinPagador: `INNER JOIN proveedor pr ON pr.idProveedor = c.idProveedor`,
+        campoPagador: 'pr.nombre',
+        aliasPagador: 'proveedor',
+        campoNumero: 'c.numeroFactura',
+    },
+};
 // ─── Utilidad interna ────────────────────────────────────────────────────────
 // El driver de MariaDB devuelve SUM sobre DECIMAL como string y COUNT como
 // BigInt; normalizamos todo a Number para el frontend.
@@ -47,121 +76,159 @@ function parsearFecha(valor, porDefecto) {
     return iso(fecha) === valor ? valor : porDefecto;
 }
 // Expresión de agrupación SQL según la frecuencia (intenta usar índices por rango).
-const GROUP_SEMANAL = `DATE_SUB(v.fechaCreacion, INTERVAL WEEKDAY(v.fechaCreacion) DAY)`;
-const AGRUPAR_POR_FRECUENCIA = {
-    diario: {
-        unidad: `DATE_FORMAT(v.fechaCreacion, '%Y-%m-%d')`,
-        etiqueta: `DATE_FORMAT(v.fechaCreacion, '%d/%m/%Y')`,
-    },
-    semanal: {
-        unidad: `DATE_FORMAT(${GROUP_SEMANAL}, '%Y-%m-%d')`,
-        etiqueta: `DATE_FORMAT(${GROUP_SEMANAL}, '%d/%m/%Y')`,
-    },
-    mensual: {
-        unidad: `DATE_FORMAT(v.fechaCreacion, '%Y-%m')`,
-        etiqueta: `DATE_FORMAT(v.fechaCreacion, '%m/%Y')`,
-    },
-};
+function agruparPorFrecuencia(alias) {
+    const grupoSemanal = `DATE_SUB(${alias}.fechaCreacion, INTERVAL WEEKDAY(${alias}.fechaCreacion) DAY)`;
+    return {
+        diario: {
+            unidad: `DATE_FORMAT(${alias}.fechaCreacion, '%Y-%m-%d')`,
+            etiqueta: `DATE_FORMAT(${alias}.fechaCreacion, '%d/%m/%Y')`,
+        },
+        semanal: {
+            unidad: `DATE_FORMAT(${grupoSemanal}, '%Y-%m-%d')`,
+            etiqueta: `DATE_FORMAT(${grupoSemanal}, '%d/%m/%Y')`,
+        },
+        mensual: {
+            unidad: `DATE_FORMAT(${alias}.fechaCreacion, '%Y-%m')`,
+            etiqueta: `DATE_FORMAT(${alias}.fechaCreacion, '%m/%Y')`,
+        },
+    };
+}
+async function obtenerDatosEntidad(entidad, frecuenciaValue, fechaInicioValue, fechaFinValue) {
+    const config = CONFIGS[entidad];
+    if (!config)
+        throw new Error('Entidad de reporte no válida');
+    const frecuencia = FRECUENCIAS.includes(frecuenciaValue)
+        ? frecuenciaValue
+        : 'diario';
+    const porDefecto = rangoPorDefecto(frecuencia);
+    let fechaInicio = parsearFecha(fechaInicioValue, porDefecto.inicio);
+    let fechaFin = parsearFecha(fechaFinValue, porDefecto.fin);
+    if (fechaInicio > fechaFin) {
+        const aux = fechaInicio;
+        fechaInicio = fechaFin;
+        fechaFin = aux;
+    }
+    const agrupacion = agruparPorFrecuencia(config.alias);
+    const { unidad, etiqueta } = agrupacion[frecuencia];
+    const conection = await db_1.default.getConnection();
+    try {
+        const [rowsPeriodos, rowsDetalle] = await Promise.all([
+            conection.query(`
+                SELECT ${unidad} AS unidad,
+                       ${etiqueta} AS etiqueta,
+                       COUNT(*) AS cantidad,
+                       IFNULL(SUM(${config.alias}.subtotal), 0) AS subtotal,
+                       IFNULL(SUM(${config.alias}.${config.colDescuento}), 0) AS descuentoTotal,
+                       IFNULL(SUM(${config.alias}.${config.colImpuesto}), 0) AS impuestos,
+                       IFNULL(SUM(${config.alias}.total), 0) AS total
+                FROM ${config.tabla} ${config.alias}
+                WHERE ${config.alias}.estado = '${config.estadoCompletado}'
+                  AND DATE(${config.alias}.fechaCreacion) BETWEEN ? AND ?
+                GROUP BY unidad, etiqueta
+                ORDER BY unidad ASC
+            `, [fechaInicio, fechaFin]),
+            conection.query(`
+                SELECT ${config.alias}.${config.campoId} AS idEntidad,
+                       IFNULL(${config.campoNumero}, '') AS numeroFactura,
+                       ${config.alias}.fechaCreacion,
+                       ${config.alias}.subtotal,
+                       ${config.alias}.${config.colDescuento} AS descuentoTotal,
+                       ${config.alias}.${config.colImpuesto} AS impuestos,
+                       ${config.alias}.total,
+                       ${config.alias}.estado,
+                       ${config.campoPagador} AS pagador,
+                       CONCAT(u.nombre, ' ', u.apellido) AS usuario,
+                       s.nombre AS sucursal
+                       ${config.columnaExtra ? `, ${config.columnaExtra}` : ''}
+                FROM ${config.tabla} ${config.alias}
+                ${config.joinPagador}
+                INNER JOIN usuario  u ON u.idUsuario  = ${config.alias}.idUsuario
+                INNER JOIN sucursal s ON s.idSucursal = ${config.alias}.idSucursal
+                WHERE DATE(${config.alias}.fechaCreacion) BETWEEN ? AND ?
+                ORDER BY ${config.alias}.fechaCreacion DESC
+            `, [fechaInicio, fechaFin]),
+        ]);
+        const periodos = rowsPeriodos.map((p) => ({
+            unidad: p.unidad,
+            etiqueta: p.etiqueta,
+            cantidad: num(p.cantidad),
+            subtotal: num(p.subtotal),
+            descuentoTotal: num(p.descuentoTotal),
+            impuestos: num(p.impuestos),
+            total: num(p.total),
+        }));
+        const detalles = rowsDetalle.map((e) => ({
+            idEntidad: num(e.idEntidad),
+            numeroFactura: e.numeroFactura ?? null,
+            fechaCreacion: e.fechaCreacion,
+            pagador: e.pagador ?? null,
+            usuario: e.usuario ?? null,
+            sucursal: e.sucursal ?? null,
+            estado: e.estado,
+            subtotal: num(e.subtotal),
+            descuentoTotal: num(e.descuentoTotal),
+            impuestos: num(e.impuestos),
+            total: num(e.total),
+        }));
+        const reducer = (acum, p) => {
+            acum.cantidad += p.cantidad;
+            acum.subtotal += p.subtotal;
+            acum.descuentoTotal += p.descuentoTotal;
+            acum.impuestos += p.impuestos;
+            acum.total += p.total;
+            return acum;
+        };
+        return {
+            frecuencia,
+            fechaInicio,
+            fechaFin,
+            periodos,
+            detalles,
+            totales: periodos.reduce(reducer, {
+                cantidad: 0,
+                subtotal: 0,
+                descuentoTotal: 0,
+                impuestos: 0,
+                total: 0,
+            }),
+        };
+    }
+    finally {
+        conection.release();
+    }
+}
 const DataReportes = {
     // ── Datos de ventas agrupados por periodo (diario/semanal/mensual) ────────
     // periodos y totales solo consideran ventas 'completada' (ingresos reales);
     // en el detalle se listan TODAS las ventas del rango con su estado.
     async getDatos(frecuenciaValue, fechaInicioValue, fechaFinValue) {
-        const frecuencia = FRECUENCIAS.includes(frecuenciaValue)
-            ? frecuenciaValue
-            : 'diario';
-        const porDefecto = rangoPorDefecto(frecuencia);
-        let fechaInicio = parsearFecha(fechaInicioValue, porDefecto.inicio);
-        let fechaFin = parsearFecha(fechaFinValue, porDefecto.fin);
-        if (fechaInicio > fechaFin) {
-            const aux = fechaInicio;
-            fechaInicio = fechaFin;
-            fechaFin = aux;
-        }
-        const { unidad, etiqueta } = AGRUPAR_POR_FRECUENCIA[frecuencia];
-        const conection = await db_1.default.getConnection();
-        try {
-            const [rowsPeriodos, rowsVentas] = await Promise.all([
-                conection.query(`
-                    SELECT ${unidad} AS unidad,
-                           ${etiqueta} AS etiqueta,
-                           COUNT(*) AS cantidad,
-                           IFNULL(SUM(v.subtotal), 0) AS subtotal,
-                           IFNULL(SUM(v.descuentoTotal), 0) AS descuentoTotal,
-                           IFNULL(SUM(v.impuestos), 0) AS impuestos,
-                           IFNULL(SUM(v.total), 0) AS total
-                    FROM venta v
-                    WHERE v.estado = 'completada'
-                      AND DATE(v.fechaCreacion) BETWEEN ? AND ?
-                    GROUP BY unidad, etiqueta
-                    ORDER BY unidad ASC
-                `, [fechaInicio, fechaFin]),
-                conection.query(`
-                    SELECT v.idVenta, v.fechaCreacion, v.subtotal, v.descuentoTotal,
-                           v.impuestos, v.total, v.estado, v.tipoPago,
-                           cl.nombre AS cliente,
-                           CONCAT(u.nombre, ' ', u.apellido) AS usuario,
-                           s.nombre AS sucursal,
-                           (SELECT f.numeroFactura FROM factura f
-                            WHERE f.idVenta = v.idVenta
-                            ORDER BY f.fechaEmision ASC LIMIT 1) AS numeroFactura
-                    FROM venta v
-                    INNER JOIN cliente  cl ON cl.idCliente = v.idCliente
-                    INNER JOIN usuario  u  ON u.idUsuario  = v.idUsuario
-                    INNER JOIN sucursal s  ON s.idSucursal = v.idSucursal
-                    WHERE DATE(v.fechaCreacion) BETWEEN ? AND ?
-                    ORDER BY v.fechaCreacion DESC
-                `, [fechaInicio, fechaFin]),
-            ]);
-            const periodos = rowsPeriodos.map((p) => ({
-                unidad: p.unidad,
-                etiqueta: p.etiqueta,
-                cantidad: num(p.cantidad),
-                subtotal: num(p.subtotal),
-                descuentoTotal: num(p.descuentoTotal),
-                impuestos: num(p.impuestos),
-                total: num(p.total),
-            }));
-            const ventas = rowsVentas.map((v) => ({
-                idVenta: num(v.idVenta),
-                numeroFactura: v.numeroFactura ?? null,
-                fechaCreacion: v.fechaCreacion,
-                cliente: v.cliente ?? null,
-                usuario: v.usuario ?? null,
-                sucursal: v.sucursal ?? null,
-                tipoPago: v.tipoPago ?? null,
-                estado: v.estado,
-                subtotal: num(v.subtotal),
-                descuentoTotal: num(v.descuentoTotal),
-                impuestos: num(v.impuestos),
-                total: num(v.total),
-            }));
-            const reducer = (acum, p) => {
-                acum.cantidad += p.cantidad;
-                acum.subtotal += p.subtotal;
-                acum.descuentoTotal += p.descuentoTotal;
-                acum.impuestos += p.impuestos;
-                acum.total += p.total;
-                return acum;
-            };
-            return {
-                frecuencia,
-                fechaInicio,
-                fechaFin,
-                periodos,
-                ventas,
-                totales: periodos.reduce(reducer, {
-                    cantidad: 0,
-                    subtotal: 0,
-                    descuentoTotal: 0,
-                    impuestos: 0,
-                    total: 0,
-                }),
-            };
-        }
-        finally {
-            conection.release();
-        }
+        const datos = await obtenerDatosEntidad('venta', frecuenciaValue, fechaInicioValue, fechaFinValue);
+        const ventas = datos.detalles.map((v) => ({
+            idVenta: num(v.idEntidad),
+            numeroFactura: v.numeroFactura,
+            fechaCreacion: v.fechaCreacion,
+            cliente: v.pagador,
+            usuario: v.usuario,
+            sucursal: v.sucursal,
+            tipoPago: v.tipoPago ?? null,
+            estado: v.estado,
+            subtotal: num(v.subtotal),
+            descuentoTotal: num(v.descuentoTotal),
+            impuestos: num(v.impuestos),
+            total: num(v.total),
+        }));
+        return {
+            ...datos,
+            ventas,
+        };
+    },
+    // ── Datos de compras agrupados por periodo (diario/semanal/mensual) ───────
+    async getDatosCompra(frecuenciaValue, fechaInicioValue, fechaFinValue) {
+        const datos = await obtenerDatosEntidad('compra', frecuenciaValue, fechaInicioValue, fechaFinValue);
+        return {
+            ...datos,
+            compras: datos.detalles,
+        };
     },
 };
 exports.default = DataReportes;

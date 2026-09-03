@@ -873,3 +873,36 @@ export const ReporteDatosSchema = z.object({
   totales: ReporteTotalesSchema,
 });
 export type ReporteDatosType = z.infer<typeof ReporteDatosSchema>;
+
+// ========================================================================
+// TYPES: REPORTES DE COMPRAS (diario / semanal / mensual + Excel y PDF)
+// ========================================================================
+
+// ── Compra individual del detalle del reporte ─────────────────────────────────
+export const ReporteCompraDetalleSchema = z.object({
+  idEntidad: z.number(),
+  numeroFactura: z.string().nullable(),
+  fechaCreacion: z.string(),
+  pagador: z.string().nullable(),
+  usuario: z.string().nullable(),
+  sucursal: z.string().nullable(),
+  estado: z.string(),
+  subtotal: MontoLike,
+  descuentoTotal: MontoLike,
+  impuestos: MontoLike,
+  total: MontoLike,
+});
+export const ReporteComprasDetalleSchema = z.array(ReporteCompraDetalleSchema);
+export type ReporteCompraDetalleType = z.infer<typeof ReporteCompraDetalleSchema>;
+export type ReporteComprasDetalleType = z.infer<typeof ReporteComprasDetalleSchema>;
+
+// ── Respuesta completa de /Reporte/GetDatosCompra ─────────────────────────────
+export const ReporteCompraDatosSchema = z.object({
+  frecuencia: FrecuenciaReporteSchema,
+  fechaInicio: z.string(),
+  fechaFin: z.string(),
+  periodos: ReportePeriodosSchema,
+  compras: ReporteComprasDetalleSchema,
+  totales: ReporteTotalesSchema,
+});
+export type ReporteCompraDatosType = z.infer<typeof ReporteCompraDatosSchema>;

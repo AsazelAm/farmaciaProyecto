@@ -12,14 +12,29 @@ router.get('/GetDatos',
     ReporteControllers.GetDatosReporteC
 );
 
-//  GET: descargar reporte en Excel (.xlsx)
+//  GET: descargar reporte de ventas en Excel (.xlsx)
 router.get('/DescargarExcel',
     ReporteControllers.DescargarExcelC
 );
 
-//  GET: descargar reporte en PDF
+//  GET: descargar reporte de ventas en PDF
 router.get('/DescargarPdf',
     ReporteControllers.DescargarPdfC
+);
+
+//  GET: datos del reporte de compras (JSON) para previsualización
+router.get('/GetDatosCompra',
+    ReporteControllers.GetDatosCompraC
+);
+
+//  GET: descargar reporte de compras en Excel (.xlsx)
+router.get('/DescargarExcelCompra',
+    ReporteControllers.DescargarExcelCompraC
+);
+
+//  GET: descargar reporte de compras en PDF
+router.get('/DescargarPdfCompra',
+    ReporteControllers.DescargarPdfCompraC
 );
 
 export default router;

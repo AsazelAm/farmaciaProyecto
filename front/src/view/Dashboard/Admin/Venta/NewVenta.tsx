@@ -382,8 +382,10 @@ export default function NewVenta() {
       // 2) Como ya se cobró en el modal, la pasamos a 'completada'
       await ChangeEstadoVentaApi(idVenta, "completada");
 
-      // 3) La factura ya no es opcional: se emite siempre al confirmar
-      await EmitirFacturaApi(idVenta, datosCobro.facturaInput);
+      // 3) Emitir la factura solo si el usuario eligió "Con Factura"
+      if (datosCobro.emitirFactura) {
+        await EmitirFacturaApi(idVenta, datosCobro.facturaInput);
+      }
 
       return idVenta;
     },

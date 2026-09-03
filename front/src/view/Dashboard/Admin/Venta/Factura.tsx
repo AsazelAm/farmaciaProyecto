@@ -7,6 +7,7 @@ export interface IDatosCobro {
   tipoPago: "Efectivo" | "Tarjeta de Crédito" | "QR Directo";
   facturaInput: IFacturaInput;
   observaciones?: string;
+  emitirFactura: boolean;
 }
 
 interface FacturaProps {
@@ -36,6 +37,7 @@ export default function Factura({
   const [razonSocial, setRazonSocial] = useState("");
   const [tipoFactura, setTipoFactura] = useState(TIPOS_FACTURA[0]);
   const [observaciones, setObservaciones] = useState("");
+  const [emitirFactura, setEmitirFactura] = useState(true);
 
   
   useEffect(() => {
@@ -62,6 +64,7 @@ export default function Factura({
         razonSocial: razonSocial.trim() || undefined,
       },
       observaciones: observaciones.trim() || undefined,
+      emitirFactura,
     });
   }
 
@@ -73,6 +76,7 @@ export default function Factura({
     setRazonSocial("");
     setTipoFactura(TIPOS_FACTURA[0]);
     setObservaciones("");
+    setEmitirFactura(true);
     onClose();
   }
 
@@ -120,7 +124,39 @@ export default function Factura({
             </div>
           </div>
 
-          {/* ── Atributos de factura: siempre visibles, se registra siempre ── */}
+          {/* ── ¿Generar factura? (toggle pequeño) ── */}
+          <div>
+            <label className="mb-2 block text-xs font-bold text-gray-500">
+              ¿GENERAR FACTURA?
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEmitirFactura(true)}
+                className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition-colors ${
+                  emitirFactura
+                    ? "border-violet-600 bg-violet-600 text-white"
+                    : "border-violet-200 text-gray-500 hover:bg-violet-50"
+                }`}
+              >
+                Con Factura
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmitirFactura(false)}
+                className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition-colors ${
+                  !emitirFactura
+                    ? "border-violet-600 bg-violet-600 text-white"
+                    : "border-violet-200 text-gray-500 hover:bg-violet-50"
+                }`}
+              >
+                Sin Factura
+              </button>
+            </div>
+          </div>
+
+          {/* ── Atributos de factura: solo si se elige generar factura ── */}
+          {emitirFactura && (
           <div className="space-y-3 rounded-xl border border-violet-100 p-3">
             <p className="text-xs font-bold text-gray-500">
               ATRIBUTOS DE FACTURA RELACIONADA
@@ -209,6 +245,7 @@ export default function Factura({
               </select>
             </div>
           </div>
+          )}
 
           {/* ── Observaciones de venta ── */}
           <div>
