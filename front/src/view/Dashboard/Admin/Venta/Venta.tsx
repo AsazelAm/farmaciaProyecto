@@ -18,22 +18,22 @@ const COLORS = {
   textSecondary: "#6B7280",
   textMuted: "#9CA3AF",
   estadoPendiente:  { bg: "#FEF3C7", color: "#D97706", dot: "#D97706" },
-  estadoCompletada: { bg: "#D1FAE5", color: "#059669", dot: "#059669" },
-  estadoAnulada:    { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" },
+  estadoCompletado: { bg: "#D1FAE5", color: "#059669", dot: "#059669" },
+  estadoCancelado:  { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" },
 } as const;
 
 const ESTADO_STYLES = {
   pendiente: COLORS.estadoPendiente,
-  completada: COLORS.estadoCompletada,
-  anulada: COLORS.estadoAnulada,
+  completado: COLORS.estadoCompletado,
+  cancelado: COLORS.estadoCancelado,
 };
 
 type TipoEstadoVenta = keyof typeof ESTADO_STYLES;
 
 const ESTADO_LABELS: Record<TipoEstadoVenta, string> = {
   pendiente: "Pendiente",
-  completada: "Completado",
-  anulada: "Anulado",
+  completado: "Completado",
+  cancelado: "Anulado",
 };
 
 const TIPOS_PAGO = ["Efectivo", "QR", "Transferencia", "Tarjeta de crédito", "Tarjeta de débito"] as const;
@@ -189,7 +189,7 @@ export default function Venta() {
       const cantidad = Number(s.cantidad ?? 0);
       const monto = Number(s.monto ?? 0);
       totalRegistros += cantidad;
-      if (s.estado !== "anulada") {
+      if (s.estado !== "cancelado") {
         ingresosFacturados += monto;
         noAnuladas += cantidad;
       }
@@ -299,8 +299,8 @@ export default function Venta() {
           >
             <option value="todos">Todos los Estados</option>
             <option value="pendiente">Pendiente</option>
-            <option value="completada">Completado</option>
-            <option value="anulada">Anulado</option>
+            <option value="completado">Completado</option>
+            <option value="cancelado">Anulado</option>
           </select>
 
           <select

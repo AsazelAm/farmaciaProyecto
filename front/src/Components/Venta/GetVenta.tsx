@@ -25,8 +25,8 @@ const COLORS = {
 
 const ESTADO_STYLES = {
   pendiente:  { bg: "#FEF3C7", color: "#D97706", label: "Pendiente" },
-  completada: { bg: "#D1FAE5", color: "#059669", label: "Completado" },
-  anulada:    { bg: "#FEE2E2", color: "#DC2626", label: "Anulado" },
+  completado: { bg: "#D1FAE5", color: "#059669", label: "Completado" },
+  cancelado:  { bg: "#FEE2E2", color: "#DC2626", label: "Anulado" },
 } as const;
 
 // ─── Formatters ──────────────────────────────────────────────────────────────

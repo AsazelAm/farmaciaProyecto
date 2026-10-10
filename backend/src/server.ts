@@ -14,6 +14,7 @@ import TipoUsRoutes from "./Routes/TipoUsRoutes";
 import SucursalRoutes from "./Routes/SucursalRoutes";
 import ProveedoRoutes from "./Routes/ProveedoRoutes";
 import ProductoRoutes from "./Routes/ProductoRoutes";
+import PrincipioActivoRoutes from "./Routes/PrincipioActivoRoutes";
 
 import CompraLoteRoutes from "./Routes/CompraLoteRoutes";
 import LoteRoutes from "./Routes/LoteRoutes";
@@ -47,6 +48,7 @@ app.use('/api/TipoUs',TipoUsRoutes);
 app.use('/api/Sucursal',SucursalRoutes);
 app.use('/api/Proveedor',ProveedoRoutes);
 app.use('/api/Producto',ProductoRoutes);
+app.use('/api/PrincipioActivo', PrincipioActivoRoutes);
 
 app.use('/api/Compra', CompraLoteRoutes);
 app.use('/api/Lote', LoteRoutes);

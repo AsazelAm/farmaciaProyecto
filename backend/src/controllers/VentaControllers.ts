@@ -8,7 +8,7 @@ export class VentaControllers {
         try {
             // Extraer filtros del query params
             const filtros = {
-                estado: req.query.estado as 'pendiente' | 'completada' | 'anulada' | undefined,
+                estado: req.query.estado as 'pendiente' | 'completado' | 'cancelado' | undefined,
                 idCliente: req.query.idCliente ? Number(req.query.idCliente) : undefined,
                 idUsuario: req.query.idUsuario ? Number(req.query.idUsuario) : undefined,
                 idSucursal: req.query.idSucursal ? Number(req.query.idSucursal) : undefined,
@@ -109,12 +109,12 @@ export class VentaControllers {
     static readonly ChangeEstadoVentaC = async (req: Request, res: Response): Promise<any> => {
         try {
             const idVenta = Number(req.params.idVenta);
-            const { estado, motivo } = req.body; // Debería recibir 'completada', 'anulada' o 'pendiente'
+            const { estado, motivo } = req.body; // Debería recibir 'completado', 'cancelado' o 'pendiente'
 
-            if (estado === 'completada') {
+            if (estado === 'completado') {
                 await DataVenta.completar(idVenta);
                 return res.status(200).json({ message: 'Venta completada exitosamente' });
-            } else if (estado === 'anulada') {
+            } else if (estado === 'cancelado') {
                 await DataVenta.anular(idVenta, motivo);
                 return res.status(200).json({ message: 'Venta anulada y stock restituido exitosamente' });
             } else if (estado === 'pendiente') {

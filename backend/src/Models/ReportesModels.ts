@@ -24,7 +24,7 @@ const CONFIGS: Record<string, ConfigEntidad> = {
     venta: {
         tabla: 'venta',
         alias: 'v',
-        estadoCompletado: 'completada',
+        estadoCompletado: 'completado',
         campoId: 'idVenta',
         colDescuento: 'descuentoTotal',
         colImpuesto: 'impuestos',
@@ -50,9 +50,6 @@ const CONFIGS: Record<string, ConfigEntidad> = {
     },
 };
 
-// ─── Utilidad interna ────────────────────────────────────────────────────────
-// El driver de MariaDB devuelve SUM sobre DECIMAL como string y COUNT como
-// BigInt; normalizamos todo a Number para el frontend.
 function num(valor: any, porDefecto = 0): number {
     const n = Number(valor);
     return Number.isFinite(n) ? n : porDefecto;
@@ -233,7 +230,7 @@ async function obtenerDatosEntidad(entidad: string, frecuenciaValue: string, fec
 const DataReportes = {
 
     // ── Datos de ventas agrupados por periodo (diario/semanal/mensual) ────────
-    // periodos y totales solo consideran ventas 'completada' (ingresos reales);
+    // periodos y totales solo consideran ventas 'completado' (ingresos reales);
     // en el detalle se listan TODAS las ventas del rango con su estado.
     async getDatos(frecuenciaValue: string, fechaInicioValue?: any, fechaFinValue?: any) {
         const datos = await obtenerDatosEntidad('venta', frecuenciaValue, fechaInicioValue, fechaFinValue);

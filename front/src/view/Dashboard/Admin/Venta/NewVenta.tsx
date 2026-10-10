@@ -349,7 +349,7 @@ export default function NewVenta() {
 
   // ── Mutación: registra la venta completa ────────────────────────────────
   // Tu backend separa esto en 3 endpoints (AddVenta crea en 'pendiente',
-  // ChangeEstadoVenta la pasa a 'completada', EmitirFactura es opcional),
+  // ChangeEstadoVenta la pasa a 'completado', EmitirFactura es opcional),
   // así que aquí encadenamos las 3 llamadas como una sola operación desde
   // la perspectiva del usuario: "Confirmar Transacción" = pagar y cerrar.
   const registrarVentaMutation = useMutation({
@@ -379,8 +379,8 @@ export default function NewVenta() {
       // 1) Crear la venta (queda en estado 'pendiente' + descuenta stock)
       const { idVenta } = await AddVentaApi(payload);
 
-      // 2) Como ya se cobró en el modal, la pasamos a 'completada'
-      await ChangeEstadoVentaApi(idVenta, "completada");
+      // 2) Como ya se cobró en el modal, la pasamos a 'completado'
+      await ChangeEstadoVentaApi(idVenta, "completado");
 
       // 3) Emitir la factura solo si el usuario eligió "Con Factura"
       if (datosCobro.emitirFactura) {

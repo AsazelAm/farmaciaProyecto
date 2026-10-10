@@ -169,6 +169,15 @@ export type CreatePresenta = Pick<PresentaType, "nombre">;
 export type UpdatePresenta = Pick<PresentaType, "nombre" | "idPresentacion"|"fechaCreacion">;
 export type DeletePresenta = Pick<PresentaType, "idPresentacion">;
 
+//Type Principio Activo
+export const principioActivoArray = z.object({
+  idPrincipioActivo: z.number(),
+  nombre: z.string(),
+  descripcion: z.string().nullable().optional(),
+  fechaCreacion: z.string().optional(),
+});
+export const PrincipioActivoShcemas = z.array(principioActivoArray);
+
 //Type Cliente
 export const ClienteArray = z.object({
   idCliente: z.number(),
@@ -264,57 +273,79 @@ export const ProductoArray = z.object({
   stockMinimo:         z.union([z.number(), z.string()]).transform(Number),
   estado:              z.number().optional(),
   idLaboratorio:       z.number(),
-  idTipoProd:          z.number(),
+  idTipoProd:          z.number().nullable(),
   idPresentacion:      z.number(),
   nombreLaboratorio:   z.string().optional(),
-  nombreTipoProd:      z.string().optional(),
+  nombreTipoProd:      z.string().nullable().optional(),
   nombrePresentacion:  z.string().optional(),
+  principiosActivos:   z.array(z.object({
+    idPrincipioActivo: z.number(),
+    nombre:            z.string(),
+    concentracion:     z.string().nullable(),
+  })).optional(),
+  tiposProducto:       z.array(z.object({
+    idTipoProd: z.number(),
+    nombre:     z.string(),
+  })).optional(),
 });
 export const ProductoShcemass = z.array(ProductoArray);
 
-type ProductoType = z.infer<typeof ProductoArray>;
+// ── Entradas para el alta/edición de producto ─────────────────────────────────
+export interface ProductoPrincipioInput {
+  idPrincipioActivo?: number;
+  nombre?:            string;
+  concentracion?:     string | null;
+}
 
-export type CreateProducto = Pick<
-  ProductoType,
-  | 'codigoBarra'
-  | 'nombreGenerico'
-  | 'nombreComercial'
-  | 'concentracion'
-  | 'descripcion'
-  | 'precio'
-  | 'requiereReceta'
-  | 'contraindicaciones'
-  | 'viaAdministracion'
-  | 'stockMinimo'
-  | 'idLaboratorio'
-  | 'idTipoProd'
-  | 'idPresentacion'
-> & { img?: FileList | null };
+export interface ProductoTipoInput {
+  idTipoProd?: number;
+  nombre?:     string;
+}
 
-export type UpdateProducto = Pick<
-  ProductoType,
-  | 'idProducto'
-  | 'codigoBarra'
-  | 'nombreGenerico'
-  | 'nombreComercial'
-  | 'concentracion'
-  | 'descripcion'
-  | 'precio'
-  | 'requiereReceta'
-  | 'contraindicaciones'
-  | 'viaAdministracion'
-  | 'stockMinimo'
-  | 'idLaboratorio'
-  | 'idTipoProd'
-  | 'idPresentacion'
-  | 'img'
-  | 'fechaCreacion'
-  | 'nombreLaboratorio'
-  | 'nombreTipoProd'
-  | 'nombrePresentacion'
-> & { newImg?: FileList | null };
+export type CreateProducto = {
+  codigoBarra:         string;
+  nombreComercial:     string;
+  descripcion:         string;
+  precio:              number;
+  requiereReceta:      number;
+  contraindicaciones:  string;
+  viaAdministracion:   string;
+  stockMinimo:         number;
+  idLaboratorio:       number;
+  nombreLaboratorio?:  string;
+  idPresentacion:      number;
+  nombrePresentacion?: string;
+  principiosActivos:   ProductoPrincipioInput[];
+  tiposProducto:       ProductoTipoInput[];
+  img?:                FileList | null;
+};
 
-export type DeleteProducto = Pick<ProductoType, 'idProducto'>;
+export type UpdateProducto = {
+  idProducto:          number;
+  codigoBarra:         string;
+  nombreGenerico:      string;
+  nombreComercial:     string | null;
+  concentracion:       string | null;
+  descripcion:         string | null;
+  precio:              number;
+  requiereReceta:      number;
+  contraindicaciones:  string | null;
+  viaAdministracion:   string | null;
+  stockMinimo:         number;
+  idLaboratorio:       number;
+  idTipoProd:          number | null;
+  idPresentacion:      number;
+  img:                 string | null;
+  fechaCreacion?:      string;
+  nombreLaboratorio?:  string;
+  nombreTipoProd?:     string | null;
+  nombrePresentacion?: string;
+  principiosActivos?:  ProductoPrincipioInput[];
+  tiposProducto?:      ProductoTipoInput[];
+  newImg?:             FileList | null;
+};
+
+export type DeleteProducto = Pick<z.infer<typeof ProductoArray>, 'idProducto'>;
 
 
 //type Lote
@@ -543,7 +574,7 @@ export const VentaSchema = z.object({
   descuentoTotal: z.union([z.number(), z.string()]).transform(Number),
   impuestos: z.union([z.number(), z.string()]).transform(Number),
   total: z.union([z.number(), z.string()]).transform(Number),
-  estado: z.enum(['pendiente', 'completada', 'anulada']),
+  estado: z.enum(['pendiente', 'completado', 'cancelado']),
   tipoPago: z.string().nullable().optional(),
   observaciones: z.string().nullable().optional(),
   // Campos del JOIN
@@ -593,8 +624,8 @@ export type UpdateVentaType = CreateVentaType; // La estructura de update es la 
 
 // 5. Schema para cambio de estado (Completar / Anular / Volver a pendiente)
 export const ChangeEstadoVentaSchema = z.object({
-  estado: z.enum(['pendiente', 'completada', 'anulada']),
-  motivo: z.string().optional(), // Solo se usa cuando estado === 'anulada'
+  estado: z.enum(['pendiente', 'completado', 'cancelado']),
+  motivo: z.string().optional(), // Solo se usa cuando estado === 'cancelado'
 });
 
 export type ChangeEstadoVentaType = z.infer<typeof ChangeEstadoVentaSchema>;
@@ -623,7 +654,7 @@ export type DatosFacturacionClienteType = z.infer<
 
 // 7. Schema para Filtros de Búsqueda
 export const VentaFiltrosSchema = z.object({
-  estado: z.enum(['pendiente', 'completada', 'anulada']).optional(),
+  estado: z.enum(['pendiente', 'completado', 'cancelado']).optional(),
   idCliente: z.number().optional(),
   idUsuario: z.number().optional(),
   idSucursal: z.number().optional(),

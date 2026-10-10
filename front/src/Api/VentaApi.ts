@@ -90,10 +90,10 @@ export async function UpdateVentaApi(idVenta: number, formData: UpdateVentaType)
   }
 }
 
-// ── PATCH: Cambiar Estado (Pendiente / Completada / Anulada) ─────────────────
+// ── PATCH: Cambiar Estado (Pendiente / Completado / Cancelado) ─────────────────
 export async function ChangeEstadoVentaApi(
   idVenta: number,
-  estado: 'pendiente' | 'completada' | 'anulada',
+  estado: 'pendiente' | 'completado' | 'cancelado',
   motivo?: string
 ) {
   try {

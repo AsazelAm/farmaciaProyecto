@@ -26,7 +26,7 @@ router.get('/GetProductosMasVendidos',
     DashboardControllers.GetProductosMasVendidosC
 );
 
-//  GET: distribución de ventas por estado (pendiente/completada/anulada)
+//  GET: distribución de ventas por estado (pendiente/completado/cancelado)
 router.get('/GetVentasPorEstado',
     DashboardControllers.GetVentasPorEstadoC
 );

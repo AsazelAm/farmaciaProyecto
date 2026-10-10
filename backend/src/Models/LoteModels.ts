@@ -1,4 +1,5 @@
 import conectar from '../config/db';
+import { sqlNombreGenerico } from './ProductoDerivado';
 
 // ─── Interfaces ────────────────────────────────────────────────────────────
 export interface ILoteFiltros {
@@ -41,7 +42,7 @@ const DataLote = {
             queryBase += ` AND l.fechaVencimiento <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND l.estado = 'activo'`;
         }
         if (filtros.busqueda) {
-            queryBase += ` AND (l.codigo LIKE ? OR l.numeroLote LIKE ? OR pr.nombreGenerico LIKE ? OR pr.nombreComercial LIKE ?)`;
+            queryBase += ` AND (l.codigo LIKE ? OR l.numeroLote LIKE ? OR ${sqlNombreGenerico('pr')} LIKE ? OR pr.nombreComercial LIKE ?)`;
             const like = `%${filtros.busqueda}%`;
             queryParams.push(like, like, like, like);
         }
@@ -60,7 +61,7 @@ const DataLote = {
                 l.fechaVencimiento, l.precioCompra, l.fechaIngreso,
                 l.fechaCreacion, l.fechaModificacion, l.fechaFabricacion,
                 l.estado, l.idProducto, l.idProveedor,
-                pr.nombreGenerico, pr.nombreComercial, pr.codigoBarra,
+                ${sqlNombreGenerico('pr')} AS nombreGenerico, pr.nombreComercial, pr.codigoBarra,
                 pv.nombre AS proveedor,
                 DATEDIFF(l.fechaVencimiento, NOW()) AS diasParaVencer
             ${queryBase}
@@ -87,7 +88,7 @@ const DataLote = {
         const result = await conection.query(`
             SELECT
                 l.*,
-                pr.nombreGenerico, pr.nombreComercial, pr.codigoBarra,
+                ${sqlNombreGenerico('pr')} AS nombreGenerico, pr.nombreComercial, pr.codigoBarra,
                 pv.nombre AS proveedor,
                 DATEDIFF(l.fechaVencimiento, NOW()) AS diasParaVencer
             FROM lote l

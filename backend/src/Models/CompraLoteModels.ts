@@ -1,4 +1,5 @@
 import conectar from '../config/db';
+import { sqlNombreGenerico, sqlConcentracion } from './ProductoDerivado';
 
 // ─── Interfaces Internas (puedes moverlas a types/compra.types.ts luego) ─────
 export interface ICompraFiltros {
@@ -153,7 +154,7 @@ const DataCompra = {
                 l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento, l.fechaFabricacion,
                 l.stock, l.precioCompra, l.estado as estadoLote,
                 DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasParaVencer,
-                pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial, pr.concentracion,
+                pr.idProducto, pr.codigoBarra, ${sqlNombreGenerico('pr')} AS nombreGenerico, pr.nombreComercial, ${sqlConcentracion('pr')} AS concentracion,
                 lab.nombre AS nombreLaboratorio
             FROM detallecompra dc
             INNER JOIN lote        l   ON l.idLote        = dc.idLote

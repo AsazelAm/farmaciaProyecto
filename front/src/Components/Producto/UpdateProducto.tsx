@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import BarcodeRenderer from "../../lib/BarcodeRenderer";
@@ -7,22 +7,28 @@ import { UpdateProductoApi, GetProductoApi } from "../../Api/ProductoApi";
 import { GetLaboratorioApi } from "../../Api/LaboratorioApi";
 import { GetTipoProdApi } from "../../Api/TipoProdApi";
 import { GetPresentaApi } from "../../Api/PresentacionApi";
+import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
+import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
-import type { UpdateProducto } from "../../types";
+import type {
+  ProductoPrincipioInput,
+  ProductoTipoInput,
+  UpdateProducto,
+} from "../../types";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 type Props = Readonly<{
-    SendValor: UpdateProducto | null;
-    SetVer: React.Dispatch<React.SetStateAction<boolean>>;
+  SendValor: UpdateProducto | null;
+  SetVer: React.Dispatch<React.SetStateAction<boolean>>;
 }>;
 
 // ─── Paleta ──────────────────────────────────────────────────────────────────
 const C = {
-    dark: "#4A1A6E",
-    medium: "#7B3FA0",
-    light: "#F3EBF9",
-    border: "#D8B4F0",
-    text: "#2D0A47",
+  dark: "#4A1A6E",
+  medium: "#7B3FA0",
+  light: "#F3EBF9",
+  border: "#D8B4F0",
+  text: "#2D0A47",
 };
 
 // ─── Utilidad: convierte la ruta del backend a URL pública ───────────────────
@@ -31,20 +37,6 @@ const toPublicUrl = (ruta: string | null | undefined): string | null => {
     const base = import.meta.env.VITE_API_URL?.replace('/api', '') ?? '';
     return `${base}/${ruta.replace(/^\.\//, "").replace(/\\\\/g, "/")}`;
 };
-
-// ─── Helper: arma FormData ───────────────────────────────────────────────────
-function buildFormData(values: Omit<UpdateProducto, "img" | "newImg">, file?: File | null): FormData {
-    const fd = new FormData();
-    const record = values as Record<string, unknown>;
-    (Object.keys(record) as string[]).forEach((k) => {
-        const v = record[k];
-        if (v !== null && v !== undefined && k !== "img" && k !== "newImg") {
-            fd.append(k, String(v));
-        }
-    });
-    if (file) fd.append("img", file);
-    return fd;
-}
 
 // ── Input field helper ────────────────────────────────────────────────────
 const Field = ({
@@ -68,6 +60,13 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const fileRef = useRef<HTMLInputElement | null>(null);
 
+    // ── Estado de los catálogos N:M ─────────────────────────────────────────
+    const [principios, setPrincipios] = useState<ProductoPrincipioInput[]>([]);
+    const [tipos, setTipos] = useState<ProductoTipoInput[]>([]);
+    const [laboratorio, setLaboratorio] = useState<{ idLaboratorio?: number; nombre?: string }>({});
+    const [presentacion, setPresentacion] = useState<{ idPresentacion?: number; nombre?: string }>({});
+    const [tried, setTried] = useState(false);
+
     // ── react-hook-form ───────────────────────────────────────────────────────
     const {
         register,
@@ -83,20 +82,43 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
         reset({
             idProducto: SendValor.idProducto,
             codigoBarra: SendValor.codigoBarra ?? "",
-            nombreGenerico: SendValor.nombreGenerico ?? "",
             nombreComercial: SendValor.nombreComercial ?? "",
-            concentracion: SendValor.concentracion ?? "",
             descripcion: SendValor.descripcion ?? "",
-            precio: SendValor.precio ?? 0,
-            requiereReceta: SendValor.requiereReceta ?? 0,
+            precio: Number(SendValor.precio ?? 0),
+            requiereReceta: Number(SendValor.requiereReceta ?? 0),
             contraindicaciones: SendValor.contraindicaciones ?? "",
             viaAdministracion: SendValor.viaAdministracion ?? "",
-            stockMinimo: SendValor.stockMinimo ?? 0,
-            idLaboratorio: SendValor.idLaboratorio ?? 0,
-            idTipoProd: SendValor.idTipoProd ?? 0,
-            idPresentacion: SendValor.idPresentacion ?? 0,
+            stockMinimo: Number(SendValor.stockMinimo ?? 0),
         });
-        // Mostrar imagen actual del producto (si existe)
+
+        setLaboratorio(
+            (SendValor.idLaboratorio ?? 0) > 0
+                ? { idLaboratorio: Number(SendValor.idLaboratorio), nombre: SendValor.nombreLaboratorio ?? "" }
+                : {}
+        );
+        setPresentacion(
+            (SendValor.idPresentacion ?? 0) > 0
+                ? { idPresentacion: Number(SendValor.idPresentacion), nombre: SendValor.nombrePresentacion ?? "" }
+                : {}
+        );
+
+        const principiosIniciales =
+            SendValor.principiosActivos && SendValor.principiosActivos.length > 0
+                ? SendValor.principiosActivos.map((p) => ({
+                      idPrincipioActivo: p.idPrincipioActivo,
+                      nombre: p.nombre,
+                      concentracion: p.concentracion ?? "",
+                  }))
+                : [{ concentracion: "" }];
+        setPrincipios(principiosIniciales);
+
+        const tiposIniciales =
+            SendValor.tiposProducto && SendValor.tiposProducto.length > 0
+                ? SendValor.tiposProducto.map((t) => ({ idTipoProd: t.idTipoProd, nombre: t.nombre }))
+                : [];
+        setTipos(tiposIniciales);
+        setTried(false);
+
         const publicUrl = toPublicUrl(SendValor.img);
         setImgPreview(publicUrl);
     }, [SendValor, reset]);
@@ -105,6 +127,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
     const { data: laboratorios = [] } = useQuery({ queryKey: ["LaboratorioAll"], queryFn: GetLaboratorioApi });
     const { data: tiposProducto = [] } = useQuery({ queryKey: ["TipoProdAll"], queryFn: GetTipoProdApi });
     const { data: presentaciones = [] } = useQuery({ queryKey: ["PresentacionAll"], queryFn: GetPresentaApi });
+    const { data: principiosActivosList = [] } = useQuery({ queryKey: ["PrincipioActivoAll"], queryFn: GetPrincipioActivoApi });
 
     // ── Productos existentes (para validar código de barra único) ─────────────
     const { data: productos = [] } = useQuery({ queryKey: ["ProductoAll"], queryFn: GetProductoApi });
@@ -120,10 +143,24 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
         },
     });
 
+    // ── Helpers de los arreglos N:M ───────────────────────────────────────────
+    const updatePrincipio = (i: number, patch: Partial<ProductoPrincipioInput>) =>
+        setPrincipios((prev) => prev.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+    const removePrincipio = (i: number) =>
+        setPrincipios((prev) => prev.filter((_, idx) => idx !== i));
+
+    const updateTipo = (i: number, patch: Partial<ProductoTipoInput>) =>
+        setTipos((prev) => prev.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+    const removeTipo = (i: number) => setTipos((prev) => prev.filter((_, idx) => idx !== i));
+
+    const labValid = Boolean((laboratorio.idLaboratorio ?? 0) > 0 || (laboratorio.nombre ?? "").trim());
+    const presValid = Boolean((presentacion.idPresentacion ?? 0) > 0 || (presentacion.nombre ?? "").trim());
+    const tiposValid = tipos.some((t) => (t.idTipoProd ?? 0) > 0 || (t.nombre ?? "").trim());
+    const princiValid = principios.some((p) => (p.idPrincipioActivo ?? 0) > 0 || (p.nombre ?? "").trim());
+
     const handleForm = (values: UpdateProducto) => {
         if (!SendValor) return;
 
-        // ── Validar código de barra único (excluyendo este mismo producto) ─────
         const codigo = String(values.codigoBarra ?? "").trim();
         const yaExiste = Array.isArray(productos) && productos.some(
             (p: UpdateProducto) => Number(p.idProducto) !== Number(SendValor.idProducto) &&
@@ -134,15 +171,68 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
             return;
         }
 
+        setTried(true);
+        if (!labValid) return toast.warning("Debe seleccionar o crear un laboratorio");
+        if (!presValid) return toast.warning("Debe seleccionar o crear una presentación");
+        if (!princiValid) return toast.warning("Debe agregar al menos un principio activo");
+        if (!tiposValid) return toast.warning("Debe agregar al menos un tipo de producto");
+
+        const principiosClean = principios
+            .filter((p) => (p.idPrincipioActivo ?? 0) > 0 || (p.nombre ?? "").trim())
+            .map((p) => ({
+                idPrincipioActivo: (p.idPrincipioActivo ?? 0) > 0 ? p.idPrincipioActivo : undefined,
+                nombre: p.nombre,
+                concentracion: p.concentracion ?? null,
+            }));
+
+        const tiposClean = tipos
+            .filter((t) => (t.idTipoProd ?? 0) > 0 || (t.nombre ?? "").trim())
+            .map((t) => ({
+                idTipoProd: (t.idTipoProd ?? 0) > 0 ? t.idTipoProd : undefined,
+                nombre: t.nombre,
+            }));
+
+        const fd = new FormData();
+        fd.append("codigoBarra", values.codigoBarra);
+        if (values.nombreComercial) fd.append("nombreComercial", values.nombreComercial);
+        if (values.descripcion) fd.append("descripcion", values.descripcion);
+        fd.append("precio", String(values.precio));
+        fd.append("requiereReceta", String(values.requiereReceta));
+        if (values.contraindicaciones) fd.append("contraindicaciones", String(values.contraindicaciones));
+        if (values.viaAdministracion) fd.append("viaAdministracion", String(values.viaAdministracion));
+        fd.append("stockMinimo", String(values.stockMinimo));
+        if ((laboratorio.idLaboratorio ?? 0) > 0) fd.append("idLaboratorio", String(laboratorio.idLaboratorio));
+        else fd.append("nombreLaboratorio", String(laboratorio.nombre));
+        if ((presentacion.idPresentacion ?? 0) > 0) fd.append("idPresentacion", String(presentacion.idPresentacion));
+        else fd.append("nombrePresentacion", String(presentacion.nombre));
+        fd.append("tiposProducto", JSON.stringify(tiposClean));
+        fd.append("principiosActivos", JSON.stringify(principiosClean));
+
         const file = fileRef.current?.files?.[0] ?? null;
-        mutate({ fd: buildFormData(values, file), id: SendValor.idProducto });
+        if (file) fd.append("img", file);
+
+        mutate({ fd, id: SendValor.idProducto });
     };
 
     const handleClose = () => SetVer(false);
 
-    if (!SendValor) return null;
+    // Mapeos de catálogos para SearchableSelect
+    const labOptions = useMemo(() => (Array.isArray(laboratorios) ? laboratorios.map((l: { idLaboratorio: number; nombre: string }) => ({ value: l.idLaboratorio, label: l.nombre })) : []), [laboratorios]);
+    const tipoOptions = useMemo(() => (Array.isArray(tiposProducto) ? tiposProducto.map((t: { idTipoProd: number; nombre: string }) => ({ value: t.idTipoProd, label: t.nombre })) : []), [tiposProducto]);
+    const presentaOptions = useMemo(() => (Array.isArray(presentaciones) ? presentaciones.map((p: { idPresentacion: number; nombre: string }) => ({ value: p.idPresentacion, label: p.nombre })) : []), [presentaciones]);
+    const principioOptions = useMemo(
+        () => (Array.isArray(principiosActivosList) ? principiosActivosList.map((p: { idPrincipioActivo: number; nombre: string }) => ({ value: p.idPrincipioActivo, label: p.nombre })) : []),
+        [principiosActivosList]
+    );
 
-    // Field helper se movió afuera para evitar pérdida de focus al recrearse.
+    const labChip: SearchableOption[] =
+        (laboratorio.idLaboratorio ?? 0) > 0 && laboratorio.nombre ? [{ value: laboratorio.idLaboratorio!, label: laboratorio.nombre }] : [];
+    const labCustoms: string[] = !(laboratorio.idLaboratorio ?? 0) && laboratorio.nombre ? [laboratorio.nombre] : [];
+    const presentaChip: SearchableOption[] =
+        (presentacion.idPresentacion ?? 0) > 0 && presentacion.nombre ? [{ value: presentacion.idPresentacion!, label: presentacion.nombre }] : [];
+    const presentaCustoms: string[] = !(presentacion.idPresentacion ?? 0) && presentacion.nombre ? [presentacion.nombre] : [];
+
+    if (!SendValor) return null;
 
     return (
         <div className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -173,7 +263,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                     Editar Producto
                                 </h2>
                                 <p className="text-xs text-green-100 mt-0.5">
-                                    Modificando: <span className="font-semibold">{SendValor.nombreGenerico}</span>
+                                    Modificando: <span className="font-semibold">{SendValor.nombreGenerico ?? SendValor.nombreComercial ?? ""}</span>
                                 </p>
                             </div>
                         </div>
@@ -215,7 +305,6 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                     </div>
                                     {errors.codigoBarra && <ErrorMessage>{errors.codigoBarra.message}</ErrorMessage>}
                                 </Field>
-                                {/* Preview del Código de Barra */}
                                 {watch("codigoBarra") && (
                                     <div className="mt-2 flex flex-col items-center p-2.5 bg-green-50/30 rounded-xl border border-dashed border-green-200">
                                         <span className="text-[10px] uppercase font-bold tracking-wider text-green-700 mb-1">Vista Previa del Código</span>
@@ -224,38 +313,12 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 )}
                             </div>
 
-                            {/* ── Nombre Genérico ──────────────────────────────────────── */}
-                            <Field id="upd-nombreGenerico" label="Nombre Genérico" required>
-                                <div className="relative group">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                    </div>
-                                    <input id="upd-nombreGenerico" type="text" placeholder="Ej: Paracetamol"
-                                        className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
-                                        style={{ borderColor: C.border, color: C.text }}
-                                        {...register("nombreGenerico", { required: "El nombre genérico es obligatorio" })}
-                                    />
-                                </div>
-                                {errors.nombreGenerico && <ErrorMessage>{errors.nombreGenerico.message}</ErrorMessage>}
-                            </Field>
-
                             {/* ── Nombre Comercial ─────────────────────────────────────── */}
                             <Field id="upd-nombreComercial" label="Nombre Comercial" optional>
                                 <input id="upd-nombreComercial" type="text" placeholder="Ej: Tylenol..."
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                     style={{ borderColor: C.border, color: C.text }}
                                     {...register("nombreComercial")}
-                                />
-                            </Field>
-
-                            {/* ── Concentración ────────────────────────────────────────── */}
-                            <Field id="upd-concentracion" label="Concentración" optional>
-                                <input id="upd-concentracion" type="text" placeholder="Ej: 500 mg"
-                                    className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
-                                    style={{ borderColor: C.border, color: C.text }}
-                                    {...register("concentracion")}
                                 />
                             </Field>
 
@@ -305,62 +368,156 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 {errors.requiereReceta && <ErrorMessage>{errors.requiereReceta.message}</ErrorMessage>}
                             </Field>
 
-                            {/* ── Laboratorio ──────────────────────────────────────────── */}
-                            <Field id="upd-idLaboratorio" label="Laboratorio" required>
-                                <select
-                                    id="upd-idLaboratorio"
-                                    className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-                                    style={{ borderColor: C.border, color: C.text }}
-                                    {...register("idLaboratorio", {
-                                        required: "Seleccione un laboratorio",
-                                        validate: (v) => Number(v) > 0 || "Seleccione un laboratorio",
-                                    })}
-                                >
-                                    <option value="0">-- Seleccione --</option>
-                                    {Array.isArray(laboratorios) && laboratorios.map((l: { idLaboratorio: number; nombre: string }) => (
-                                        <option key={l.idLaboratorio} value={l.idLaboratorio}>{l.nombre}</option>
-                                    ))}
-                                </select>
-                                {errors.idLaboratorio && <ErrorMessage>{errors.idLaboratorio.message}</ErrorMessage>}
-                            </Field>
+                            {/* ── Principios Activos (N:M) ─────────────────────────────── */}
+                            <div className="md:col-span-2 space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                                        Principios Activos <span className="text-red-500">*</span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPrincipios((prev) => [...prev, { concentracion: "" }])}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors hover:bg-purple-50"
+                                        style={{ borderColor: C.border, color: C.dark }}
+                                    >
+                                        + Agregar principio
+                                    </button>
+                                </div>
+                                {tried && !princiValid && <ErrorMessage>Agregue al menos un principio activo</ErrorMessage>}
+                                {principios.map((row, i) => (
+                                    <div
+                                        key={i}
+                                        className="grid grid-cols-1 sm:grid-cols-[1fr,200px,auto] gap-3 items-start p-3 rounded-xl border"
+                                        style={{ borderColor: C.border, background: "#FBF8FE" }}
+                                    >
+                                        <SearchableSelect
+                                            placeholder="Buscar principio activo..."
+                                            options={principioOptions}
+                                            selected={row.idPrincipioActivo ? [{ value: row.idPrincipioActivo, label: row.nombre ?? "" }] : []}
+                                            customs={!row.idPrincipioActivo && row.nombre ? [row.nombre] : []}
+                                            onPick={(opt) => updatePrincipio(i, { idPrincipioActivo: opt.value, nombre: opt.label })}
+                                            onPickCustom={(name) => updatePrincipio(i, { idPrincipioActivo: undefined, nombre: name })}
+                                            onRemoveSelected={() => updatePrincipio(i, { idPrincipioActivo: undefined, nombre: undefined })}
+                                            onRemoveCustom={() => updatePrincipio(i, { nombre: undefined })}
+                                            createVerb="principio activo"
+                                            emptyText="Escribe el nombre para crearlo"
+                                            invalid={tried && !row.idPrincipioActivo && !(row.nombre ?? "").trim()}
+                                        />
+                                        <input
+                                            type="text"
+                                            value={row.concentracion ?? ""}
+                                            onChange={(e) => updatePrincipio(i, { concentracion: e.target.value })}
+                                            placeholder="Concentración (ej: 500 mg)"
+                                            className="w-full px-3.5 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
+                                            style={{ borderColor: C.border, color: C.text }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removePrincipio(i)}
+                                            title="Quitar principio"
+                                            className="self-center w-9 h-9 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
 
-                            {/* ── Tipo de Producto ─────────────────────────────────────── */}
-                            <Field id="upd-idTipoProd" label="Tipo de Producto" required>
-                                <select
-                                    id="upd-idTipoProd"
-                                    className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-                                    style={{ borderColor: C.border, color: C.text }}
-                                    {...register("idTipoProd", {
-                                        required: "Seleccione un tipo",
-                                        validate: (v) => Number(v) > 0 || "Seleccione un tipo",
-                                    })}
-                                >
-                                    <option value="0">-- Seleccione --</option>
-                                    {Array.isArray(tiposProducto) && tiposProducto.map((t: { idTipoProd: number; nombre: string }) => (
-                                        <option key={t.idTipoProd} value={t.idTipoProd}>{t.nombre}</option>
-                                    ))}
-                                </select>
-                                {errors.idTipoProd && <ErrorMessage>{errors.idTipoProd.message}</ErrorMessage>}
-                            </Field>
+                            {/* ── Tipos de Producto (N:M) ──────────────────────────────── */}
+                            <div className="md:col-span-2 space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                                        Tipos de Producto <span className="text-red-500">*</span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setTipos((prev) => [...prev, {}])}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors hover:bg-purple-50"
+                                        style={{ borderColor: C.border, color: C.dark }}
+                                    >
+                                        + Agregar tipo
+                                    </button>
+                                </div>
+                                {tried && !tiposValid && <ErrorMessage>Agregue al menos un tipo de producto</ErrorMessage>}
+                                {tipos.length === 0 && (
+                                    <div className="text-xs text-gray-400 border border-dashed rounded-xl p-3 text-center" style={{ borderColor: C.border }}>
+                                        Busca un tipo existente o escríbelo para crearlo al guardar.
+                                    </div>
+                                )}
+                                {tipos.map((row, i) => (
+                                    <div
+                                        key={i}
+                                        className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-3 items-start p-3 rounded-xl border"
+                                        style={{ borderColor: C.border, background: "#FBF8FE" }}
+                                    >
+                                        <SearchableSelect
+                                            placeholder="Buscar tipo de producto..."
+                                            options={tipoOptions}
+                                            selected={row.idTipoProd ? [{ value: row.idTipoProd, label: row.nombre ?? "" }] : []}
+                                            customs={!row.idTipoProd && row.nombre ? [row.nombre] : []}
+                                            onPick={(opt) => updateTipo(i, { idTipoProd: opt.value, nombre: opt.label })}
+                                            onPickCustom={(name) => updateTipo(i, { idTipoProd: undefined, nombre: name })}
+                                            onRemoveSelected={() => updateTipo(i, { idTipoProd: undefined, nombre: undefined })}
+                                            onRemoveCustom={() => updateTipo(i, { nombre: undefined })}
+                                            createVerb="tipo de producto"
+                                            emptyText="Escribe el nombre para crearlo"
+                                            invalid={tried && !row.idTipoProd && !(row.nombre ?? "").trim()}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeTipo(i)}
+                                            title="Quitar tipo"
+                                            className="self-center w-9 h-9 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
 
-                            {/* ── Presentación ─────────────────────────────────────────── */}
-                            <Field id="upd-idPresentacion" label="Presentación" required>
-                                <select
-                                    id="upd-idPresentacion"
-                                    className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-                                    style={{ borderColor: C.border, color: C.text }}
-                                    {...register("idPresentacion", {
-                                        required: "Seleccione una presentación",
-                                        validate: (v) => Number(v) > 0 || "Seleccione una presentación",
-                                    })}
-                                >
-                                    <option value="0">-- Seleccione --</option>
-                                    {Array.isArray(presentaciones) && presentaciones.map((p: { idPresentacion: number; nombre: string }) => (
-                                        <option key={p.idPresentacion} value={p.idPresentacion}>{p.nombre}</option>
-                                    ))}
-                                </select>
-                                {errors.idPresentacion && <ErrorMessage>{errors.idPresentacion.message}</ErrorMessage>}
-                            </Field>
+                            {/* ── Laboratorio (con creación inline) ────────────────────── */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="upd-labSearch" className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                                    Laboratorio <span className="text-red-500">*</span>
+                                </label>
+                                <SearchableSelect
+                                    id="upd-labSearch"
+                                    placeholder="Buscar laboratorio..."
+                                    options={labOptions}
+                                    selected={labChip}
+                                    customs={labCustoms}
+                                    onPick={(opt) => setLaboratorio({ idLaboratorio: opt.value, nombre: opt.label })}
+                                    onPickCustom={(name) => setLaboratorio({ nombre: name })}
+                                    onRemoveSelected={() => setLaboratorio({})}
+                                    onRemoveCustom={() => setLaboratorio({})}
+                                    createVerb="laboratorio"
+                                    emptyText="Escribe el nombre para crearlo"
+                                    invalid={tried && !labValid}
+                                />
+                                {tried && !labValid && <ErrorMessage>Seleccione o cree un laboratorio</ErrorMessage>}
+                            </div>
+
+                            {/* ── Presentación (con creación inline) ───────────────────── */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="upd-presSearch" className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                                    Presentación <span className="text-red-500">*</span>
+                                </label>
+                                <SearchableSelect
+                                    id="upd-presSearch"
+                                    placeholder="Buscar presentación..."
+                                    options={presentaOptions}
+                                    selected={presentaChip}
+                                    customs={presentaCustoms}
+                                    onPick={(opt) => setPresentacion({ idPresentacion: opt.value, nombre: opt.label })}
+                                    onPickCustom={(name) => setPresentacion({ nombre: name })}
+                                    onRemoveSelected={() => setPresentacion({})}
+                                    onRemoveCustom={() => setPresentacion({})}
+                                    createVerb="presentación"
+                                    emptyText="Escribe el nombre para crearlo"
+                                    invalid={tried && !presValid}
+                                />
+                                {tried && !presValid && <ErrorMessage>Seleccione o cree una presentación</ErrorMessage>}
+                            </div>
 
                             {/* ── Descripción (ancho completo) ─────────────────────────── */}
                             <div className="space-y-1.5 md:col-span-2">

@@ -33,26 +33,26 @@ const COLORS = {
   light: "#F3EBF9",
   border: "#D8B4F0",
   estadoPendiente: { bg: "#FEF3C7", color: "#D97706" },
-  estadoCompletada: { bg: "#D1FAE5", color: "#059669" },
-  estadoAnulada: { bg: "#FEE2E2", color: "#DC2626" },
+  estadoCompletado: { bg: "#D1FAE5", color: "#059669" },
+  estadoCancelado: { bg: "#FEE2E2", color: "#DC2626" },
 } as const;
 
 const ESTADO_STYLES: Record<string, { bg: string; color: string }> = {
   pendiente: COLORS.estadoPendiente,
-  completada: COLORS.estadoCompletada,
-  anulada: COLORS.estadoAnulada,
+  completado: COLORS.estadoCompletado,
+  cancelado: COLORS.estadoCancelado,
 };
 
 const ESTADO_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
-  completada: "Completado",
-  anulada: "Anulado",
+  completado: "Completado",
+  cancelado: "Anulado",
 };
 
 const ESTADO_DONUT_COLORS: Record<string, string> = {
-  completada: "#059669",
+  completado: "#059669",
   pendiente: "#D97706",
-  anulada: "#DC2626",
+  cancelado: "#DC2626",
 };
 
 // ─── Formatters nativos ──────────────────────────────────────────────────────
@@ -388,8 +388,8 @@ function TablaStockBajo({ datos }: { datos: StockBajoType }) {
                     <span
                       className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold"
                       style={{
-                        backgroundColor: agotado ? COLORS.estadoAnulada.bg : "#FEF3C7",
-                        color: agotado ? COLORS.estadoAnulada.color : "#D97706",
+                        backgroundColor: agotado ? COLORS.estadoCancelado.bg : "#FEF3C7",
+                        color: agotado ? COLORS.estadoCancelado.color : "#D97706",
                       }}
                     >
                       {agotado && <XCircle className="w-3 h-3" />}
@@ -445,8 +445,8 @@ function TablaLotesPorVencer({ datos }: { datos: LotesPorVencerType }) {
                     <span
                       className="inline-flex px-2 py-1 rounded-full text-xs font-bold"
                       style={{
-                        backgroundColor: critico ? COLORS.estadoAnulada.bg : "#FEF3C7",
-                        color: critico ? COLORS.estadoAnulada.color : "#D97706",
+                        backgroundColor: critico ? COLORS.estadoCancelado.bg : "#FEF3C7",
+                        color: critico ? COLORS.estadoCancelado.color : "#D97706",
                       }}
                     >
                       {l.diasParaVencer} días
@@ -702,7 +702,7 @@ export default function Dashboard() {
           extra={
             <span
               className="inline-flex px-2 py-1 rounded-lg text-xs font-bold"
-              style={{ backgroundColor: COLORS.estadoAnulada.bg, color: COLORS.estadoAnulada.color }}
+              style={{ backgroundColor: COLORS.estadoCancelado.bg, color: COLORS.estadoCancelado.color }}
             >
               {stockBajo.length} alertas
             </span>

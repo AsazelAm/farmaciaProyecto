@@ -1,8 +1,9 @@
 import conectar from '../config/db';
+import { sqlNombreGenerico, sqlConcentracion } from './ProductoDerivado';
 
 // ─── Interfaces Internas (puedes moverlas a types/venta.types.ts luego) ──────
 export interface IVentaFiltros {
-    estado?: 'pendiente' | 'completada' | 'anulada';
+    estado?: 'pendiente' | 'completado' | 'cancelado';
     idCliente?: number;
     idUsuario?: number;
     idSucursal?: number;
@@ -153,8 +154,8 @@ const DataVenta = {
                 dv.cantidad, dv.precioUnitario, dv.descuento, dv.subtotal,
                 l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento,
                 DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasParaVencer,
-                pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial,
-                pr.concentracion, pr.requiereReceta,
+                pr.idProducto, pr.codigoBarra, ${sqlNombreGenerico('pr')} AS nombreGenerico, pr.nombreComercial,
+                ${sqlConcentracion('pr')} AS concentracion, pr.requiereReceta,
                 lab.nombre AS nombreLaboratorio
             FROM detalleventa dv
             INNER JOIN lote        l   ON l.idLote        = dv.idLote
@@ -274,7 +275,7 @@ const DataVenta = {
 
         try {
             const result = await conection.query(`
-                UPDATE venta SET estado = 'completada' WHERE idVenta = ? AND estado = 'pendiente'
+                UPDATE venta SET estado = 'completado' WHERE idVenta = ? AND estado = 'pendiente'
             `, [idVenta]);
             return result.affectedRows > 0;
         } finally {
@@ -287,7 +288,7 @@ const DataVenta = {
         const conection = await conectar.getConnection();
         try {
             const result = await conection.query(`
-                UPDATE venta SET estado = 'pendiente' WHERE idVenta = ? AND estado = 'completada'
+                UPDATE venta SET estado = 'pendiente' WHERE idVenta = ? AND estado = 'completado'
             `, [idVenta]);
             return result.affectedRows > 0;
         } finally {
@@ -309,8 +310,8 @@ const DataVenta = {
             if (check.length === 0) {
                 throw new Error('La venta no existe.');
             }
-            if (check[0].estado === 'anulada') {
-                throw new Error('La venta ya se encuentra anulada.');
+            if (check[0].estado === 'cancelado') {
+                throw new Error('La venta ya se encuentra cancelada.');
             }
 
             // 2. Regresar el stock vendido a cada lote
@@ -326,7 +327,7 @@ const DataVenta = {
 
             // 3. Marcar la venta como anulada
             await conection.query(`
-                UPDATE venta SET estado = 'anulada' WHERE idVenta = ?
+                UPDATE venta SET estado = 'cancelado' WHERE idVenta = ?
             `, [idVenta]);
 
             // 4. Si tiene factura emitida, anularla también
@@ -464,7 +465,7 @@ const DataVenta = {
             if (check.length === 0) {
                 throw new Error('La venta no existe.');
             }
-            if (check[0].estado !== 'completada') {
+            if (check[0].estado !== 'completado') {
                 throw new Error('Solo se puede facturar una venta completada.');
             }
 
@@ -552,28 +553,28 @@ const DataVenta = {
                     SELECT IFNULL(SUM(total), 0) AS totalMes FROM venta 
                     WHERE MONTH(fechaCreacion) = MONTH(NOW()) 
                     AND YEAR(fechaCreacion) = YEAR(NOW()) 
-                    AND estado = 'completada'
+                    AND estado = 'completado'
                 `),
                 conection.query(`
                     SELECT IFNULL(SUM(total), 0) AS totalMesAnterior FROM venta 
                     WHERE MONTH(fechaCreacion) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) 
                     AND YEAR(fechaCreacion) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH)) 
-                    AND estado = 'completada'
+                    AND estado = 'completado'
                 `),
                 conection.query(`
                     SELECT s.nombre, COUNT(v.idVenta) AS cantidad, SUM(v.total) AS monto 
                     FROM venta v
                     INNER JOIN sucursal s ON s.idSucursal = v.idSucursal
-                    WHERE v.estado = 'completada'
+                    WHERE v.estado = 'completado'
                     GROUP BY v.idSucursal
                     ORDER BY monto DESC LIMIT 5
                 `),
                 conection.query(`
-                    SELECT pr.nombreGenerico, SUM(dv.cantidad) AS unidadesVendidas, SUM(dv.subtotal) AS monto
+                    SELECT ${sqlNombreGenerico('pr')} AS nombreGenerico, SUM(dv.cantidad) AS unidadesVendidas, SUM(dv.subtotal) AS monto
                     FROM detalleventa dv
                     INNER JOIN venta v ON v.idVenta = dv.idVenta
                     INNER JOIN producto pr ON pr.idProducto = dv.idProducto
-                    WHERE v.estado = 'completada'
+                    WHERE v.estado = 'completado'
                     GROUP BY dv.idProducto
                     ORDER BY unidadesVendidas DESC LIMIT 5
                 `)

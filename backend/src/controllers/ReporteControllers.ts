@@ -247,9 +247,9 @@ function generarHtml(datos: any): string {
     td.num, th.num { text-align: right; }
     .total-row td { font-weight: bold; background: #dbeafe !important; }
     .estado { display: inline-block; padding: 1px 8px; border-radius: 10px; text-transform: capitalize; }
-    .estado-completada { background: #dcfce7; color: #15803d; }
+    .estado-completado { background: #dcfce7; color: #15803d; }
     .estado-pendiente { background: #fef9c3; color: #a16207; }
-    .estado-anulada { background: #fee2e2; color: #b91c1c; }
+    .estado-cancelado { background: #fee2e2; color: #b91c1c; }
     .footer { margin-top: 22px; color: #9ca3af; font-size: 10px; text-align: center; }
 </style>
 </head>

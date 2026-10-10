@@ -47,13 +47,13 @@ const COLORS = {
 
 const ESTADO_STYLES: Record<string, { bg: string; color: string }> = {
   pendiente: { bg: "#FEF3C7", color: "#D97706" },
-  completada: { bg: "#D1FAE5", color: "#059669" },
-  anulada: { bg: "#FEE2E2", color: "#DC2626" },
+  completado: { bg: "#D1FAE5", color: "#059669" },
+  cancelado: { bg: "#FEE2E2", color: "#DC2626" },
 };
 const ESTADO_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
-  completada: "Completado",
-  anulada: "Anulado",
+  completado: "Completado",
+  cancelado: "Anulado",
 };
 
 // ─── Formatters nativos ──────────────────────────────────────────────────────

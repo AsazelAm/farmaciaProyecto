@@ -1,4 +1,4 @@
-import { useForm, type UseFormRegisterReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -7,8 +7,14 @@ import { AddProductoApi, GetProductoApi } from "../../Api/ProductoApi";
 import { GetLaboratorioApi } from "../../Api/LaboratorioApi";
 import { GetTipoProdApi } from "../../Api/TipoProdApi";
 import { GetPresentaApi } from "../../Api/PresentacionApi";
+import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
+import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
-import type { CreateProducto } from "../../types";
+import type {
+  CreateProducto,
+  ProductoPrincipioInput,
+  ProductoTipoInput,
+} from "../../types";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 type Props = Readonly<{
@@ -20,8 +26,9 @@ type Props = Readonly<{
 interface ILaboratorio { idLaboratorio: number; nombre: string; }
 interface ITipoProducto { idTipoProd: number; nombre: string; }
 interface IPresentacion { idPresentacion: number; nombre: string; }
+interface IPrincipioActivo { idPrincipioActivo: number; nombre: string; }
 
-// ─── Paleta (idéntica a Proveedor / ProveedorForm) ───────────────────────────
+// ─── Paleta ──────────────────────────────────────────────────────────────────
 const C = {
   dark: "#4A1A6E",
   medium: "#7B3FA0",
@@ -32,17 +39,15 @@ const C = {
 
 const LS_KEY = "ProductoFormDraft";
 
-// ─── Helper: arma un FormData desde los valores del form + archivo ────────────
-function buildFormData(values: CreateProducto, file?: File | null): FormData {
-  const fd = new FormData();
-  (Object.keys(values) as (keyof CreateProducto)[]).forEach((k) => {
-    if (k === "img") return;
-    const v = values[k];
-    if (v !== null && v !== undefined) fd.append(k, String(v));
-  });
-  if (file) fd.append("img", file);
-  return fd;
-}
+type Draft = {
+  scalars?: Partial<CreateProducto>;
+  principios?: ProductoPrincipioInput[];
+  tipos?: ProductoTipoInput[];
+  laboratorio?: { idLaboratorio?: number; nombre?: string };
+  presentacion?: { idPresentacion?: number; nombre?: string };
+};
+
+const saveDraft = (draft: Draft) => localStorage.setItem(LS_KEY, JSON.stringify(draft));
 
 // ── Input field helper ────────────────────────────────────────────────────
 const Field = ({
@@ -60,101 +65,78 @@ const Field = ({
   </div>
 );
 
-// ── Select field reutilizable (DRY) ───────────────────────────────────────
-interface SelectFieldProps {
-  id: string;
-  label: string;
-  options: { value: number; label: string }[];
-  placeholder: string;
-  error?: string;
-  registration: UseFormRegisterReturn;
-}
-
-const SelectField = ({ id, label, options, placeholder, error, registration }: SelectFieldProps) => (
-  <Field id={id} label={label} required>
-    <div className="relative group">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-        <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-        </svg>
-      </div>
-      <select
-        id={id}
-        className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium appearance-none bg-white"
-        style={{ borderColor: C.border, color: C.text }}
-        {...registration}
-      >
-        <option value="0">{placeholder}</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-    </div>
-    {error && <ErrorMessage>{error}</ErrorMessage>}
-  </Field>
-);
-
 export default function ProductoForm({ setIsOpen, isOpen }: Props) {
   const queryClient = useQueryClient();
 
-  // ── Estado de preview de imagen ──────────────────────────────────────────
   const [imgPreview, setImgPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  // ── react-hook-form ───────────────────────────────────────────────────────
+  // ── Estado de los catálogos N:M (principios activos, tipos, laboratorio, presentación) ──
+  const [principios, setPrincipios] = useState<ProductoPrincipioInput[]>([{ concentracion: "" }]);
+  const [tipos, setTipos] = useState<ProductoTipoInput[]>([]);
+  const [laboratorio, setLaboratorio] = useState<{ idLaboratorio?: number; nombre?: string }>({});
+  const [presentacion, setPresentacion] = useState<{ idPresentacion?: number; nombre?: string }>({});
+  const [tried, setTried] = useState(false);
+
+  // ── react-hook-form (solo campos escalares) ──────────────────────────────
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<CreateProducto>({
     defaultValues: {
       codigoBarra: "",
-      nombreGenerico: "",
       nombreComercial: "",
-      concentracion: "",
       descripcion: "",
       precio: 0,
       requiereReceta: 0,
       contraindicaciones: "",
       viaAdministracion: "",
       stockMinimo: 0,
-      idLaboratorio: 0,
-      idTipoProd: 0,
-      idPresentacion: 0,
     },
   });
 
   // ── Recuperar borrador ─────────────────────────────────────────────────────
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY);
-    if (saved) {
-      try { reset(JSON.parse(saved)); } catch { localStorage.removeItem(LS_KEY); }
+    if (!saved) return;
+    try {
+      const draft: Draft = JSON.parse(saved);
+      if (draft.scalars) reset(draft.scalars);
+      if (draft.principios?.length) setPrincipios(draft.principios);
+      if (draft.tipos?.length) setTipos(draft.tipos);
+      if (draft.laboratorio) setLaboratorio(draft.laboratorio);
+      if (draft.presentacion) setPresentacion(draft.presentacion);
+    } catch {
+      localStorage.removeItem(LS_KEY);
     }
   }, [reset]);
 
   // ── Persistir borrador mientras está abierto ───────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
-    const { unsubscribe } = watch((values) =>
-      localStorage.setItem(LS_KEY, JSON.stringify(values))
-    );
-    return unsubscribe;
-  }, [watch, isOpen]);
+    saveDraft({ scalars: getValues(), principios, tipos, laboratorio, presentacion });
+  }, [isOpen, principios, tipos, laboratorio, presentacion, getValues]);
 
   // ── Queries para los selects relacionados ─────────────────────────────────
   const { data: laboratorios = [] } = useQuery<ILaboratorio[] | undefined>({
     queryKey: ["LaboratorioAll"],
     queryFn: GetLaboratorioApi,
   });
+  const { data: presentaciones = [] } = useQuery<IPresentacion[] | undefined>({
+    queryKey: ["PresentacionAll"],
+    queryFn: GetPresentaApi,
+  });
   const { data: tiposProducto = [] } = useQuery<ITipoProducto[] | undefined>({
     queryKey: ["TipoProdAll"],
     queryFn: GetTipoProdApi,
   });
-  const { data: presentaciones = [] } = useQuery<IPresentacion[] | undefined>({
-    queryKey: ["PresentacionAll"],
-    queryFn: GetPresentaApi,
+  const { data: principiosActivosList = [] } = useQuery<IPrincipioActivo[] | undefined>({
+    queryKey: ["PrincipioActivoAll"],
+    queryFn: GetPrincipioActivoApi,
   });
 
   // ── Productos existentes (para validar código de barra único) ──────────────
@@ -174,6 +156,21 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
     },
   });
 
+  // ── Helpers de los arreglos N:M ───────────────────────────────────────────
+  const updatePrincipio = (i: number, patch: Partial<ProductoPrincipioInput>) =>
+    setPrincipios((prev) => prev.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  const removePrincipio = (i: number) =>
+    setPrincipios((prev) => prev.filter((_, idx) => idx !== i));
+
+  const updateTipo = (i: number, patch: Partial<ProductoTipoInput>) =>
+    setTipos((prev) => prev.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  const removeTipo = (i: number) => setTipos((prev) => prev.filter((_, idx) => idx !== i));
+
+  const labValid = Boolean((laboratorio.idLaboratorio ?? 0) > 0 || (laboratorio.nombre ?? "").trim());
+  const presValid = Boolean((presentacion.idPresentacion ?? 0) > 0 || (presentacion.nombre ?? "").trim());
+  const tiposValid = tipos.some((t) => (t.idTipoProd ?? 0) > 0 || (t.nombre ?? "").trim());
+  const princiValid = principios.some((p) => (p.idPrincipioActivo ?? 0) > 0 || (p.nombre ?? "").trim());
+
   const handleForm = (values: CreateProducto) => {
     const file = fileRef.current?.files?.[0] ?? null;
 
@@ -184,23 +181,76 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
       return;
     }
 
-    mutate(buildFormData(values, file));
+    setTried(true);
+    if (!labValid) return toast.warning("Debe seleccionar o crear un laboratorio");
+    if (!presValid) return toast.warning("Debe seleccionar o crear una presentación");
+    if (!princiValid) return toast.warning("Debe agregar al menos un principio activo");
+    if (!tiposValid) return toast.warning("Debe agregar al menos un tipo de producto");
+
+    const principiosClean = principios
+      .filter((p) => (p.idPrincipioActivo ?? 0) > 0 || (p.nombre ?? "").trim())
+      .map((p) => ({
+        idPrincipioActivo: (p.idPrincipioActivo ?? 0) > 0 ? p.idPrincipioActivo : undefined,
+        nombre: p.nombre,
+        concentracion: p.concentracion ?? null,
+      }));
+
+    const tiposClean = tipos
+      .filter((t) => (t.idTipoProd ?? 0) > 0 || (t.nombre ?? "").trim())
+      .map((t) => ({
+        idTipoProd: (t.idTipoProd ?? 0) > 0 ? t.idTipoProd : undefined,
+        nombre: t.nombre,
+      }));
+
+    const fd = new FormData();
+    fd.append("codigoBarra", values.codigoBarra);
+    if (values.nombreComercial) fd.append("nombreComercial", values.nombreComercial);
+    if (values.descripcion) fd.append("descripcion", values.descripcion);
+    fd.append("precio", String(values.precio));
+    fd.append("requiereReceta", String(values.requiereReceta));
+    if (values.contraindicaciones) fd.append("contraindicaciones", values.contraindicaciones);
+    if (values.viaAdministracion) fd.append("viaAdministracion", values.viaAdministracion);
+    fd.append("stockMinimo", String(values.stockMinimo));
+    if ((laboratorio.idLaboratorio ?? 0) > 0) fd.append("idLaboratorio", String(laboratorio.idLaboratorio));
+    else fd.append("nombreLaboratorio", String(laboratorio.nombre));
+    if ((presentacion.idPresentacion ?? 0) > 0) fd.append("idPresentacion", String(presentacion.idPresentacion));
+    else fd.append("nombrePresentacion", String(presentacion.nombre));
+    fd.append("tiposProducto", JSON.stringify(tiposClean));
+    fd.append("principiosActivos", JSON.stringify(principiosClean));
+    if (file) fd.append("img", file);
+
+    mutate(fd);
   };
 
   const handleCleanUp = () => {
-    if (imgPreview) {
-      URL.revokeObjectURL(imgPreview);
-    }
+    if (imgPreview) URL.revokeObjectURL(imgPreview);
     localStorage.removeItem(LS_KEY);
     reset();
+    setPrincipios([{ concentracion: "" }]);
+    setTipos([]);
+    setLaboratorio({});
+    setPresentacion({});
+    setTried(false);
     setImgPreview(null);
     setIsOpen(false);
   };
 
-  // Mapeos limpios de los catálogos para el subcomponente DRY
-  const labOptions = useMemo(() => laboratorios.map(l => ({ value: l.idLaboratorio, label: l.nombre })), [laboratorios]);
-  const tipoOptions = useMemo(() => tiposProducto.map(t => ({ value: t.idTipoProd, label: t.nombre })), [tiposProducto]);
-  const presentaOptions = useMemo(() => presentaciones.map(p => ({ value: p.idPresentacion, label: p.nombre })), [presentaciones]);
+  // Mapeos de los catálogos para el subcomponente SearchableSelect
+  const labOptions = useMemo(() => laboratorios.map((l) => ({ value: l.idLaboratorio, label: l.nombre })), [laboratorios]);
+  const tipoOptions = useMemo(() => tiposProducto.map((t) => ({ value: t.idTipoProd, label: t.nombre })), [tiposProducto]);
+  const presentaOptions = useMemo(() => presentaciones.map((p) => ({ value: p.idPresentacion, label: p.nombre })), [presentaciones]);
+  const principioOptions = useMemo(
+    () => principiosActivosList.map((p) => ({ value: p.idPrincipioActivo, label: p.nombre })),
+    [principiosActivosList]
+  );
+
+  // Chips auxiliares para el SearchableSelect
+  const labChip: SearchableOption[] =
+    (laboratorio.idLaboratorio ?? 0) > 0 && laboratorio.nombre ? [{ value: laboratorio.idLaboratorio!, label: laboratorio.nombre }] : [];
+  const labCustoms: string[] = !(laboratorio.idLaboratorio ?? 0) && laboratorio.nombre ? [laboratorio.nombre] : [];
+  const presentaChip: SearchableOption[] =
+    (presentacion.idPresentacion ?? 0) > 0 && presentacion.nombre ? [{ value: presentacion.idPresentacion!, label: presentacion.nombre }] : [];
+  const presentaCustoms: string[] = !(presentacion.idPresentacion ?? 0) && presentacion.nombre ? [presentacion.nombre] : [];
 
   return (
     <div className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -283,29 +333,6 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                 )}
               </div>
 
-              {/* ── Nombre Genérico ──────────────────────────────────────── */}
-              <Field id="nombreGenerico" label="Nombre Genérico" required>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <input
-                    id="nombreGenerico"
-                    type="text"
-                    placeholder="Ej: Paracetamol"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
-                    style={{ borderColor: C.border, color: C.text }}
-                    {...register("nombreGenerico", {
-                      required: "El nombre genérico es obligatorio",
-                      minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                    })}
-                  />
-                </div>
-                {errors.nombreGenerico && <ErrorMessage>{errors.nombreGenerico.message}</ErrorMessage>}
-              </Field>
-
               {/* ── Nombre Comercial ─────────────────────────────────────── */}
               <Field id="nombreComercial" label="Nombre Comercial" optional>
                 <div className="relative group">
@@ -321,25 +348,6 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
                     {...register("nombreComercial")}
-                  />
-                </div>
-              </Field>
-
-              {/* ── Concentración ────────────────────────────────────────── */}
-              <Field id="concentracion" label="Concentración" optional>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                  </div>
-                  <input
-                    id="concentracion"
-                    type="text"
-                    placeholder="Ej: 500 mg, 250mg/5ml..."
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
-                    style={{ borderColor: C.border, color: C.text }}
-                    {...register("concentracion")}
                   />
                 </div>
               </Field>
@@ -432,42 +440,156 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                 {errors.requiereReceta && <ErrorMessage>{errors.requiereReceta.message}</ErrorMessage>}
               </Field>
 
-              {/* ── Catálogos Abstraídos (DRY) ────────────────────────────── */}
-              <SelectField
-                id="idLaboratorio"
-                label="Laboratorio"
-                placeholder="-- Seleccione un laboratorio --"
-                options={labOptions}
-                error={errors.idLaboratorio?.message}
-                registration={register("idLaboratorio", {
-                  required: "Seleccione un laboratorio",
-                  validate: (v) => Number(v) > 0 || "Seleccione un laboratorio",
-                })}
-              />
+              {/* ── Principios Activos (N:M) ─────────────────────────────── */}
+              <div className="md:col-span-2 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                    Principios Activos <span className="text-red-500">*</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPrincipios((prev) => [...prev, { concentracion: "" }])}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors hover:bg-purple-50"
+                    style={{ borderColor: C.border, color: C.dark }}
+                  >
+                    + Agregar principio
+                  </button>
+                </div>
+                {tried && !princiValid && <ErrorMessage>Agregue al menos un principio activo</ErrorMessage>}
+                {principios.map((row, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-1 sm:grid-cols-[1fr,200px,auto] gap-3 items-start p-3 rounded-xl border"
+                    style={{ borderColor: C.border, background: "#FBF8FE" }}
+                  >
+                    <SearchableSelect
+                      placeholder="Buscar principio activo..."
+                      options={principioOptions}
+                      selected={row.idPrincipioActivo ? [{ value: row.idPrincipioActivo, label: row.nombre ?? "" }] : []}
+                      customs={!row.idPrincipioActivo && row.nombre ? [row.nombre] : []}
+                      onPick={(opt) => updatePrincipio(i, { idPrincipioActivo: opt.value, nombre: opt.label })}
+                      onPickCustom={(name) => updatePrincipio(i, { idPrincipioActivo: undefined, nombre: name })}
+                      onRemoveSelected={() => updatePrincipio(i, { idPrincipioActivo: undefined, nombre: undefined })}
+                      onRemoveCustom={() => updatePrincipio(i, { nombre: undefined })}
+                      createVerb="principio activo"
+                      emptyText="Escribe el nombre para crearlo"
+                      invalid={tried && !row.idPrincipioActivo && !(row.nombre ?? "").trim()}
+                    />
+                    <input
+                      type="text"
+                      value={row.concentracion ?? ""}
+                      onChange={(e) => updatePrincipio(i, { concentracion: e.target.value })}
+                      placeholder="Concentración (ej: 500 mg)"
+                      className="w-full px-3.5 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
+                      style={{ borderColor: C.border, color: C.text }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePrincipio(i)}
+                      title="Quitar principio"
+                      className="self-center w-9 h-9 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
 
-              <SelectField
-                id="idTipoProd"
-                label="Tipo de Producto"
-                placeholder="-- Seleccione un tipo --"
-                options={tipoOptions}
-                error={errors.idTipoProd?.message}
-                registration={register("idTipoProd", {
-                  required: "Seleccione un tipo",
-                  validate: (v) => Number(v) > 0 || "Seleccione un tipo de producto",
-                })}
-              />
+              {/* ── Tipos de Producto (N:M) ──────────────────────────────── */}
+              <div className="md:col-span-2 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                    Tipos de Producto <span className="text-red-500">*</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTipos((prev) => [...prev, {}])}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors hover:bg-purple-50"
+                    style={{ borderColor: C.border, color: C.dark }}
+                  >
+                    + Agregar tipo
+                  </button>
+                </div>
+                {tried && !tiposValid && <ErrorMessage>Agregue al menos un tipo de producto</ErrorMessage>}
+                {tipos.length === 0 && (
+                  <div className="text-xs text-gray-400 border border-dashed rounded-xl p-3 text-center" style={{ borderColor: C.border }}>
+                    Busca un tipo existente o escríbelo para crearlo al guardar. Ej: Antibiótico, Analgésico...
+                  </div>
+                )}
+                {tipos.map((row, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-3 items-start p-3 rounded-xl border"
+                    style={{ borderColor: C.border, background: "#FBF8FE" }}
+                  >
+                    <SearchableSelect
+                      placeholder="Buscar tipo de producto..."
+                      options={tipoOptions}
+                      selected={row.idTipoProd ? [{ value: row.idTipoProd, label: row.nombre ?? "" }] : []}
+                      customs={!row.idTipoProd && row.nombre ? [row.nombre] : []}
+                      onPick={(opt) => updateTipo(i, { idTipoProd: opt.value, nombre: opt.label })}
+                      onPickCustom={(name) => updateTipo(i, { idTipoProd: undefined, nombre: name })}
+                      onRemoveSelected={() => updateTipo(i, { idTipoProd: undefined, nombre: undefined })}
+                      onRemoveCustom={() => updateTipo(i, { nombre: undefined })}
+                      createVerb="tipo de producto"
+                      emptyText="Escribe el nombre para crearlo"
+                      invalid={tried && !row.idTipoProd && !(row.nombre ?? "").trim()}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeTipo(i)}
+                      title="Quitar tipo"
+                      className="self-center w-9 h-9 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
 
-              <SelectField
-                id="idPresentacion"
-                label="Presentación"
-                placeholder="-- Seleccione presentación --"
-                options={presentaOptions}
-                error={errors.idPresentacion?.message}
-                registration={register("idPresentacion", {
-                  required: "Seleccione una presentación",
-                  validate: (v) => Number(v) > 0 || "Seleccione una presentación",
-                })}
-              />
+              {/* ── Laboratorio (con creación inline) ────────────────────── */}
+              <div className="space-y-1.5">
+                <label htmlFor="labSearch" className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                  Laboratorio <span className="text-red-500">*</span>
+                </label>
+                <SearchableSelect
+                  id="labSearch"
+                  placeholder="Buscar laboratorio..."
+                  options={labOptions}
+                  selected={labChip}
+                  customs={labCustoms}
+                  onPick={(opt) => setLaboratorio({ idLaboratorio: opt.value, nombre: opt.label })}
+                  onPickCustom={(name) => setLaboratorio({ nombre: name })}
+                  onRemoveSelected={() => setLaboratorio({})}
+                  onRemoveCustom={() => setLaboratorio({})}
+                  createVerb="laboratorio"
+                  emptyText="Escribe el nombre para crearlo"
+                  invalid={tried && !labValid}
+                />
+                {tried && !labValid && <ErrorMessage>Seleccione o cree un laboratorio</ErrorMessage>}
+              </div>
+
+              {/* ── Presentación (con creación inline) ───────────────────── */}
+              <div className="space-y-1.5">
+                <label htmlFor="presSearch" className="block text-xs font-bold uppercase tracking-wider" style={{ color: C.dark }}>
+                  Presentación <span className="text-red-500">*</span>
+                </label>
+                <SearchableSelect
+                  id="presSearch"
+                  placeholder="Buscar presentación..."
+                  options={presentaOptions}
+                  selected={presentaChip}
+                  customs={presentaCustoms}
+                  onPick={(opt) => setPresentacion({ idPresentacion: opt.value, nombre: opt.label })}
+                  onPickCustom={(name) => setPresentacion({ nombre: name })}
+                  onRemoveSelected={() => setPresentacion({})}
+                  onRemoveCustom={() => setPresentacion({})}
+                  createVerb="presentación"
+                  emptyText="Escribe el nombre para crearlo"
+                  invalid={tried && !presValid}
+                />
+                {tried && !presValid && <ErrorMessage>Seleccione o cree una presentación</ErrorMessage>}
+              </div>
 
               {/* ── Descripción ─────────────────────────────────────────── */}
               <div className="space-y-1.5 md:col-span-2">
@@ -552,9 +674,9 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                 </svg>
               </div>
               <p className="text-xs leading-relaxed" style={{ color: C.dark }}>
-                El <strong>código de barra</strong> debe ser único. Los campos marcados con{" "}
-                <span className="text-red-500 font-bold">*</span> son obligatorios.
-                El <strong>precio</strong> se ingresa en Bolivianos (Bs.).
+                Los <strong>principios activos</strong> y <strong>tipos de producto</strong> se pueden
+                crear al momento si no existen: escribe el nombre y el sistema lo guardará automáticamente.
+                El <strong>código de barra</strong> debe ser único.
               </p>
             </div>
           </div>

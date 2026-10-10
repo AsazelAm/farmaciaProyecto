@@ -45,7 +45,7 @@ router.put('/UpdateVenta/:idVenta',
     VentaControllers.UpdateVentaC
 );
 
-//  PATCH: cambiar el estado de la venta (completada, anulada o pendiente)
+//  PATCH: cambiar el estado de la venta (completado, cancelado o pendiente)
 router.patch('/ChangeEstadoVenta/:idVenta',
     VentaControllers.ChangeEstadoVentaC
 );
