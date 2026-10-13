@@ -793,7 +793,7 @@ export default function NewVenta() {
                 disabled={carrito.length === 0}
                 className={`flex-1 rounded-xl py-2 text-sm font-semibold text-white ${COLORS.primario} disabled:bg-gray-300`}
               >
-                Registrar Venta (${total.toFixed(2)})
+                Registrar Venta (Bs{total.toFixed(2)})
               </button>
             </div>
           </div>
