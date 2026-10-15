@@ -10,7 +10,7 @@ import { GetPresentaApi } from "../../Api/PresentacionApi";
 import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
 import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
-import { soloLetras, soloDigitos, numero, textoLibre, tecladoSoloLetras, tecladoSoloDigitos } from "../../lib/validators";
+import { soloLetras, soloDigitos, numero, textoLibre, alfanumerico, tecladoSoloLetras, tecladoSoloDigitos, tecladoAlfanumerico } from "../../lib/validators";
 import type {
   ProductoPrincipioInput,
   ProductoTipoInput,
@@ -320,8 +320,8 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 <input id="upd-nombreComercial" type="text" placeholder="Ej: Tylenol..."
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                     style={{ borderColor: C.border, color: C.text }}
-                                    {...register("nombreComercial", soloLetras("Nombre comercial", { min: 2, max: 150 }))}
-                                    {...tecladoSoloLetras}
+                                    {...register("nombreComercial", alfanumerico("Nombre comercial", { min: 2, max: 150 }))}
+                                    {...tecladoAlfanumerico}
                                 />
                             </Field>
 
