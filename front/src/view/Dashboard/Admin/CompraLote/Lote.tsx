@@ -18,11 +18,13 @@ const colors = {
   required: "#EF4444",
 } as const;
 
-type EstadoFiltro = "todos" | "pendiente" | "activo" | "vencido" | "cancelado";
+type EstadoFiltro = "todos" | "pendiente" | "activo" | "vencido" | "cancelado" | "cuarentena" | "devuelto";
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const getAlertaVencimiento = (diasParaVencer: number, estado: string) => {
   if (estado === "cancelado") return { label: "Cancelado", bg: "#F3F4F6", text: "#6B7280", dot: "#9CA3AF" };
+  if (estado === "devuelto") return { label: "Devuelto", bg: "#F3F4F6", text: "#6B7280", dot: "#9CA3AF" };
+  if (estado === "cuarentena") return { label: "Cuarentena", bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" };
   if (estado === "vencido" || diasParaVencer < 0) return { label: "Vencido", bg: "#FEE2E2", text: "#B91C1C", dot: "#EF4444" };
   if (diasParaVencer <= 30) return { label: `Vence en ${diasParaVencer}d`, bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" };
   if (estado === "pendiente") return { label: "Pendiente", bg: "#EFF6FF", text: "#1D4ED8", dot: "#3B82F6" };
@@ -139,6 +141,8 @@ export default function Lote() {
               <option value="activo">Activo</option>
               <option value="vencido">Vencido</option>
               <option value="cancelado">Cancelado</option>
+              <option value="cuarentena">Cuarentena</option>
+              <option value="devuelto">Devuelto</option>
             </select>
 
             <button

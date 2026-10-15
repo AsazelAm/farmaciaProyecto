@@ -20,12 +20,16 @@ const COLORS = {
   estadoPendiente:  { bg: "#FEF3C7", color: "#D97706", dot: "#D97706" },
   estadoCompletado: { bg: "#D1FAE5", color: "#059669", dot: "#059669" },
   estadoCancelado:  { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" },
+  estadoDevParcial: { bg: "#FFEDD5", color: "#EA580C", dot: "#EA580C" },
+  estadoDevTotal:   { bg: "#EDE9FE", color: "#7C3AED", dot: "#7C3AED" },
 } as const;
 
 const ESTADO_STYLES = {
   pendiente: COLORS.estadoPendiente,
   completado: COLORS.estadoCompletado,
   cancelado: COLORS.estadoCancelado,
+  devuelto_parcial: COLORS.estadoDevParcial,
+  devuelto_total: COLORS.estadoDevTotal,
 };
 
 type TipoEstadoVenta = keyof typeof ESTADO_STYLES;
@@ -34,6 +38,8 @@ const ESTADO_LABELS: Record<TipoEstadoVenta, string> = {
   pendiente: "Pendiente",
   completado: "Completado",
   cancelado: "Anulado",
+  devuelto_parcial: "Dev. Parcial",
+  devuelto_total: "Dev. Total",
 };
 
 const TIPOS_PAGO = ["Efectivo", "QR", "Transferencia", "Tarjeta de crédito", "Tarjeta de débito"] as const;
@@ -301,6 +307,8 @@ export default function Venta() {
             <option value="pendiente">Pendiente</option>
             <option value="completado">Completado</option>
             <option value="cancelado">Anulado</option>
+            <option value="devuelto_parcial">Devuelto Parcial</option>
+            <option value="devuelto_total">Devuelto Total</option>
           </select>
 
           <select

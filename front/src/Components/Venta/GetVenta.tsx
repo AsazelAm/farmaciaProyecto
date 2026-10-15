@@ -27,6 +27,8 @@ const ESTADO_STYLES = {
   pendiente:  { bg: "#FEF3C7", color: "#D97706", label: "Pendiente" },
   completado: { bg: "#D1FAE5", color: "#059669", label: "Completado" },
   cancelado:  { bg: "#FEE2E2", color: "#DC2626", label: "Anulado" },
+  devuelto_parcial: { bg: "#FFEDD5", color: "#EA580C", label: "Devuelto Parcial" },
+  devuelto_total:   { bg: "#EDE9FE", color: "#7C3AED", label: "Devuelto Total" },
 } as const;
 
 // ─── Formatters ──────────────────────────────────────────────────────────────

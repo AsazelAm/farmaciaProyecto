@@ -219,7 +219,13 @@ export default function GetCompra({ isOpen, setIsOpen, idCompra }: Props) {
                   <p className="text-xs mt-1.5" style={{ color: COLORS.textSecondary }}>
                     Entrega:{" "}
                     <span className="font-semibold">
-                      {compra.estado === "completado" ? "Completada" : compra.estado === "cancelado" ? "Cancelada" : "Pendiente"}
+                      {compra.estado === "completado" ? "Completada"
+                        : compra.estado === "cancelado" ? "Cancelada"
+                        : compra.estado === "parcial" ? "Recepción parcial"
+                        : compra.estado === "rechazado" ? "Rechazada"
+                        : compra.estado === "devuelto_parcial" ? "Devuelta parcialmente"
+                        : compra.estado === "devuelto_total" ? "Devuelta totalmente"
+                        : "Pendiente"}
                     </span>
                   </p>
                 </InfoCard>

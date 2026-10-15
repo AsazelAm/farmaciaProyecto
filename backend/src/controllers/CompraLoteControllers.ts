@@ -8,7 +8,7 @@ export class CompraLoteControllers {
         try {
             // Extraer filtros del query params
             const filtros = {
-                estado: req.query.estado as 'pendiente' | 'completado' | 'cancelado' | undefined,
+                estado: req.query.estado as 'pendiente' | 'parcial' | 'completado' | 'cancelado' | 'rechazado' | 'devuelto_parcial' | 'devuelto_total' | undefined,
                 idProveedor: req.query.idProveedor ? Number(req.query.idProveedor) : undefined,
                 idSucursal: req.query.idSucursal ? Number(req.query.idSucursal) : undefined,
                 fechaDesde: req.query.fechaDesde as string | undefined,
@@ -117,13 +117,14 @@ export class CompraLoteControllers {
     static readonly ChangeEstadoCompraC = async (req: Request, res: Response): Promise<any> => {
         try {
             const idCompra = Number(req.params.idCompra);
-            const { estado } = req.body; // Debería recibir 'completado' o 'cancelado'
+            const { estado, motivo } = req.body; // Debería recibir 'completado' o 'cancelado'
+            const idUsuario = req.user?.idUsuario ?? req.body.idUsuario ?? undefined;
 
             if (estado === 'completado') {
                 await DataCompra.completar(idCompra);
                 return res.status(200).json({ message: 'Compra completada e inventario actualizado' });
             } else if (estado === 'cancelado') {
-                await DataCompra.cancelar(idCompra);
+                await DataCompra.cancelar(idCompra, motivo, idUsuario);
                 return res.status(200).json({ message: 'Compra cancelada exitosamente' });
             } else if (estado === 'pendiente') {
                 await DataCompra.cambiarAPendiente(idCompra);

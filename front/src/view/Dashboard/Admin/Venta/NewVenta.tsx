@@ -31,6 +31,7 @@ import { GetSucursalApi } from "../../../../Api/SucursalApi";
 // TODO: ajusta la ruta/forma de tu hook de autenticación real. Aquí solo
 // necesito idUsuario, idSucursal, nombre y nameRol del usuario logueado.
 import { useAuth } from "../../../../Hook/UseAuth";
+// import { soloLetras, soloDigitos, tecladoSoloLetras, tecladoSoloDigitos, tecladoTelefono } from "../../../../lib/validators";
 
 import {
   ClienteArray,

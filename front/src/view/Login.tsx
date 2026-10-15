@@ -128,6 +128,7 @@ export default function Logins() {
                 className="w-full border border-gray-300 p-2 rounded-lg"
                 {...register("email", {
                   required: "El Email es obligatorio",
+                  maxLength: { value: 100, message: "Máximo 100 caracteres" },
                   pattern: {
                     value: /\S+@\S+\.\S+/,
                     message: "E-mail no válido",
@@ -152,6 +153,8 @@ export default function Logins() {
                 className="w-full border border-gray-300 p-2 rounded-lg"
                 {...register("passwd", {
                   required: "El Password es obligatorio",
+                  minLength: { value: 8, message: "Mínimo 8 caracteres" },
+                  maxLength: { value: 64, message: "Máximo 64 caracteres" },
                 })}
               />
               {errors.passwd && (

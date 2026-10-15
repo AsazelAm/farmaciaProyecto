@@ -26,18 +26,28 @@ const COLORS = {
   textSecondary: "#6B7280",
   textMuted: "#9CA3AF",
   estadoPendiente:  { bg: "#FEF3C7", color: "#D97706", dot: "#D97706" },
+  estadoParcial:    { bg: "#DBEAFE", color: "#2563EB", dot: "#2563EB" },
   estadoCompletado: { bg: "#D1FAE5", color: "#059669", dot: "#059669" },
   estadoCancelado:  { bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" },
+  estadoRechazado:  { bg: "#FCE7F3", color: "#BE185D", dot: "#BE185D" },
+  estadoDevParcial: { bg: "#FFEDD5", color: "#EA580C", dot: "#EA580C" },
+  estadoDevTotal:   { bg: "#EDE9FE", color: "#7C3AED", dot: "#7C3AED" },
 } as const;
 
 // Mapa para simplificar los condicionales de estado en la tabla
 const ESTADO_STYLES = {
   pendiente: COLORS.estadoPendiente,
+  parcial: COLORS.estadoParcial,
   completado: COLORS.estadoCompletado,
   cancelado: COLORS.estadoCancelado,
+  rechazado: COLORS.estadoRechazado,
+  devuelto_parcial: COLORS.estadoDevParcial,
+  devuelto_total: COLORS.estadoDevTotal,
 };
 
 type TipoEstadoCompra = keyof typeof ESTADO_STYLES;
+// Estados que el usuario puede fijar manualmente (el resto los calcula el flujo de recepción/devolución)
+type TipoEstadoCompraCambiable = 'pendiente' | 'completado' | 'cancelado';
 
 // ─── Formatters Nativos (Instanciados una vez para mayor rendimiento) ──────────
 const numFormatter = new Intl.NumberFormat("es-BO", {
@@ -113,7 +123,7 @@ export default function Compra() {
 
   // Mutación
   const mutationChangeEstado = useMutation({
-    mutationFn: ({ idCompra, estado }: { idCompra: number; estado: TipoEstadoCompra }) =>
+    mutationFn: ({ idCompra, estado }: { idCompra: number; estado: TipoEstadoCompraCambiable }) =>
       ChangeEstadoCompraApi(idCompra, estado),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ComprasAll"] });
@@ -123,7 +133,7 @@ export default function Compra() {
   });
 
   // Handlers Memorizados
-  const handleEstadoChange = useCallback((idCompra: number, nuevoEstado: TipoEstadoCompra) => {
+  const handleEstadoChange = useCallback((idCompra: number, nuevoEstado: TipoEstadoCompraCambiable) => {
     mutationChangeEstado.mutate({ idCompra, estado: nuevoEstado });
   }, [mutationChangeEstado]);
 
@@ -274,7 +284,7 @@ export default function Compra() {
           </select>
 
           <div className="flex gap-2 flex-wrap w-full lg:w-auto">
-            {(["todos", "pendiente", "completado", "cancelado"] as const).map((e) => (
+            {(["todos", "pendiente", "parcial", "completado", "cancelado", "rechazado", "devuelto_parcial", "devuelto_total"] as const).map((e) => (
               <button
                 key={e}
                 onClick={() => setEstadoFiltro(e)}
@@ -348,11 +358,14 @@ export default function Compra() {
                         <td className="px-5 py-4">
                           <select
                             value={compra.estado}
-                            onChange={(e) => handleEstadoChange(compra.idCompra, e.target.value as TipoEstadoCompra)}
+                            onChange={(e) => handleEstadoChange(compra.idCompra, e.target.value as TipoEstadoCompraCambiable)}
                             disabled={mutationChangeEstado.isPending}
                             className="px-2 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wide cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400"
                             style={{ backgroundColor: estStyle.bg, color: estStyle.color, borderColor: COLORS.border }}
                           >
+                            {!(["pendiente", "completado", "cancelado"] as string[]).includes(compra.estado) && (
+                              <option value={compra.estado} disabled>{compra.estado}</option>
+                            )}
                             <option value="pendiente">pendiente</option>
                             <option value="completado">completado</option>
                             <option value="cancelado">cancelado</option>

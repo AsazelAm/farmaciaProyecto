@@ -7,7 +7,7 @@ export class LoteControllers {
     static readonly GetLotesC = async (req: Request, res: Response): Promise<any> => {
         try {
             const filtros = {
-                estado: req.query.estado as 'pendiente' | 'activo' | 'vencido' | 'cancelado' | undefined,
+                estado: req.query.estado as 'pendiente' | 'activo' | 'vencido' | 'cancelado' | 'cuarentena' | 'devuelto' | undefined,
                 idProducto: req.query.idProducto ? Number(req.query.idProducto) : undefined,
                 idProveedor: req.query.idProveedor ? Number(req.query.idProveedor) : undefined,
                 soloProximosVencer: req.query.soloProximosVencer === 'true',

@@ -7,6 +7,7 @@ import { GetSucursalApi } from "../../../../Api/SucursalApi";
 import { AddCompraApi } from "../../../../Api/CompraLoteApi";
 import { GetProductoApi } from "../../../../Api/ProductoApi";
 import type { CreateCompraType, ILoteInput } from "../../../../types";
+// import { alfanumerico, numero, tecladoAlfanumerico } from "../../../../lib/validators";
 
 // ─── Lazy: modal de lote ──────────────────────────────────────────────────────
 const LotDetalleForm = lazy(

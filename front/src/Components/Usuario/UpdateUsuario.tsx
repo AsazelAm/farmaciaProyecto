@@ -6,7 +6,8 @@ import { toast } from "react-toastify";
 import { UpdateUserApi } from "../../Api/UserApi"; 
 import { GetTipoUsApi } from "../../Api/TipoUsApi";
 import { GetSucursalApi } from "../../Api/SucursalApi";
-import type { updateuser } from "../../types"; 
+import type { updateuser } from "../../types";
+import { soloLetras, soloDigitos, telefono, email, tecladoSoloLetras, tecladoSoloDigitos, tecladoTelefono } from "../../lib/validators";
 
 type Props = Readonly<{
     SetVer: React.Dispatch<React.SetStateAction<boolean>>;
@@ -121,21 +122,21 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                         <div className={sectionStyles}>
                             <div>
                                 <label className={labelStyles}>C.I. / Documento</label>
-                                <input type="text" className={inputStyles} {...register("ci", { required: "El CI es obligatorio" })} />
+                                <input type="text" className={inputStyles} {...register("ci", soloDigitos("C.I.", { required: "El CI es obligatorio", min: 5, max: 10 }))} {...tecladoSoloDigitos} />
                                 {errors.ci && <ErrorMessage>{errors.ci.message}</ErrorMessage>}
                             </div>
                             <div>
                                 <label className={labelStyles}>Email</label>
-                                <input type="email" className={inputStyles} {...register("email", { required: "El Email es obligatorio" })} />
+                                <input type="email" className={inputStyles} {...register("email", email("Email", { required: "El Email es obligatorio" }))} />
                                 {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
                             </div>
                             <div>
                                 <label className={labelStyles}>Nombre(s)</label>
-                                <input type="text" className={inputStyles} {...register("nombre", { required: "El nombre es obligatorio" })} />
+                                <input type="text" className={inputStyles} {...register("nombre", soloLetras("Nombre", { required: "El nombre es obligatorio" }))} {...tecladoSoloLetras} />
                             </div>
                             <div>
                                 <label className={labelStyles}>Apellido(s)</label>
-                                <input type="text" className={inputStyles} {...register("apellido", { required: "El apellido es obligatorio" })} />
+                                <input type="text" className={inputStyles} {...register("apellido", soloLetras("Apellido", { required: "El apellido es obligatorio" }))} {...tecladoSoloLetras} />
                             </div>
                         </div>
                     </div>
@@ -163,7 +164,7 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
                             </div>
                             <div className="md:col-span-2">
                                 <label className={labelStyles}>Teléfono de Contacto</label>
-                                <input type="tel" className={inputStyles} {...register("telefono", { required: "El teléfono es obligatorio" })} />
+                                <input type="tel" className={inputStyles} {...register("telefono", telefono("Teléfono", { required: "El teléfono es obligatorio" }))} {...tecladoTelefono} />
                             </div>
                         </div>
                     </div>

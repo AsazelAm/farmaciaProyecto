@@ -406,7 +406,7 @@ export const CompraSchema = z.object({
   descuento: z.union([z.number(), z.string()]).transform(Number),
   impuesto: z.union([z.number(), z.string()]).transform(Number),
   total: z.union([z.number(), z.string()]).transform(Number),
-  estado: z.enum(['pendiente', 'completado', 'cancelado']),
+  estado: z.enum(['pendiente', 'parcial', 'completado', 'cancelado', 'rechazado', 'devuelto_parcial', 'devuelto_total']),
   observaciones: z.string().nullable().optional(),
   fechaModificacion: z.string().optional(),
   // Campos del JOIN
@@ -457,7 +457,7 @@ export type UpdateCompraType = CreateCompraType; // La estructura de update es l
 
 // 4. Schema para Filtros de Búsqueda
 export const CompraFiltrosSchema = z.object({
-  estado: z.enum(['pendiente', 'completado', 'cancelado']).optional(),
+  estado: z.enum(['pendiente', 'parcial', 'completado', 'cancelado', 'rechazado', 'devuelto_parcial', 'devuelto_total']).optional(),
   idProveedor: z.number().optional(),
   idSucursal: z.number().optional(),
   fechaDesde: z.string().optional(),
@@ -495,7 +495,7 @@ export const LoteListItemSchema = z.object({
   fechaCreacion: z.string(),
   fechaModificacion: z.string(),
   fechaFabricacion: z.string().nullable(),
-  estado: z.enum(['pendiente', 'activo', 'vencido', 'cancelado']),
+  estado: z.enum(['pendiente', 'activo', 'vencido', 'cancelado', 'cuarentena', 'devuelto']),
   idProducto: z.number(),
   idProveedor: z.number(),
   // Datos del JOIN
@@ -511,7 +511,7 @@ export type LoteListItemType = z.infer<typeof LoteListItemSchema>;
 
 // ── Filtros de búsqueda de lotes ────────────────────────────────────────────
 export const LoteFiltrosSchema = z.object({
-  estado: z.enum(['pendiente', 'activo', 'vencido', 'cancelado']).optional(),
+  estado: z.enum(['pendiente', 'activo', 'vencido', 'cancelado', 'cuarentena', 'devuelto']).optional(),
   idProducto: z.number().optional(),
   idProveedor: z.number().optional(),
   soloProximosVencer: z.boolean().optional(),
@@ -574,7 +574,7 @@ export const VentaSchema = z.object({
   descuentoTotal: z.union([z.number(), z.string()]).transform(Number),
   impuestos: z.union([z.number(), z.string()]).transform(Number),
   total: z.union([z.number(), z.string()]).transform(Number),
-  estado: z.enum(['pendiente', 'completado', 'cancelado']),
+  estado: z.enum(['pendiente', 'completado', 'cancelado', 'devuelto_parcial', 'devuelto_total']),
   tipoPago: z.string().nullable().optional(),
   observaciones: z.string().nullable().optional(),
   // Campos del JOIN
@@ -654,7 +654,7 @@ export type DatosFacturacionClienteType = z.infer<
 
 // 7. Schema para Filtros de Búsqueda
 export const VentaFiltrosSchema = z.object({
-  estado: z.enum(['pendiente', 'completado', 'cancelado']).optional(),
+  estado: z.enum(['pendiente', 'completado', 'cancelado', 'devuelto_parcial', 'devuelto_total']).optional(),
   idCliente: z.number().optional(),
   idUsuario: z.number().optional(),
   idSucursal: z.number().optional(),
@@ -937,3 +937,224 @@ export const ReporteCompraDatosSchema = z.object({
   totales: ReporteTotalesSchema,
 });
 export type ReporteCompraDatosType = z.infer<typeof ReporteCompraDatosSchema>;
+
+// ========================================================================
+// TYPES: DEVOLUCIONES (VENTA AL CLIENTE Y A PROVEEDOR)
+// ========================================================================
+
+// ── Enums compartidos con los ENUM de la base de datos ────────────────────────
+export const MotivoDevVentaSchema = z.enum([
+  'error_dispensacion',
+  'reaccion_adversa',
+  'producto_danado',
+  'producto_vencido',
+  'receta_invalida',
+  'arrepentimiento',
+  'otro',
+]);
+export type MotivoDevVenta = z.infer<typeof MotivoDevVentaSchema>;
+
+export const MotivoDevProveedorSchema = z.enum([
+  'producto_danado',
+  'empaque_danado',
+  'vencimiento_corto',
+  'producto_vencido',
+  'cantidad_incorrecta',
+  'reclamo_clientes',
+  'otro',
+]);
+export type MotivoDevProveedor = z.infer<typeof MotivoDevProveedorSchema>;
+
+export const EstadoDevVentaSchema = z.enum(['solicitada', 'aprobada', 'rechazada', 'completada']);
+export type EstadoDevVenta = z.infer<typeof EstadoDevVentaSchema>;
+
+export const EstadoDevProveedorSchema = z.enum(['solicitada', 'aceptada', 'rechazada', 'completada']);
+export type EstadoDevProveedor = z.infer<typeof EstadoDevProveedorSchema>;
+
+export const DestinoDevVentaSchema = z.enum(['reingreso_stock', 'merma', 'cuarentena']);
+export type DestinoDevVenta = z.infer<typeof DestinoDevVentaSchema>;
+
+// ── Devolución de venta (cliente → farmacia) ──────────────────────────────────
+export const DevVentaListItemSchema = z.object({
+  idDevolucionVenta: z.number(),
+  fechaCreacion: z.string(),
+  fechaResolucion: z.string().nullable().optional(),
+  tipo: z.enum(['total', 'parcial']),
+  motivo: MotivoDevVentaSchema,
+  estado: EstadoDevVentaSchema,
+  montoReembolso: z.union([z.number(), z.string()]).transform(Number),
+  metodoReembolso: z.string().nullable().optional(),
+  numeroNotaCredito: z.string().nullable().optional(),
+  observaciones: z.string().nullable().optional(),
+  idVenta: z.number(),
+  cliente: z.string().nullable().optional(),
+  usuario: z.string().nullable().optional(),
+  totalItems: z.number().optional(),
+});
+export const DevVentaListSchema = z.array(DevVentaListItemSchema);
+export type DevVentaListItemType = z.infer<typeof DevVentaListItemSchema>;
+
+export const DevVentaDetalleItemSchema = z.object({
+  idLote: z.number(),
+  idProducto: z.number(),
+  cantidad: z.number(),
+  precioUnitario: z.union([z.number(), z.string()]).transform(Number),
+  subtotal: z.union([z.number(), z.string()]).transform(Number),
+  destino: DestinoDevVentaSchema.nullable(),
+  numeroLote: z.string().optional(),
+  codigo: z.string().optional(),
+  nombreComercial: z.string().nullable().optional(),
+  nombreGenerico: z.string().optional(),
+});
+export type DevVentaDetalleItemType = z.infer<typeof DevVentaDetalleItemSchema>;
+
+export const DevVentaSchema = z.object({
+  idDevolucionVenta: z.number(),
+  fechaCreacion: z.string(),
+  fechaResolucion: z.string().nullable().optional(),
+  fechaModificacion: z.string().optional(),
+  tipo: z.enum(['total', 'parcial']),
+  motivo: MotivoDevVentaSchema,
+  estado: EstadoDevVentaSchema,
+  montoReembolso: z.union([z.number(), z.string()]).transform(Number),
+  metodoReembolso: z.string().nullable().optional(),
+  numeroNotaCredito: z.string().nullable().optional(),
+  motivoRechazo: z.string().nullable().optional(),
+  observaciones: z.string().nullable().optional(),
+  idVenta: z.number(),
+  idUsuario: z.number(),
+  idUsuarioAutoriza: z.number().nullable().optional(),
+  cliente: z.string().nullable().optional(),
+  clienteNit: z.string().nullable().optional(),
+  usuario: z.string().nullable().optional(),
+  usuarioAutoriza: z.string().nullable().optional(),
+  detalles: z.array(DevVentaDetalleItemSchema).optional(),
+});
+export type DevVentaType = z.infer<typeof DevVentaSchema>;
+
+// ── Devolución a proveedor (farmacia → proveedor) ─────────────────────────────
+export const DevProveedorListItemSchema = z.object({
+  idDevolucionProveedor: z.number(),
+  fechaCreacion: z.string(),
+  fechaResolucion: z.string().nullable().optional(),
+  tipo: z.enum(['total', 'parcial']),
+  motivo: MotivoDevProveedorSchema,
+  estado: EstadoDevProveedorSchema,
+  montoNotaCredito: z.union([z.number(), z.string()]).transform(Number),
+  numeroNotaCredito: z.string().nullable().optional(),
+  observaciones: z.string().nullable().optional(),
+  idCompra: z.number(),
+  compraFactura: z.string().nullable().optional(),
+  proveedor: z.string().nullable().optional(),
+  usuario: z.string().nullable().optional(),
+  totalItems: z.number().optional(),
+});
+export const DevProveedorListSchema = z.array(DevProveedorListItemSchema);
+export type DevProveedorListItemType = z.infer<typeof DevProveedorListItemSchema>;
+
+export const DevProveedorDetalleItemSchema = z.object({
+  idLote: z.number(),
+  cantidad: z.number(),
+  precioUnitario: z.union([z.number(), z.string()]).transform(Number),
+  subtotal: z.union([z.number(), z.string()]).transform(Number),
+  numeroLote: z.string().optional(),
+  codigo: z.string().optional(),
+  idProducto: z.number().optional(),
+  nombreComercial: z.string().nullable().optional(),
+  nombreGenerico: z.string().optional(),
+});
+export type DevProveedorDetalleItemType = z.infer<typeof DevProveedorDetalleItemSchema>;
+
+export const DevProveedorSchema = z.object({
+  idDevolucionProveedor: z.number(),
+  fechaCreacion: z.string(),
+  fechaResolucion: z.string().nullable().optional(),
+  fechaModificacion: z.string().optional(),
+  tipo: z.enum(['total', 'parcial']),
+  motivo: MotivoDevProveedorSchema,
+  estado: EstadoDevProveedorSchema,
+  montoNotaCredito: z.union([z.number(), z.string()]).transform(Number),
+  numeroNotaCredito: z.string().nullable().optional(),
+  motivoRechazo: z.string().nullable().optional(),
+  observaciones: z.string().nullable().optional(),
+  idCompra: z.number(),
+  idUsuario: z.number(),
+  idUsuarioAutoriza: z.number().nullable().optional(),
+  compraFactura: z.string().nullable().optional(),
+  proveedor: z.string().nullable().optional(),
+  usuario: z.string().nullable().optional(),
+  usuarioAutoriza: z.string().nullable().optional(),
+  detalles: z.array(DevProveedorDetalleItemSchema).optional(),
+});
+export type DevProveedorType = z.infer<typeof DevProveedorSchema>;
+
+// ── Inputs de creación ────────────────────────────────────────────────────────
+export const CreateDevVentaDetalleSchema = z.object({
+  idLote: z.number(),
+  idProducto: z.number(),
+  cantidad: z.number().min(1, 'La cantidad debe ser mayor a 0'),
+  precioUnitario: z.number().min(0, 'El precio debe ser válido'),
+  destino: DestinoDevVentaSchema,
+});
+
+export const CreateDevVentaSchema = z.object({
+  tipo: z.enum(['total', 'parcial']),
+  motivo: MotivoDevVentaSchema,
+  metodoReembolso: z.string().optional(),
+  observaciones: z.string().optional(),
+  idVenta: z.number(),
+  detalles: z.array(CreateDevVentaDetalleSchema).min(1, 'Debe agregar al menos un producto'),
+});
+export type CreateDevVentaType = z.infer<typeof CreateDevVentaSchema>;
+
+export const CreateDevProveedorDetalleSchema = z.object({
+  idLote: z.number(),
+  cantidad: z.number().min(1, 'La cantidad debe ser mayor a 0'),
+  precioUnitario: z.number().min(0, 'El precio debe ser válido'),
+});
+
+export const CreateDevProveedorSchema = z.object({
+  tipo: z.enum(['total', 'parcial']),
+  motivo: MotivoDevProveedorSchema,
+  observaciones: z.string().optional(),
+  idCompra: z.number(),
+  detalles: z.array(CreateDevProveedorDetalleSchema).min(1, 'Debe agregar al menos un lote'),
+});
+export type CreateDevProveedorType = z.infer<typeof CreateDevProveedorSchema>;
+
+// ── Resolución de devoluciones ────────────────────────────────────────────────
+export const ResolverDevVentaSchema = z.object({
+  estado: z.enum(['aprobada', 'rechazada', 'completada']),
+  metodoReembolso: z.string().optional(),
+  numeroNotaCredito: z.string().optional(),
+  motivoRechazo: z.string().optional(),
+});
+export type ResolverDevVentaType = z.infer<typeof ResolverDevVentaSchema>;
+
+export const ResolverDevProveedorSchema = z.object({
+  estado: z.enum(['aceptada', 'rechazada', 'completada']),
+  numeroNotaCredito: z.string().optional(),
+  motivoRechazo: z.string().optional(),
+});
+export type ResolverDevProveedorType = z.infer<typeof ResolverDevProveedorSchema>;
+
+// ── Filtros ───────────────────────────────────────────────────────────────────
+export const DevVentaFiltrosSchema = z.object({
+  estado: EstadoDevVentaSchema.optional(),
+  idVenta: z.number().optional(),
+  fechaDesde: z.string().optional(),
+  fechaHasta: z.string().optional(),
+  pagina: z.number().optional(),
+  porPagina: z.number().optional(),
+});
+export type IDevVentaFiltros = z.infer<typeof DevVentaFiltrosSchema>;
+
+export const DevProveedorFiltrosSchema = z.object({
+  estado: EstadoDevProveedorSchema.optional(),
+  idCompra: z.number().optional(),
+  fechaDesde: z.string().optional(),
+  fechaHasta: z.string().optional(),
+  pagina: z.number().optional(),
+  porPagina: z.number().optional(),
+});
+export type IDevProveedorFiltros = z.infer<typeof DevProveedorFiltrosSchema>;

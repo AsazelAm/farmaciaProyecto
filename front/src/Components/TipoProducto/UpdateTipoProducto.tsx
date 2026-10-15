@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import type { UpdateTipoProd } from "../../types";
 import { UpdateTipoProdApi } from "../../Api/TipoProdApi";
+import { soloLetras, tecladoSoloLetras } from "../../lib/validators";
 
 type Props = Readonly<{
   SetVer:    React.Dispatch<React.SetStateAction<boolean>>;
@@ -119,10 +120,12 @@ export default function UpdateTipoProducto({ SetVer, SendValor }: Props) {
                     placeholder="Ej: Analgésicos, Suplementos..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: "#D8B4F0", color: "#2D0A47" }}
-                    {...register("nombre", {
+                    {...register("nombre", soloLetras("Nombre", {
                       required: "El nombre es obligatorio para actualizar",
-                      minLength: { value: 3, message: "Debe tener al menos 3 caracteres" },
-                    })}
+                      min: 3,
+                      max: 100,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
 

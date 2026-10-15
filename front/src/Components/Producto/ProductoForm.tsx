@@ -10,6 +10,7 @@ import { GetPresentaApi } from "../../Api/PresentacionApi";
 import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
 import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
+import { soloLetras, soloDigitos, numero, textoLibre, tecladoSoloLetras, tecladoSoloDigitos } from "../../lib/validators";
 import type {
   CreateProducto,
   ProductoPrincipioInput,
@@ -320,7 +321,8 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                       placeholder="Ej: 7501234567890"
                       className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                       style={{ borderColor: C.border, color: C.text }}
-                      {...register("codigoBarra", { required: "El código de barra es obligatorio" })}
+                      {...register("codigoBarra", soloDigitos("Código de barra", { required: "El código de barra es obligatorio", min: 8, max: 14 }))}
+                      {...tecladoSoloDigitos}
                     />
                   </div>
                   {errors.codigoBarra && <ErrorMessage>{errors.codigoBarra.message}</ErrorMessage>}
@@ -347,7 +349,8 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                     placeholder="Ej: Tylenol, Panadol..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("nombreComercial")}
+                    {...register("nombreComercial", soloLetras("Nombre comercial", { min: 2, max: 150 }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
               </Field>
@@ -366,10 +369,11 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                     placeholder="0.00"
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("precio", {
+                    {...register("precio", numero("Precio", {
                       required: "El precio es obligatorio",
-                      min: { value: 0, message: "El precio debe ser mayor o igual a 0" },
-                    })}
+                      min: 0,
+                      max: 1000000,
+                    }))}
                   />
                 </div>
                 {errors.precio && <ErrorMessage>{errors.precio.message}</ErrorMessage>}
@@ -390,10 +394,11 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                     placeholder="Ej: 10"
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("stockMinimo", {
+                    {...register("stockMinimo", numero("Stock mínimo", {
                       required: "El stock mínimo es obligatorio",
-                      min: { value: 0, message: "Debe ser mayor o igual a 0" },
-                    })}
+                      min: 0,
+                      max: 1000000,
+                    }))}
                   />
                 </div>
                 {errors.stockMinimo && <ErrorMessage>{errors.stockMinimo.message}</ErrorMessage>}
@@ -413,7 +418,8 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                     placeholder="Ej: Oral, Tópica, Intravenosa..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("viaAdministracion")}
+                    {...register("viaAdministracion", soloLetras("Vía de administración", { min: 2, max: 100 }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
               </Field>
@@ -479,6 +485,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                       type="text"
                       value={row.concentracion ?? ""}
                       onChange={(e) => updatePrincipio(i, { concentracion: e.target.value })}
+                      maxLength={50}
                       placeholder="Concentración (ej: 500 mg)"
                       className="w-full px-3.5 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                       style={{ borderColor: C.border, color: C.text }}
@@ -602,7 +609,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                   placeholder="Descripción del producto..."
                   className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium resize-none"
                   style={{ borderColor: C.border, color: C.text }}
-                  {...register("descripcion")}
+                  {...register("descripcion", textoLibre("Descripción", { max: 500 }))}
                 />
               </div>
 
@@ -617,7 +624,7 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
                   placeholder="Contraindicaciones del producto..."
                   className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium resize-none"
                   style={{ borderColor: C.border, color: C.text }}
-                  {...register("contraindicaciones")}
+                  {...register("contraindicaciones", textoLibre("Contraindicaciones", { max: 500 }))}
                 />
               </div>
 

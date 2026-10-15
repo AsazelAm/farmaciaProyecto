@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { AddPresentaApi } from "../../Api/PresentacionApi";
 import type { CreatePresenta } from "../../types";
+import { soloLetras, tecladoSoloLetras } from "../../lib/validators";
 
 type Cua = Readonly<{
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -86,9 +87,12 @@ export default function PresentacionForm({ setIsOpen, isOpen }: Cua) {
                             type="text"
                             placeholder="Ej. Tabletas, Jarabe, Inyectable..."
                             className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 focus:ring-0 transition-all outline-none"
-                            {...register("nombre", {
+                            {...register("nombre", soloLetras("Nombre", {
                                 required: "El nombre de la presentación es obligatorio",
-                            })}
+                                min: 2,
+                                max: 100,
+                            }))}
+                            {...tecladoSoloLetras}
                         />
                         {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
                     </div>

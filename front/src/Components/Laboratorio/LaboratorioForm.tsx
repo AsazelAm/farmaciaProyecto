@@ -4,6 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { AddLaboraApi } from "../../Api/LaboratorioApi";
+import { soloLetras, tecladoSoloLetras } from "../../lib/validators";
 
 type Cua = Readonly<{
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -90,7 +91,8 @@ export default function LaboratorioForm({ setIsOpen, isOpen }: Cua) {
                             type="text"
                             placeholder="Ej: Laboratorios Bagó"
                             className={inputStyles}
-                            {...register("nombre", { required: "El nombre es obligatorio" })}
+                            {...register("nombre", soloLetras("Nombre", { required: "El nombre es obligatorio", min: 2, max: 100 }))}
+                            {...tecladoSoloLetras}
                         />
                         {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
                     </div>

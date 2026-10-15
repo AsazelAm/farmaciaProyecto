@@ -10,6 +10,7 @@ import { GetPresentaApi } from "../../Api/PresentacionApi";
 import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
 import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
+import { soloLetras, soloDigitos, numero, textoLibre, tecladoSoloLetras, tecladoSoloDigitos } from "../../lib/validators";
 import type {
   ProductoPrincipioInput,
   ProductoTipoInput,
@@ -300,7 +301,8 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                         <input id="upd-codigoBarra" type="text" placeholder="Ej: 7501234567890"
                                             className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                             style={{ borderColor: C.border, color: C.text }}
-                                            {...register("codigoBarra", { required: "El código de barra es obligatorio" })}
+                                            {...register("codigoBarra", soloDigitos("Código de barra", { required: "El código de barra es obligatorio", min: 8, max: 14 }))}
+                                            {...tecladoSoloDigitos}
                                         />
                                     </div>
                                     {errors.codigoBarra && <ErrorMessage>{errors.codigoBarra.message}</ErrorMessage>}
@@ -318,7 +320,8 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 <input id="upd-nombreComercial" type="text" placeholder="Ej: Tylenol..."
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                     style={{ borderColor: C.border, color: C.text }}
-                                    {...register("nombreComercial")}
+                                    {...register("nombreComercial", soloLetras("Nombre comercial", { min: 2, max: 150 }))}
+                                    {...tecladoSoloLetras}
                                 />
                             </Field>
 
@@ -329,7 +332,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                     <input id="upd-precio" type="number" step="0.01" min="0"
                                         className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                         style={{ borderColor: C.border, color: C.text }}
-                                        {...register("precio", { required: "El precio es obligatorio", min: { value: 0, message: "Debe ser ≥ 0" } })}
+                                        {...register("precio", numero("Precio", { required: "El precio es obligatorio", min: 0, max: 1000000 }))}
                                     />
                                 </div>
                                 {errors.precio && <ErrorMessage>{errors.precio.message}</ErrorMessage>}
@@ -340,7 +343,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 <input id="upd-stockMinimo" type="number" min="0"
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                     style={{ borderColor: C.border, color: C.text }}
-                                    {...register("stockMinimo", { required: "Requerido", min: { value: 0, message: "Debe ser ≥ 0" } })}
+                                    {...register("stockMinimo", numero("Stock mínimo", { required: "Requerido", min: 0, max: 1000000 }))}
                                 />
                                 {errors.stockMinimo && <ErrorMessage>{errors.stockMinimo.message}</ErrorMessage>}
                             </Field>
@@ -350,7 +353,8 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 <input id="upd-viaAdmin" type="text" placeholder="Ej: Oral, Tópica..."
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                     style={{ borderColor: C.border, color: C.text }}
-                                    {...register("viaAdministracion")}
+                                    {...register("viaAdministracion", soloLetras("Vía de administración", { min: 2, max: 100 }))}
+                                    {...tecladoSoloLetras}
                                 />
                             </Field>
 
@@ -527,7 +531,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 <textarea id="upd-descripcion" rows={3}
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium resize-none"
                                     style={{ borderColor: C.border, color: C.text }}
-                                    {...register("descripcion")}
+                                    {...register("descripcion", textoLibre("Descripción", { max: 500 }))}
                                 />
                             </div>
 
@@ -539,7 +543,7 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                 <textarea id="upd-contra" rows={3}
                                     className="w-full px-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium resize-none"
                                     style={{ borderColor: C.border, color: C.text }}
-                                    {...register("contraindicaciones")}
+                                    {...register("contraindicaciones", textoLibre("Contraindicaciones", { max: 500 }))}
                                 />
                             </div>
 

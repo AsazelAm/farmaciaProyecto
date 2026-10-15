@@ -20,6 +20,7 @@ import CompraLoteRoutes from "./Routes/CompraLoteRoutes";
 import LoteRoutes from "./Routes/LoteRoutes";
 
 import VentaRoutes from "./Routes/VentaRoutes";
+import DevolucionRoutes from "./Routes/DevolucionRoutes";
 import DashboardRoutes from "./Routes/DashboardRoutes";
 import ReporteRoutes from "./Routes/ReporteRoutes";
 
@@ -54,6 +55,7 @@ app.use('/api/Compra', CompraLoteRoutes);
 app.use('/api/Lote', LoteRoutes);
 
 app.use('/api/Venta', VentaRoutes);
+app.use('/api/Devolucion', DevolucionRoutes);
 
 app.use('/api/Dashboard', DashboardRoutes);
 app.use('/api/Reporte', ReporteRoutes);

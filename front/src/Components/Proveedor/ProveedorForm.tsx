@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { addProveedorApi } from "../../Api/ProveedorApi";
 import type { CreateProveedor } from "../../types";
+import { soloLetras, alfanumerico, textoLibre, tecladoSoloLetras, tecladoAlfanumerico, tecladoTelefono } from "../../lib/validators";
 
 // ─── Tipos de las props (igual que TipoProductoForm) ─────────────────────────
 type Cua = Readonly<{
@@ -206,14 +207,12 @@ export default function ProveedorForm({ setIsOpen, isOpen }: Cua) {
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
                     // register conecta el input con react-hook-form y define las validaciones
-                    {...register("codigo", {
+                    {...register("codigo", alfanumerico("Código", {
                       required: "El código es obligatorio",
-                      minLength: { value: 3, message: "Mínimo 2 caracteres" },
-                      pattern: {
-                        value: /^[A-Za-z]{4}-[A-Za-z]{2}-\d{3}$/,
-                        message: "Formato: XX-000 (ej: PROV-LB-001)",
-                      },
-                    })}
+                      min: 3,
+                      max: 30,
+                    }))}
+                    {...tecladoAlfanumerico}
                   />
                 </div>
                 {/* ErrorMessage solo se renderiza si el campo tiene error */}
@@ -260,10 +259,12 @@ export default function ProveedorForm({ setIsOpen, isOpen }: Cua) {
                     placeholder="Ej: Farmacorp S.A., Droguería..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("nombre", {
+                    {...register("nombre", soloLetras("Nombre", {
                       required: "El nombre es obligatorio",
-                      minLength: { value: 3, message: "Mínimo 3 caracteres" },
-                    })}
+                      min: 3,
+                      max: 150,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
                 {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
@@ -300,6 +301,7 @@ export default function ProveedorForm({ setIsOpen, isOpen }: Cua) {
                         message: "Número de teléfono inválido",
                       },
                     })}
+                    {...tecladoTelefono}
                   />
                 </div>
                 {errors.telefono && <ErrorMessage>{errors.telefono.message}</ErrorMessage>}
@@ -366,7 +368,7 @@ export default function ProveedorForm({ setIsOpen, isOpen }: Cua) {
                     placeholder="Ej: Av. Beni 3er Anillo, Santa Cruz de la Sierra"
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium resize-none"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("direccion")}
+                    {...register("direccion", textoLibre("Dirección", { max: 200 }))}
                   />
                 </div>
                 {errors.direccion && <ErrorMessage>{errors.direccion.message}</ErrorMessage>}
@@ -395,7 +397,11 @@ export default function ProveedorForm({ setIsOpen, isOpen }: Cua) {
                     placeholder="Ej: Ing. Ramírez, Lic. Torres..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("contactoPrincipal")}
+                    {...register("contactoPrincipal", soloLetras("Contacto Principal", {
+                      min: 2,
+                      max: 100,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
                 {errors.contactoPrincipal && (

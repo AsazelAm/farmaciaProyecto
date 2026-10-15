@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { GetProductoApi } from "../../Api/ProductoApi";
 import type { ILoteInput } from "../../types";
+import { alfanumerico, numero, tecladoAlfanumerico } from "../../lib/validators";
 
 type Props = Readonly<{
   isOpen: boolean;
@@ -282,7 +283,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                   <input
                     type="text"
                     placeholder="Ej: L-8892-01"
-                    {...register("numeroLote", { required: "El número de lote es obligatorio" })}
+                    {...register("numeroLote", alfanumerico("Número de lote", { required: "El número de lote es obligatorio", min: 2, max: 30 }))}
+                    {...tecladoAlfanumerico}
                     className={INPUT_CLASSES}
                     style={INPUT_STYLES}
                   />
@@ -292,7 +294,8 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                   <input
                     type="text"
                     placeholder="LT-749946"
-                    {...register("codigo", { required: "El código de lote es obligatorio" })}
+                    {...register("codigo", alfanumerico("Código de lote", { required: "El código de lote es obligatorio", min: 2, max: 30 }))}
+                    {...tecladoAlfanumerico}
                     className={INPUT_CLASSES}
                     style={INPUT_STYLES}
                   />
@@ -328,7 +331,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                   <input
                     type="number"
                     min={1}
-                    {...register("stock", { required: "La cantidad es obligatoria", min: { value: 1, message: "La cantidad debe ser mayor a 0" } })}
+                    {...register("stock", numero("Cantidad", { required: "La cantidad es obligatoria", min: 1, max: 1000000 }))}
                     className={INPUT_CLASSES}
                     style={INPUT_STYLES}
                   />
@@ -338,7 +341,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                   <input
                     type="number"
                     step="0.01"
-                    {...register("precioCompra", { required: "El precio es obligatorio", min: { value: 0.01, message: "El precio debe ser mayor a 0" } })}
+                    {...register("precioCompra", numero("Precio de compra", { required: "El precio es obligatorio", min: 0.01, max: 1000000 }))}
                     className={INPUT_CLASSES}
                     style={INPUT_STYLES}
                   />
@@ -350,7 +353,7 @@ export default function LotDetalleForm({ isOpen, setIsOpen, onConfirm }: Props) 
                     step="0.01"
                     min={0}
                     max={100}
-                    {...register("descuento", { min: 0, max: 100 })}
+                    {...register("descuento", numero("Descuento", { min: 0, max: 100 }))}
                     className={INPUT_CLASSES}
                     style={INPUT_STYLES}
                   />

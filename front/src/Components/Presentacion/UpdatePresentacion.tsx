@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import type { UpdatePresenta } from "../../types";
 import { UpdatePresentaApi } from "../../Api/PresentacionApi";
+import { soloLetras, tecladoSoloLetras } from "../../lib/validators";
 
 type Props = Readonly<{
   SetVer:    React.Dispatch<React.SetStateAction<boolean>>;
@@ -119,10 +120,12 @@ export default function UpdatePresentacion({ SetVer, SendValor }: Props) {
                     placeholder="Ej: Caja, Frasco, Blister..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none text-sm transition-colors"
                     style={{ borderColor: "#D8B4F0", color: "#2D0A47" }}
-                    {...register("nombre", {
+                    {...register("nombre", soloLetras("Nombre", {
                       required: "El nombre de la presentación es obligatorio",
-                      minLength: { value: 2, message: "Debe tener al menos 2 caracteres" },
-                    })}
+                      min: 2,
+                      max: 100,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
 

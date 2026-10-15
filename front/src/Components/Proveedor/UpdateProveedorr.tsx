@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import type { UpdateProveedor } from "../../types";
 import { UpdateProveedorApi } from "../../Api/ProveedorApi";
+import { soloLetras, alfanumerico, tecladoSoloLetras, tecladoAlfanumerico, tecladoTelefono } from "../../lib/validators";
 
 // ─── Paleta de colores (igual que Proveedor.tsx / UpdateTipoProducto.tsx) ─────
 const C = {
@@ -143,11 +144,12 @@ export default function UpdateProveedorr({ SetVer, SendValor }: Props) {
                       placeholder="Ej: LB-001"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                       style={{ borderColor: C.border, color: "#2D0A47" }}
-                      {...register("codigo", {
+                      {...register("codigo", alfanumerico("Código", {
                         required: "El código es obligatorio",
-                        minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                        maxLength: { value: 30, message: "Máximo 30 caracteres" },
-                      })}
+                        min: 2,
+                        max: 30,
+                      }))}
+                      {...tecladoAlfanumerico}
                     />
                   </div>
                   {errors.codigo && <ErrorMessage>{errors.codigo.message}</ErrorMessage>}
@@ -176,11 +178,12 @@ export default function UpdateProveedorr({ SetVer, SendValor }: Props) {
                       placeholder="Nombre del proveedor"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                       style={{ borderColor: C.border, color: "#2D0A47" }}
-                      {...register("nombre", {
+                      {...register("nombre", soloLetras("Nombre", {
                         required: "El nombre es obligatorio",
-                        minLength: { value: 3, message: "Mínimo 3 caracteres" },
-                        maxLength: { value: 150, message: "Máximo 150 caracteres" },
-                      })}
+                        min: 3,
+                        max: 150,
+                      }))}
+                      {...tecladoSoloLetras}
                     />
                   </div>
                   {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
@@ -216,6 +219,7 @@ export default function UpdateProveedorr({ SetVer, SendValor }: Props) {
                       {...register("telefono", {
                         maxLength: { value: 20, message: "Máximo 20 caracteres" },
                       })}
+                      {...tecladoTelefono}
                     />
                   </div>
                   {errors.telefono && <ErrorMessage>{errors.telefono.message}</ErrorMessage>}
@@ -314,9 +318,11 @@ export default function UpdateProveedorr({ SetVer, SendValor }: Props) {
                     placeholder="Nombre del contacto"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: "#2D0A47" }}
-                    {...register("contactoPrincipal", {
-                      maxLength: { value: 100, message: "Máximo 100 caracteres" },
-                    })}
+                    {...register("contactoPrincipal", soloLetras("Contacto Principal", {
+                      min: 2,
+                      max: 100,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
                 {errors.contactoPrincipal && (

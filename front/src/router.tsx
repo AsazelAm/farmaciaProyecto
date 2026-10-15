@@ -22,6 +22,8 @@ import Lote from "./view/Dashboard/Admin/CompraLote/Lote";
 import Venta from "./view/Dashboard/Admin/Venta/Venta";
 import NewVenta from "./view/Dashboard/Admin/Venta/NewVenta";
 
+import Devolucion from "./view/Dashboard/Admin/Devolucion/Devolucion";
+
 import Reportes from "./view/Dashboard/Admin/Reportes/Reporte";
 import ReporteCompra from "./view/Dashboard/Admin/Reportes/ReporteCompra";
 
@@ -50,6 +52,7 @@ export default function Router() {
               <Route path="/Dashboard/Lote" element={<Lote/>}/>
               <Route path="/Dashboard/Venta" element={<Venta/>}/>
               <Route path="/Dashboard/NewVenta" element={<NewVenta/>}/>
+              <Route path="/Dashboard/Devoluciones" element={<Devolucion/>}/>
               <Route path="/Dashboard/Reportes" element={<Reportes/>}/>
               <Route path="/Dashboard/ReportesCompras" element={<ReporteCompra/>}/>
             </Route>

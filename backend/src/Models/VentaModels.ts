@@ -3,7 +3,7 @@ import { sqlNombreGenerico, sqlConcentracion } from './ProductoDerivado';
 
 // ─── Interfaces Internas (puedes moverlas a types/venta.types.ts luego) ──────
 export interface IVentaFiltros {
-    estado?: 'pendiente' | 'completado' | 'cancelado';
+    estado?: 'pendiente' | 'completado' | 'cancelado' | 'devuelto_parcial' | 'devuelto_total';
     idCliente?: number;
     idUsuario?: number;
     idSucursal?: number;
@@ -297,7 +297,7 @@ const DataVenta = {
     },
 
     // ── CANCEL: Anular una venta y devolver el stock a los lotes ──────────────
-    async anular(idVenta: number, motivo?: string) {
+    async anular(idVenta: number, motivo?: string, idUsuario?: number) {
         const conection = await conectar.getConnection();
         await conection.beginTransaction();
 
@@ -325,10 +325,15 @@ const DataVenta = {
                 `, [d.cantidad, d.idLote]);
             }
 
-            // 3. Marcar la venta como anulada
+            // 3. Marcar la venta como anulada (registrando auditoría de la anulación)
             await conection.query(`
-                UPDATE venta SET estado = 'cancelado' WHERE idVenta = ?
-            `, [idVenta]);
+                UPDATE venta SET 
+                    estado = 'cancelado',
+                    motivoCancelacion = ?,
+                    fechaCancelacion = NOW(),
+                    idUsuarioCancelacion = ?
+                WHERE idVenta = ?
+            `, [motivo || 'Venta anulada', idUsuario ?? null, idVenta]);
 
             // 4. Si tiene factura emitida, anularla también
             await conection.query(`
@@ -459,7 +464,7 @@ const DataVenta = {
         try {
             // 1. Verificar que la venta exista y esté completada
             const check = await conection.query(`
-                SELECT total, estado FROM venta WHERE idVenta = ?
+                SELECT subtotal, descuentoTotal, impuestos, total, estado FROM venta WHERE idVenta = ?
             `, [idVenta]);
 
             if (check.length === 0) {
@@ -490,19 +495,24 @@ const DataVenta = {
             const siguienteNumero = Number(consecutivoFilas[0]?.maxNumero ?? 0) + 1;
             const numeroFactura = `FAC-${anio}${String(siguienteNumero).padStart(5, '0')}`;
 
-            // 4. Insertar la factura
+            // 4. Insertar la factura replicando el desglose de montos de la venta
+            const subtotal = Number(check[0].subtotal);
+            const descuento = Number(check[0].descuentoTotal);
+            const impuesto = Number(check[0].impuestos);
             const total = Number(check[0].total);
             const insertFactura = await conection.query(`
                 INSERT INTO factura (
                     numeroFactura, tipoFactura, nitCliente, razonSocial,
                     subtotal, descuento, impuesto, total, estado, idVenta
-                ) VALUES (?, ?, ?, ?, ?, 0, 0, ?, 'emitida', ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'emitida', ?)
             `, [
                 numeroFactura,
                 datosFactura.tipoFactura,
                 datosFactura.nitCliente || null,
                 datosFactura.razonSocial || null,
-                total,
+                subtotal,
+                descuento,
+                impuesto,
                 total,
                 idVenta
             ]);

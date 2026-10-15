@@ -3,7 +3,7 @@ import { sqlNombreGenerico, sqlConcentracion } from './ProductoDerivado';
 
 // ─── Interfaces Internas (puedes moverlas a types/compra.types.ts luego) ─────
 export interface ICompraFiltros {
-    estado?: 'pendiente' | 'completado' | 'cancelado';
+    estado?: 'pendiente' | 'parcial' | 'completado' | 'cancelado' | 'rechazado' | 'devuelto_parcial' | 'devuelto_total';
     idProveedor?: number;
     idSucursal?: number;
     fechaDesde?: string;
@@ -309,14 +309,19 @@ async cambiarAPendiente(idCompra: number) {
 },
 
     // ── CANCEL: Cancelar una compra pendiente ─────────────────────────────────
-    async cancelar(idCompra: number) {
+    async cancelar(idCompra: number, motivo?: string, idUsuario?: number) {
         const conection = await conectar.getConnection();
         await conection.beginTransaction();
 
         try {
             await conection.query(`
-                UPDATE compra SET estado = 'cancelado' WHERE idCompra = ? AND estado = 'pendiente'
-            `, [idCompra]);
+                UPDATE compra SET 
+                    estado = 'cancelado',
+                    motivoCancelacion = ?,
+                    fechaCancelacion = NOW(),
+                    idUsuarioCancelacion = ?
+                WHERE idCompra = ? AND estado = 'pendiente'
+            `, [motivo || 'Compra cancelada', idUsuario ?? null, idCompra]);
 
             await conection.query(`
                 UPDATE detallecompra SET estado = 'anulado' WHERE idCompra = ?

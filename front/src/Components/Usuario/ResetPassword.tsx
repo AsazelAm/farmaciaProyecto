@@ -74,7 +74,8 @@ export default function ResetPassword({ SetVer, SendValor }: ResetPasswordProps)
                             style={{ borderColor: "#D8B4F0", color: "#2D0A47" }}
                             {...register("passwd", {
                                 required: "La contraseña es obligatoria",
-                                minLength: { value: 8, message: "Mínimo 8 caracteres" }
+                                minLength: { value: 8, message: "Mínimo 8 caracteres" },
+                                maxLength: { value: 64, message: "Máximo 64 caracteres" }
                             })}
                         />
                         {errors.passwd && <ErrorMessage>{errors.passwd.message}</ErrorMessage>}

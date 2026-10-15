@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { UpdateLaboraApi } from "../../Api/LaboratorioApi";
 import type { UpdateLabo } from "../../types";
+import { soloLetras, tecladoSoloLetras } from "../../lib/validators";
 
 type Props = Readonly<{
     SetVer: React.Dispatch<React.SetStateAction<boolean>>;
@@ -110,7 +111,8 @@ export default function UpdateLaboratorio({ SetVer, SendValor }: Props) {
                             type="text"
                             placeholder="Ej: Laboratorios Bagó"
                             className={inputStyles}
-                            {...register("nombre", { required: "El nombre es obligatorio" })}
+                            {...register("nombre", soloLetras("Nombre", { required: "El nombre es obligatorio", min: 2, max: 100 }))}
+                            {...tecladoSoloLetras}
                         />
                         {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
                     </div>

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { AddTipoUsApi } from "../../Api/TipoUsApi";
 import type { CreateTipo_us } from "../../types";
+import { soloLetras, tecladoSoloLetras } from "../../lib/validators";
 
 type Cua = Readonly<{
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -137,10 +138,12 @@ export default function TipoUsForm({ setIsOpen, isOpen }: Cua) {
                     placeholder="Ej: Administrador, Farmacéutico..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none text-sm transition-colors"
                     style={{ borderColor: "#D8B4F0", color: "#2D0A47" }}
-                    {...register("nameRol", {
+                    {...register("nameRol", soloLetras("Nombre del rol", {
                       required: "El nombre del rol es obligatorio",
-                      minLength: { value: 2, message: "Debe tener al menos 2 caracteres" },
-                    })}
+                      min: 2,
+                      max: 50,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
 

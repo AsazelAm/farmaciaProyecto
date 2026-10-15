@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import type { UpdateCliente } from "../../types";
 import { UpdateClienteApi } from "../../Api/ClienteApi";
+import { soloLetras, tecladoSoloLetras, tecladoSoloDigitos, tecladoTelefono } from "../../lib/validators";
 
 // ─── Paleta de colores (igual que Cliente.tsx / UpdateProveedorr.tsx) ──────────
 const C = {
@@ -148,6 +149,7 @@ export default function UpdateClienteModal({ SetVer, SendValor }: Props) {
                           message: "El CI debe tener entre 5 y 10 dígitos",
                         },
                       })}
+                      {...tecladoSoloDigitos}
                     />
                   </div>
                   {errors.ci && <ErrorMessage>{errors.ci.message}</ErrorMessage>}
@@ -176,11 +178,12 @@ export default function UpdateClienteModal({ SetVer, SendValor }: Props) {
                       placeholder="Nombre del cliente"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                       style={{ borderColor: C.border, color: "#2D0A47" }}
-                      {...register("nombre", {
+                      {...register("nombre", soloLetras("Nombre", {
                         required: "El nombre es obligatorio",
-                        minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                        maxLength: { value: 100, message: "Máximo 100 caracteres" },
-                      })}
+                        min: 2,
+                        max: 100,
+                      }))}
+                      {...tecladoSoloLetras}
                     />
                   </div>
                   {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
@@ -214,10 +217,11 @@ export default function UpdateClienteModal({ SetVer, SendValor }: Props) {
                       placeholder="Apellido del cliente"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                       style={{ borderColor: C.border, color: "#2D0A47" }}
-                      {...register("apellido", {
-                        minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                        maxLength: { value: 100, message: "Máximo 100 caracteres" },
-                      })}
+                      {...register("apellido", soloLetras("Apellido", {
+                        min: 2,
+                        max: 100,
+                      }))}
+                      {...tecladoSoloLetras}
                     />
                   </div>
                   {errors.apellido && <ErrorMessage>{errors.apellido.message}</ErrorMessage>}
@@ -254,6 +258,7 @@ export default function UpdateClienteModal({ SetVer, SendValor }: Props) {
                           message: "Número de teléfono inválido",
                         },
                       })}
+                      {...tecladoTelefono}
                     />
                   </div>
                   {errors.telefono && <ErrorMessage>{errors.telefono.message}</ErrorMessage>}

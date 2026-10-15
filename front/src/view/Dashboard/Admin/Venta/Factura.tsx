@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import type { IFacturaInput, DatosFacturacionClienteType } from "../../../../types";
+import { tecladoSoloLetras, tecladoSoloDigitos } from "../../../../lib/validators";
 
 
 export interface IDatosCobro {
@@ -215,16 +216,20 @@ export default function Factura({
                 </label>
                 <input
                   value={nitCliente}
-                  onChange={(e) => setNitCliente(e.target.value)}
-                  className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  onChange={(e) => setNitCliente(e.target.value.replace(/\D/g, ""))}
+                  {...tecladoSoloDigitos}
+                  maxLength={15}
+                  className="mt-1 w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
               <div>
                 <label className="text-[11px] text-gray-400">Razón Social</label>
                 <input
                   value={razonSocial}
-                  onChange={(e) => setRazonSocial(e.target.value)}
-                  className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  onChange={(e) => setRazonSocial(e.target.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s.'-]/g, ""))}
+                  {...tecladoSoloLetras}
+                  maxLength={150}
+                  className="mt-1 w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
             </div>
@@ -252,13 +257,13 @@ export default function Factura({
             <label className="text-[11px] text-gray-400">
               OBSERVACIONES DE VENTA (&apos;observaciones&apos;)
             </label>
-            <textarea
-              value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
-              rows={2}
-              placeholder="Por ejemplo: Firma de la receta controlada archivada, descuento general aprobado por gerencia..."
-              className="w-full resize-none rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-            />
+              <textarea
+                value={observaciones}
+                onChange={(e) => setObservaciones(e.target.value)}
+                maxLength={500}
+                rows={2}
+                className="mt-1 w-full resize-none rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
           </div>
 
           {/* ── Monto total ── */}

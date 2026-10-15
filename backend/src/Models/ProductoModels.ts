@@ -53,7 +53,7 @@ const DataProducto = {
                         ppa.idPrincipioActivo,
                         ppa.concentracion,
                         pa.nombre AS nombrePrincipio
-                    FROM producto_principio_activo ppa
+                    FROM productoprincipioactivo ppa
                     INNER JOIN principio_activo pa ON pa.idPrincipioActivo = ppa.idPrincipioActivo
                     INNER JOIN producto p ON p.idProducto = ppa.idProducto
                     WHERE p.estado = 1
@@ -64,7 +64,7 @@ const DataProducto = {
                         ptp.idProducto,
                         tp.idTipoProd,
                         tp.nombre AS nombreTipo
-                    FROM producto_tipo_producto ptp
+                    FROM productotipoproducto ptp
                     INNER JOIN tipoproducto tp ON tp.idTipoProd = ptp.idTipoProd
                     INNER JOIN producto p ON p.idProducto = ptp.idProducto
                     WHERE p.estado = 1 AND tp.estado = 1
@@ -221,7 +221,7 @@ const DataProducto = {
     async DeletePrincipiosProductoM(idProducto: number | string) {
         const conection = await conectar.getConnection();
         await conection.query(`
-            DELETE FROM producto_principio_activo WHERE idProducto = ?;
+            DELETE FROM productoprincipioactivo WHERE idProducto = ?;
         `, [idProducto]);
         conection.release();
         return 'Principios activos de producto eliminados';
@@ -230,7 +230,7 @@ const DataProducto = {
     async AddPrincipioProductoM(idProducto: number | string, idPrincipioActivo: number, concentracion: string | null) {
         const conection = await conectar.getConnection();
         await conection.query(`
-            INSERT INTO producto_principio_activo (idProducto, idPrincipioActivo, concentracion)
+            INSERT INTO productoprincipioactivo (idProducto, idPrincipioActivo, concentracion)
             VALUES (?, ?, ?);
         `, [idProducto, idPrincipioActivo, concentracion || null]);
         conection.release();
@@ -241,7 +241,7 @@ const DataProducto = {
     async DeleteTiposProductoM(idProducto: number | string) {
         const conection = await conectar.getConnection();
         await conection.query(`
-            DELETE FROM producto_tipo_producto WHERE idProducto = ?;
+            DELETE FROM productotipoproducto WHERE idProducto = ?;
         `, [idProducto]);
         conection.release();
         return 'Tipos de producto eliminados';
@@ -250,7 +250,7 @@ const DataProducto = {
     async AddTipoProductoM(idProducto: number | string, idTipoProd: number) {
         const conection = await conectar.getConnection();
         await conection.query(`
-            INSERT INTO producto_tipo_producto (idProducto, idTipoProd)
+            INSERT INTO productotipoproducto (idProducto, idTipoProd)
             VALUES (?, ?);
         `, [idProducto, idTipoProd]);
         conection.release();

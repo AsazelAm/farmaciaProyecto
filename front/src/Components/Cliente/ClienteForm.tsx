@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { AddClienteApi } from "../../Api/ClienteApi";
 import type { CreateCliente } from "../../types";
+import { soloLetras, tecladoSoloLetras, tecladoSoloDigitos, tecladoTelefono } from "../../lib/validators";
 
 // ─── Tipos de las props (igual que ProveedorForm) ─────────────────────────────
 type Cua = Readonly<{
@@ -212,6 +213,7 @@ export default function ClienteForm({ setIsOpen, isOpen }: Cua) {
                         message: "El CI debe tener entre 5 y 10 dígitos",
                       },
                     })}
+                    {...tecladoSoloDigitos}
                   />
                 </div>
                 {/* ErrorMessage solo se renderiza si el campo tiene error */}
@@ -240,11 +242,12 @@ export default function ClienteForm({ setIsOpen, isOpen }: Cua) {
                     placeholder="Ej: Juan, María..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("nombre", {
+                    {...register("nombre", soloLetras("Nombre", {
                       required: "El nombre es obligatorio",
-                      minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                      maxLength: { value: 100, message: "Máximo 100 caracteres" },
-                    })}
+                      min: 2,
+                      max: 100,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
                 {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
@@ -274,10 +277,11 @@ export default function ClienteForm({ setIsOpen, isOpen }: Cua) {
                     placeholder="Ej: Pérez, González..."
                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                     style={{ borderColor: C.border, color: C.text }}
-                    {...register("apellido", {
-                      minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                      maxLength: { value: 100, message: "Máximo 100 caracteres" },
-                    })}
+                    {...register("apellido", soloLetras("Apellido", {
+                      min: 2,
+                      max: 100,
+                    }))}
+                    {...tecladoSoloLetras}
                   />
                 </div>
                 {errors.apellido && <ErrorMessage>{errors.apellido.message}</ErrorMessage>}
@@ -314,6 +318,7 @@ export default function ClienteForm({ setIsOpen, isOpen }: Cua) {
                         message: "Número de teléfono inválido",
                       },
                     })}
+                    {...tecladoTelefono}
                   />
                 </div>
                 {errors.telefono && <ErrorMessage>{errors.telefono.message}</ErrorMessage>}

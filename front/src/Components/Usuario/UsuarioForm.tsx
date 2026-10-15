@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { AddUser } from "../../Api/UserApi";
 import { GetTipoUsApi } from "../../Api/TipoUsApi";
 import { GetSucursalApi } from "../../Api/SucursalApi";
+import { soloLetras, soloDigitos, telefono, email, tecladoSoloLetras, tecladoSoloDigitos, tecladoTelefono } from "../../lib/validators";
 
 type Cua = Readonly<{
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -127,25 +128,25 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                         
                         <div>
                             <label className={labelStyles}>C.I. *</label>
-                            <input {...register("ci", { required: "El CI es obligatorio" })} className={inputStyles} />
+                            <input {...register("ci", soloDigitos("C.I.", { required: "El CI es obligatorio", min: 5, max: 10 }))} {...tecladoSoloDigitos} className={inputStyles} />
                             {errors.ci && <ErrorMessage>{errors.ci.message}</ErrorMessage>}
                         </div>
 
                         <div>
                             <label className={labelStyles}>Email *</label>
-                            <input type="email" {...register("email", { required: "Email obligatorio", pattern: { value: /^\S+@\S+$/i, message: "Email inválido" }})} className={inputStyles} />
+                            <input type="email" {...register("email", email("Email", { required: "Email obligatorio" }))} className={inputStyles} />
                             {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
                         </div>
 
                         <div>
                             <label className={labelStyles}>Nombre *</label>
-                            <input {...register("nombre", { required: "Nombre obligatorio" })} className={inputStyles} />
+                            <input {...register("nombre", soloLetras("Nombre", { required: "Nombre obligatorio" }))} {...tecladoSoloLetras} className={inputStyles} />
                             {errors.nombre && <ErrorMessage>{errors.nombre.message}</ErrorMessage>}
                         </div>
 
                         <div>
                             <label className={labelStyles}>Apellido *</label>
-                            <input {...register("apellido", { required: "Apellido obligatorio" })} className={inputStyles} />
+                            <input {...register("apellido", soloLetras("Apellido", { required: "Apellido obligatorio" }))} {...tecladoSoloLetras} className={inputStyles} />
                             {errors.apellido && <ErrorMessage>{errors.apellido.message}</ErrorMessage>}
                         </div>
 
@@ -153,7 +154,7 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                     </div>
                     <div className='px-5 rounded-2xl grid grid-cols-1'>
                         <label className='block text-sm font-semibold text-[#4A1A6E] mb-1'>Telefono *</label>
-                        <input {...register("telefono", { required: "Telefono obligatorio" })} className='w-full p-3 border-2 rounded-xl outline-none focus:ring-2 focus:ring-[#7B3FA0] transition-all border-[#D8B4F0] text-[#2D0A47]' />
+                        <input {...register("telefono", telefono("Teléfono", { required: "Telefono obligatorio" }))} {...tecladoTelefono} className='w-full p-3 border-2 rounded-xl outline-none focus:ring-2 focus:ring-[#7B3FA0] transition-all border-[#D8B4F0] text-[#2D0A47]' />
                         {errors.telefono && <ErrorMessage>{errors.telefono.message}</ErrorMessage>}
                     </div>
                     {/* Sección: Roles y Seguridad */}
