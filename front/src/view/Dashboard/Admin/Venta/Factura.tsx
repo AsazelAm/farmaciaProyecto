@@ -269,7 +269,7 @@ export default function Factura({
           {/* ── Monto total ── */}
           <div className="text-center">
             <p className="text-xs text-gray-400">MONTO TOTAL</p>
-            <p className="text-2xl font-bold text-violet-700">${total.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-violet-700">Bs{total.toFixed(2)}</p>
           </div>
 
           {/* ── Acciones ── */}

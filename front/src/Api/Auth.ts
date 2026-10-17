@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 import type { AuthRol, AuthUser } from "../types";
 
 
-export async function ResetPasswd({formData, idUsuario}:{formData:{ passwd: string };idUsuario:number}){
+export async function ResetPasswd({formData, idUsuario}:{formData:{ passwd: string; adminPasswd: string };idUsuario:number}){
     try {
         const {data} = await api.put(`/Auth/reset-passwd/${idUsuario}`,formData)
         return data

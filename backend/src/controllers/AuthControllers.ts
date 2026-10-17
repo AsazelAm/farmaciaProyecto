@@ -39,10 +39,33 @@ export class AuthControllers {
     }
 };
     
-    static readonly ResetPasswd = async(req:Request,res:Response)=>{
+    static readonly ResetPasswd = async(req:Request,res:Response):Promise<any>=>{
         try {
             const {idUsuario} = req.params
-            const {passwd} = req.body
+            const {passwd, adminPasswd} = req.body
+
+            // Verificamos que quien cambia la contraseña sea el usuario logueado,
+            // revalidando su propia contraseña actual.
+            if (!adminPasswd) {
+                return res.status(400).json({ error: "Debes ingresar tu contraseña actual" });
+            }
+
+            if (!req.user?.idUsuario) {
+                return res.status(401).json({ error: "No autenticado" });
+            }
+
+            const AdminPass = await DataUsers.GetPasswdById(req.user.idUsuario);
+            const AdminHash = AdminPass[0]?.passwd;
+
+            if (!AdminHash) {
+                return res.status(404).json({ error: "Usuario no encontrado" });
+            }
+
+            const Correct = await CheckPassword(adminPasswd, AdminHash);
+            if (!Correct) {
+                return res.status(401).json({ error: "Tu contraseña actual es incorrecta" });
+            }
+
             const NewPasswd =  await HashPassword(passwd)
             const data = await DataUsers.ResetPasswd(NewPasswd,idUsuario);
             res.status(200).json(data)

@@ -7,6 +7,16 @@ import { AddUser } from "../../Api/UserApi";
 import { GetTipoUsApi } from "../../Api/TipoUsApi";
 import { GetSucursalApi } from "../../Api/SucursalApi";
 import { soloLetras, soloDigitos, telefono, email, tecladoSoloLetras, tecladoSoloDigitos, tecladoTelefono } from "../../lib/validators";
+import imgver from "../../assets/ver.png";
+import imgesconder from "../../assets/esconder.png";
+
+const EyeIcon = (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img src={imgver} alt="Mostrar contraseña" className="w-5 h-5 object-contain" {...props} />
+);
+
+const EyeOffIcon = (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img src={imgesconder} alt="Ocultar contraseña" className="w-5 h-5 object-contain" {...props} />
+);
 
 type Cua = Readonly<{
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -35,6 +45,8 @@ const sectionStyles = " p-5 rounded-2xl  grid grid-cols-1 md:grid-cols-2 gap-4";
 
 export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const queryClient = useQueryClient();
 
     const { data: tiposUsuario } = useQuery({ queryKey: ["TipoUsAll"], queryFn: GetTipoUsApi });
@@ -163,16 +175,36 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
                         
                         <div>
                             <label className={labelStyles}>Contraseña *</label>
-                            <input type="password" {...register("passwd", { required: "Requerido", minLength: { value: 8, message: "Mínimo 8 caracteres" }})} className={inputStyles} />
+                            <div className="relative">
+                                <input type={showPassword ? "text" : "password"} {...register("passwd", { required: "Requerido", minLength: { value: 8, message: "Mínimo 8 caracteres" }})} className={`${inputStyles} pr-12`} />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#7B3FA0] hover:text-[#4A1A6E]"
+                                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                >
+                                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                </button>
+                            </div>
                             {errors.passwd && <ErrorMessage>{errors.passwd.message}</ErrorMessage>}
                         </div>
 
                         <div>
                             <label className={labelStyles}>Confirmar Contraseña *</label>
-                            <input type="password" {...register("Passwd_Confirmation", { 
-                                required: "Debes confirmar",
-                                validate: v => v === watch('passwd') || "No coinciden" 
-                            })} className={inputStyles} />
+                            <div className="relative">
+                                <input type={showConfirmPassword ? "text" : "password"} {...register("Passwd_Confirmation", { 
+                                    required: "Debes confirmar",
+                                    validate: v => v === watch('passwd') || "No coinciden" 
+                                })} className={`${inputStyles} pr-12`} />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#7B3FA0] hover:text-[#4A1A6E]"
+                                    aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                >
+                                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                </button>
+                            </div>
                             {errors.Passwd_Confirmation && <ErrorMessage>{errors.Passwd_Confirmation.message}</ErrorMessage>}
                         </div>
 

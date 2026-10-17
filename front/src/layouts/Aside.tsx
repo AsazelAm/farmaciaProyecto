@@ -49,10 +49,21 @@ export default function Aside() {
         overflow-y-auto overflow-x-hidden
       ">
         <nav className="py-8 flex flex-col gap-4">
-          {/* Espaciado superior para el logo o icono principal */}
-          <div className="flex justify-center mb-6">
-             <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">A</span>
+          {/* Foto, nombre y rol del usuario */}
+          <div className="flex items-center gap-3 px-3 mb-6">
+             <div className="w-10 h-10 shrink-0 bg-white/10 rounded-full flex items-center justify-center overflow-hidden">
+                {user?.img
+                   ? <img
+                        src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${user.img.replace(/\\/g, '/')}`}
+                        alt={`${user.nombre} ${user.apellido}`}
+                        className="w-full h-full object-cover"
+                     />
+                   : <span className="text-white font-bold">{user?.nombre?.charAt(0).toUpperCase()}</span>
+                }
+             </div>
+             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 overflow-hidden whitespace-nowrap">
+                <p className="text-white text-sm font-semibold leading-tight">{user?.nombre} {user?.apellido}</p>
+                <p className="text-white/60 text-xs">{user?.nameRol}</p>
              </div>
           </div>
 

@@ -17,6 +17,9 @@ router.post('/login',
 
 router.put('/reset-passwd/:idUsuario',
     authenticate,
+    body('passwd').notEmpty().withMessage('El Password es obligatorio'),
+    body('adminPasswd').notEmpty().withMessage('Debes confirmar tu contraseña actual'),
+    handleInputErrors,
     AuthControllers.ResetPasswd
 )
 

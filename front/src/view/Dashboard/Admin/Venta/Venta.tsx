@@ -342,7 +342,7 @@ export default function Venta() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-white" style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                  {["N° VENTA", "FECHA & HORA", "CLIENTE (idCliente)", "ATENDIDO POR (idUsuario)", "SUCURSAL", "TIPO PAGO", "ESTADO", "MONTO TOTAL", "ACCIONES"].map((col) => (
+                  {["N° VENTA", "FECHA & HORA", "CLIENTE ", "ATENDIDO POR ", "SUCURSAL", "TIPO PAGO", "ESTADO", "MONTO TOTAL", "ACCIONES"].map((col) => (
                     <th key={col} className="px-5 py-3 text-left text-xs font-bold tracking-wider text-gray-500">{col}</th>
                   ))}
                 </tr>
