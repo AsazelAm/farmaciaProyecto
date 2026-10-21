@@ -85,6 +85,20 @@ const DataUser = {
             Conexion.release();
         }
     },
+    async GetPasswdById(idUsuario) {
+        const Conexion = await db_1.default.getConnection();
+        try {
+            const rows = await Conexion.query(`SELECT passwd FROM usuario WHERE idUsuario = ?`, [idUsuario]);
+            return rows;
+        }
+        catch (error) {
+            console.error("Error al consultar Passwd por Id:", error);
+            throw new Error("Error al verificar Passwd");
+        }
+        finally {
+            Conexion.release();
+        }
+    },
     async ResetPasswd(Passwd, idUser) {
         const Conexion = await db_1.default.getConnection();
         try {

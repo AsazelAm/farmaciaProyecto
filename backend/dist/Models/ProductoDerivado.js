@@ -1,0 +1,32 @@
+"use strict";
+// Utilidades SQL para derivar campos de producto que en la BD normalizada ya no
+// son columnas de la tabla `producto`:
+//   - nombreGenerico y concentracion provienen del PRIMER principio activo
+//     (productoprincipioactivo + principio_activo).
+// Se usan subconsultas escalares correlacionadas al idProducto; el alias de la
+// tabla producto de la consulta externa se pasa como parámetro.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sqlNombreGenerico = sqlNombreGenerico;
+exports.sqlConcentracion = sqlConcentracion;
+/** Subconsulta escalar: nombre del primer principio activo de un producto. */
+function sqlNombreGenerico(aliasProducto) {
+    return `(
+        SELECT pa_d.nombre
+        FROM productoprincipioactivo ppa_d
+        INNER JOIN principio_activo pa_d ON pa_d.idPrincipioActivo = ppa_d.idPrincipioActivo
+        WHERE ppa_d.idProducto = ${aliasProducto}.idProducto
+        ORDER BY ppa_d.idPrincipioActivo ASC
+        LIMIT 1
+    )`;
+}
+/** Subconsulta escalar: concentración del primer principio activo de un producto. */
+function sqlConcentracion(aliasProducto) {
+    return `(
+        SELECT ppa_d.concentracion
+        FROM productoprincipioactivo ppa_d
+        WHERE ppa_d.idProducto = ${aliasProducto}.idProducto
+        ORDER BY ppa_d.idPrincipioActivo ASC
+        LIMIT 1
+    )`;
+}
+//# sourceMappingURL=ProductoDerivado.js.map

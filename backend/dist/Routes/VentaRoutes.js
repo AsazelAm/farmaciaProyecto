@@ -22,7 +22,7 @@ router.get('/GetVenta/:idVenta', VentaControllers_1.VentaControllers.GetVentaByI
 router.post('/AddVenta', VentaControllers_1.VentaControllers.AddVentaC);
 //  PUT: actualizar una venta completa (solo si está en estado pendiente) 
 router.put('/UpdateVenta/:idVenta', VentaControllers_1.VentaControllers.UpdateVentaC);
-//  PATCH: cambiar el estado de la venta (completada, anulada o pendiente)
+//  PATCH: cambiar el estado de la venta (completado, cancelado o pendiente)
 router.patch('/ChangeEstadoVenta/:idVenta', VentaControllers_1.VentaControllers.ChangeEstadoVentaC);
 //  POST: emitir la factura de una venta ya completada 
 router.post('/EmitirFactura/:idVenta', VentaControllers_1.VentaControllers.EmitirFacturaC);

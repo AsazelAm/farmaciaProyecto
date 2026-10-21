@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
+const ProductoDerivado_1 = require("./ProductoDerivado");
 // ─── Utilidad interna ────────────────────────────────────────────────────────
 // El driver de MariaDB devuelve COUNT/SUM como BigInt o string según la columna
 // (DECIMAL viene como string). Normalizamos todo a Number para el frontend.
@@ -26,29 +27,29 @@ const DataDashboard = {
             ] = await Promise.all([
                 conection.query(`
                     SELECT COUNT(*) AS cantidad, IFNULL(SUM(total), 0) AS monto
-                    FROM venta WHERE estado = 'completada'
+                    FROM venta WHERE estado = 'completado'
                 `),
                 conection.query(`
                     SELECT COUNT(*) AS cantidad, IFNULL(SUM(total), 0) AS monto
                     FROM venta
-                    WHERE estado = 'completada' AND DATE(fechaCreacion) = CURDATE()
+                    WHERE estado = 'completado' AND DATE(fechaCreacion) = CURDATE()
                 `),
                 conection.query(`
                     SELECT COUNT(*) AS cantidad, IFNULL(SUM(total), 0) AS monto
                     FROM venta
-                    WHERE estado = 'completada'
+                    WHERE estado = 'completado'
                       AND MONTH(fechaCreacion) = MONTH(NOW())
                       AND YEAR(fechaCreacion) = YEAR(NOW())
                 `),
                 conection.query(`
                     SELECT IFNULL(SUM(total), 0) AS monto
                     FROM venta
-                    WHERE estado = 'completada'
+                    WHERE estado = 'completado'
                       AND MONTH(fechaCreacion) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH))
                       AND YEAR(fechaCreacion) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))
                 `),
                 conection.query(`SELECT COUNT(*) AS total FROM venta WHERE estado = 'pendiente'`),
-                conection.query(`SELECT COUNT(*) AS total FROM venta WHERE estado = 'anulada'`),
+                conection.query(`SELECT COUNT(*) AS total FROM venta WHERE estado = 'cancelado'`),
                 conection.query(`SELECT COUNT(*) AS total FROM cliente WHERE estado = 1`),
                 conection.query(`SELECT COUNT(*) AS total FROM producto WHERE estado = 1`),
                 conection.query(`SELECT COUNT(*) AS total FROM usuario WHERE estado = 1`),
@@ -113,7 +114,7 @@ const DataDashboard = {
                        COUNT(*) AS cantidad,
                        IFNULL(SUM(total), 0) AS monto
                 FROM venta
-                WHERE estado = 'completada'
+                WHERE estado = 'completado'
                   AND fechaCreacion >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL ? MONTH), '%Y-%m-01')
                 GROUP BY mes
                 ORDER BY mes ASC
@@ -143,14 +144,14 @@ const DataDashboard = {
         const conection = await db_1.default.getConnection();
         try {
             const rows = await conection.query(`
-                SELECT pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial,
+                SELECT pr.idProducto, pr.codigoBarra, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial,
                        SUM(dv.cantidad) AS unidades,
                        SUM(dv.subtotal) AS monto
                 FROM detalleventa dv
                 INNER JOIN venta v     ON v.idVenta = dv.idVenta
                 INNER JOIN producto pr ON pr.idProducto = dv.idProducto
-                WHERE v.estado = 'completada'
-                GROUP BY pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial
+                WHERE v.estado = 'completado'
+                GROUP BY pr.idProducto, pr.codigoBarra, pr.nombreComercial
                 ORDER BY unidades DESC
                 LIMIT ?
             `, [limite]);
@@ -197,7 +198,7 @@ const DataDashboard = {
                        IFNULL(SUM(v.total), 0) AS monto
                 FROM venta v
                 INNER JOIN sucursal s ON s.idSucursal = v.idSucursal
-                WHERE v.estado = 'completada'
+                WHERE v.estado = 'completado'
                 GROUP BY s.idSucursal, s.nombre
                 ORDER BY monto DESC
             `);
@@ -221,7 +222,7 @@ const DataDashboard = {
                        COUNT(*) AS cantidad,
                        IFNULL(SUM(total), 0) AS monto
                 FROM venta
-                WHERE estado = 'completada'
+                WHERE estado = 'completado'
                 GROUP BY tipoPago
                 ORDER BY cantidad DESC
             `);
@@ -240,14 +241,14 @@ const DataDashboard = {
         const conection = await db_1.default.getConnection();
         try {
             const rows = await conection.query(`
-                SELECT pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial,
+                SELECT pr.idProducto, pr.codigoBarra, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial,
                        pr.stockMinimo,
                        IFNULL(SUM(l.stock), 0) AS stockTotal
                 FROM producto pr
                 LEFT JOIN lote l ON l.idProducto = pr.idProducto
                   AND l.estado IN ('activo', 'pendiente')
                 WHERE pr.estado = 1
-                GROUP BY pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial, pr.stockMinimo
+                GROUP BY pr.idProducto, pr.codigoBarra, pr.nombreComercial, pr.stockMinimo
                 HAVING stockTotal <= pr.stockMinimo
                 ORDER BY stockTotal ASC
                 LIMIT ?
@@ -273,7 +274,7 @@ const DataDashboard = {
                 SELECT l.idLote, l.numeroLote, l.codigo AS codigoLote, l.stock,
                        l.fechaVencimiento,
                        DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasParaVencer,
-                       pr.idProducto, pr.nombreGenerico, pr.nombreComercial, pr.concentracion
+                       pr.idProducto, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial, ${(0, ProductoDerivado_1.sqlConcentracion)('pr')} AS concentracion
                 FROM lote l
                 INNER JOIN producto pr ON pr.idProducto = l.idProducto
                 WHERE l.estado IN ('activo', 'pendiente')

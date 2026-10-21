@@ -56,7 +56,17 @@ export default function Logins() {
       }
     },
     onSuccess: (data) => {
-      const rutaDestino = rutasPorRol[data];
+      // Credenciales correctas: el backend pidio verificar el codigo OTP
+      // enviado al correo -> ir a la pantalla de codigo
+      if (data.requiresCode) {
+        navigate("/VerificarCodigo", {
+          replace: true,
+          state: { email: data.email },
+        });
+        return;
+      }
+
+      const rutaDestino = rutasPorRol[data.IDRol];
       if (rutaDestino) {
         navigate(rutaDestino, { replace: true });
       } else {

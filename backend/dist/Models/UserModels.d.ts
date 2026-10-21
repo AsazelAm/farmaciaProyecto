@@ -32,6 +32,7 @@ declare const DataUser: {
         exists: boolean;
     }>;
     GetPasswd(email: string): Promise<any>;
+    GetPasswdById(idUsuario: number): Promise<any>;
     ResetPasswd(Passwd: any, idUser: any): Promise<string>;
     GetIdRol(email: string): Promise<any>;
     GetCI(CI: string): Promise<{

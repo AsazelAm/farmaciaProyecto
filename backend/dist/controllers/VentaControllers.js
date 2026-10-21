@@ -101,13 +101,14 @@ class VentaControllers {
     static ChangeEstadoVentaC = async (req, res) => {
         try {
             const idVenta = Number(req.params.idVenta);
-            const { estado, motivo } = req.body; // Debería recibir 'completada', 'anulada' o 'pendiente'
-            if (estado === 'completada') {
+            const { estado, motivo } = req.body; // Debería recibir 'completado', 'cancelado' o 'pendiente'
+            const idUsuario = req.user?.idUsuario ?? req.body.idUsuario ?? undefined;
+            if (estado === 'completado') {
                 await VentaModels_1.default.completar(idVenta);
                 return res.status(200).json({ message: 'Venta completada exitosamente' });
             }
-            else if (estado === 'anulada') {
-                await VentaModels_1.default.anular(idVenta, motivo);
+            else if (estado === 'cancelado') {
+                await VentaModels_1.default.anular(idVenta, motivo, idUsuario);
                 return res.status(200).json({ message: 'Venta anulada y stock restituido exitosamente' });
             }
             else if (estado === 'pendiente') {

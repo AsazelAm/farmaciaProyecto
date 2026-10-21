@@ -1,5 +1,5 @@
 export interface IVentaFiltros {
-    estado?: 'pendiente' | 'completada' | 'anulada';
+    estado?: 'pendiente' | 'completado' | 'cancelado' | 'devuelto_parcial' | 'devuelto_total';
     idCliente?: number;
     idUsuario?: number;
     idSucursal?: number;
@@ -40,7 +40,7 @@ declare const DataVenta: {
     crear(datos: IVentaInput, idUsuario: number): Promise<number>;
     completar(idVenta: number): Promise<boolean>;
     cambiarAPendiente(idVenta: number): Promise<boolean>;
-    anular(idVenta: number, motivo?: string): Promise<boolean>;
+    anular(idVenta: number, motivo?: string, idUsuario?: number): Promise<boolean>;
     actualizar(idVenta: number, datos: IVentaInput): Promise<boolean>;
     emitirFactura(idVenta: number, datosFactura: IFacturaInput): Promise<number>;
     obtenerDatosFacturacionPorCliente(idCliente: number): Promise<any>;

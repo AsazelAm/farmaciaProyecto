@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { body } from "express-validator";
 import { AuthControllers } from "../controllers/AuthControllers";
-import { limiter } from "../config/limits";
+import { limiter, limiterOtp } from "../config/limits";
 import { handleInputErrors } from "../Middleware/validation";
 import { authenticate } from "../Middleware/auth";
 
@@ -13,6 +13,23 @@ router.post('/login',
     body('passwd').notEmpty().withMessage('El Password es obligatorio'),
     handleInputErrors,
     AuthControllers.Login
+)
+
+// Valida el codigo de 6 digitos enviado al correo y entrega el JWT
+router.post('/verificar-codigo',
+    limiterOtp,
+    body('email').isEmail().withMessage('El Email no es valido'),
+    body('codigo').isLength({ min: 6, max: 6 }).isNumeric().withMessage('El codigo debe tener 6 digitos'),
+    handleInputErrors,
+    AuthControllers.VerificarCodigo
+)
+
+// Genera y reenvia un nuevo codigo de verificacion al correo
+router.post('/reenviar-codigo',
+    limiterOtp,
+    body('email').isEmail().withMessage('El Email no es valido'),
+    handleInputErrors,
+    AuthControllers.ReenviarCodigo
 )
 
 router.put('/reset-passwd/:idUsuario',

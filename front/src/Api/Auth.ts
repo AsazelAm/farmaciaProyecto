@@ -14,28 +14,64 @@ export async function ResetPasswd({formData, idUsuario}:{formData:{ passwd: stri
     }
 }
 
-export async function Login(formData: AuthUser) {
-    let attempts = 0; 
-    const maxAttempts = 5; 
+export type LoginResultado =
+  | { requiresCode: true; email: string }
+  | { requiresCode: false; IDRol: string };
 
-    while (attempts < maxAttempts) {
-        try {
-            const { data } = await api.post('/Auth/login', formData);
-            if (data.token2) {
-                localStorage.setItem('AUTH_TOKEN', data.token2);
-                return data.IDRol;
-            }
-        } catch (error) {
-            if (isAxiosError(error) && error.response) {
-                throw new Error(error.response.data.error);
-            }
+// Envia email + contraseña. Si las credenciales son correctas el backend
+// responde { requiresCode: true, email } y el codigo OTP llega al correo:
+// recien cuando se verifica en VerificarCodigo() se guarda el token.
+export async function Login(formData: AuthUser): Promise<LoginResultado> {
+    try {
+        const { data } = await api.post('/Auth/login', formData);
+
+        if (data.requiresCode) {
+            return { requiresCode: true, email: data.email };
         }
 
-        attempts++;
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Espera 1 segundo antes del próximo intento
-    }
+        if (data.token2) {
+            localStorage.setItem('AUTH_TOKEN', data.token2);
+            return { requiresCode: false, IDRol: data.IDRol };
+        }
 
-    throw new Error('No se pudo obtener un token válido después de varios intentos.');
+        throw new Error('Respuesta invalida del servidor');
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            throw new Error(error.response.data.error);
+        }
+        throw new Error('No se pudo iniciar sesion');
+    }
+}
+
+// Valida el codigo de 6 digitos. Al ser correcto el backend devuelve el JWT
+// (que guardamos en localStorage) junto al rol para redirigir.
+export async function VerificarCodigo({ email, codigo }: { email: string; codigo: string }) {
+    try {
+        const { data } = await api.post('/Auth/verificar-codigo', { email, codigo });
+        if (data.token2) {
+            localStorage.setItem('AUTH_TOKEN', data.token2);
+            return data.IDRol as string;
+        }
+        throw new Error('Respuesta invalida del servidor');
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            throw new Error(error.response.data.error);
+        }
+        throw new Error('No se pudo verificar el codigo');
+    }
+}
+
+// Pide al backend que genere y reenvie otro codigo al correo
+export async function ReenviarCodigo(email: string) {
+    try {
+        const { data } = await api.post('/Auth/reenviar-codigo', { email });
+        return data;
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            throw new Error(error.response.data.error);
+        }
+        throw new Error('No se pudo reenviar el codigo');
+    }
 }
 
 

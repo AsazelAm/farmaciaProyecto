@@ -10,15 +10,15 @@ async function createTestUser() {
         const hashedPassword = await (0, auth_1.HashPassword)("12345678");
         const connection = await db_1.default.getConnection();
         // Verificar si el usuario ya existe
-        const [existing] = await connection.query(`SELECT id_usuario FROM usuario WHERE email = 'guillermoAdmin@gmail.com'`);
+        const [existing] = await connection.query(`SELECT idUsuario FROM usuario WHERE email = 'guillermoAdmin@gmail.com'`);
         if (existing) {
             console.log("⚠️  El usuario ya existe, actualizando contraseña...");
-            await connection.query(`UPDATE usuario SET contrasena = ?, Estado = 1 WHERE email = 'guillermoAdmin@gmail.com'`, [hashedPassword]);
+            await connection.query(`UPDATE usuario SET passwd = ?, estado = 1 WHERE email = 'guillermoAdmin@gmail.com'`, [hashedPassword]);
         }
         else {
             await connection.query(`
-                 INSERT INTO usuario (id_usuario,ci,nombre,apellido,img,contrasena,telefono,email,Estado,id_tipo_us,id_sucursal)
-                VALUES (1,12121212,'Guillermo','Mullisaca','Uploads/sinIMG',?,'41491031','guillermoAdmin@gmail.com',1,1,1);
+                 INSERT INTO usuario (ci,nombre,apellido,img,passwd,telefono,email,estado,idTipoUs,idSucursal)
+                VALUES (12121212,'Guillermo','Mullisaca','Uploads/sinIMG',?,'41491031','guillermoAdmin@gmail.com',1,1,1);
             `, [hashedPassword]);
         }
         console.log("✅ Usuario de prueba listo");

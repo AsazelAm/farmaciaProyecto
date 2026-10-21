@@ -110,13 +110,14 @@ class CompraLoteControllers {
     static ChangeEstadoCompraC = async (req, res) => {
         try {
             const idCompra = Number(req.params.idCompra);
-            const { estado } = req.body; // Debería recibir 'completado' o 'cancelado'
+            const { estado, motivo } = req.body; // Debería recibir 'completado' o 'cancelado'
+            const idUsuario = req.user?.idUsuario ?? req.body.idUsuario ?? undefined;
             if (estado === 'completado') {
                 await CompraLoteModels_1.default.completar(idCompra);
                 return res.status(200).json({ message: 'Compra completada e inventario actualizado' });
             }
             else if (estado === 'cancelado') {
-                await CompraLoteModels_1.default.cancelar(idCompra);
+                await CompraLoteModels_1.default.cancelar(idCompra, motivo, idUsuario);
                 return res.status(200).json({ message: 'Compra cancelada exitosamente' });
             }
             else if (estado === 'pendiente') {

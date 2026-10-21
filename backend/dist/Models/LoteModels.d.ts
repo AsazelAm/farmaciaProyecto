@@ -1,5 +1,5 @@
 export interface ILoteFiltros {
-    estado?: 'pendiente' | 'activo' | 'vencido' | 'cancelado';
+    estado?: 'pendiente' | 'activo' | 'vencido' | 'cancelado' | 'cuarentena' | 'devuelto';
     idProducto?: number;
     idProveedor?: number;
     soloProximosVencer?: boolean;

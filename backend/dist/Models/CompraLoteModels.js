@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
+const ProductoDerivado_1 = require("./ProductoDerivado");
 const DataCompra = {
     // ── GET: Listar compras con filtros dinámicos y paginación ────────────────
     async listar(filtros) {
@@ -105,7 +106,7 @@ const DataCompra = {
                 l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento, l.fechaFabricacion,
                 l.stock, l.precioCompra, l.estado as estadoLote,
                 DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasParaVencer,
-                pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial, pr.concentracion,
+                pr.idProducto, pr.codigoBarra, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial, ${(0, ProductoDerivado_1.sqlConcentracion)('pr')} AS concentracion,
                 lab.nombre AS nombreLaboratorio
             FROM detallecompra dc
             INNER JOIN lote        l   ON l.idLote        = dc.idLote
@@ -247,13 +248,18 @@ const DataCompra = {
         }
     },
     // ── CANCEL: Cancelar una compra pendiente ─────────────────────────────────
-    async cancelar(idCompra) {
+    async cancelar(idCompra, motivo, idUsuario) {
         const conection = await db_1.default.getConnection();
         await conection.beginTransaction();
         try {
             await conection.query(`
-                UPDATE compra SET estado = 'cancelado' WHERE idCompra = ? AND estado = 'pendiente'
-            `, [idCompra]);
+                UPDATE compra SET 
+                    estado = 'cancelado',
+                    motivoCancelacion = ?,
+                    fechaCancelacion = NOW(),
+                    idUsuarioCancelacion = ?
+                WHERE idCompra = ? AND estado = 'pendiente'
+            `, [motivo || 'Compra cancelada', idUsuario ?? null, idCompra]);
             await conection.query(`
                 UPDATE detallecompra SET estado = 'anulado' WHERE idCompra = ?
             `, [idCompra]);

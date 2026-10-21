@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
+const ProductoDerivado_1 = require("./ProductoDerivado");
 const DataVenta = {
     // ── GET: Listar ventas con filtros dinámicos y paginación ─────────────────
     async listar(filtros) {
@@ -102,8 +103,8 @@ const DataVenta = {
                 dv.cantidad, dv.precioUnitario, dv.descuento, dv.subtotal,
                 l.idLote, l.numeroLote, l.codigo, l.fechaVencimiento,
                 DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasParaVencer,
-                pr.idProducto, pr.codigoBarra, pr.nombreGenerico, pr.nombreComercial,
-                pr.concentracion, pr.requiereReceta,
+                pr.idProducto, pr.codigoBarra, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial,
+                ${(0, ProductoDerivado_1.sqlConcentracion)('pr')} AS concentracion, pr.requiereReceta,
                 lab.nombre AS nombreLaboratorio
             FROM detalleventa dv
             INNER JOIN lote        l   ON l.idLote        = dv.idLote
@@ -208,7 +209,7 @@ const DataVenta = {
         const conection = await db_1.default.getConnection();
         try {
             const result = await conection.query(`
-                UPDATE venta SET estado = 'completada' WHERE idVenta = ? AND estado = 'pendiente'
+                UPDATE venta SET estado = 'completado' WHERE idVenta = ? AND estado = 'pendiente'
             `, [idVenta]);
             return result.affectedRows > 0;
         }
@@ -221,7 +222,7 @@ const DataVenta = {
         const conection = await db_1.default.getConnection();
         try {
             const result = await conection.query(`
-                UPDATE venta SET estado = 'pendiente' WHERE idVenta = ? AND estado = 'completada'
+                UPDATE venta SET estado = 'pendiente' WHERE idVenta = ? AND estado = 'completado'
             `, [idVenta]);
             return result.affectedRows > 0;
         }
@@ -230,7 +231,7 @@ const DataVenta = {
         }
     },
     // ── CANCEL: Anular una venta y devolver el stock a los lotes ──────────────
-    async anular(idVenta, motivo) {
+    async anular(idVenta, motivo, idUsuario) {
         const conection = await db_1.default.getConnection();
         await conection.beginTransaction();
         try {
@@ -241,8 +242,8 @@ const DataVenta = {
             if (check.length === 0) {
                 throw new Error('La venta no existe.');
             }
-            if (check[0].estado === 'anulada') {
-                throw new Error('La venta ya se encuentra anulada.');
+            if (check[0].estado === 'cancelado') {
+                throw new Error('La venta ya se encuentra cancelada.');
             }
             // 2. Regresar el stock vendido a cada lote
             const detalles = await conection.query(`
@@ -253,10 +254,15 @@ const DataVenta = {
                     UPDATE lote SET stock = stock + ? WHERE idLote = ?
                 `, [d.cantidad, d.idLote]);
             }
-            // 3. Marcar la venta como anulada
+            // 3. Marcar la venta como anulada (registrando auditoría de la anulación)
             await conection.query(`
-                UPDATE venta SET estado = 'anulada' WHERE idVenta = ?
-            `, [idVenta]);
+                UPDATE venta SET 
+                    estado = 'cancelado',
+                    motivoCancelacion = ?,
+                    fechaCancelacion = NOW(),
+                    idUsuarioCancelacion = ?
+                WHERE idVenta = ?
+            `, [motivo || 'Venta anulada', idUsuario ?? null, idVenta]);
             // 4. Si tiene factura emitida, anularla también
             await conection.query(`
                 UPDATE factura SET 
@@ -372,12 +378,12 @@ const DataVenta = {
         try {
             // 1. Verificar que la venta exista y esté completada
             const check = await conection.query(`
-                SELECT total, estado FROM venta WHERE idVenta = ?
+                SELECT subtotal, descuentoTotal, impuestos, total, estado FROM venta WHERE idVenta = ?
             `, [idVenta]);
             if (check.length === 0) {
                 throw new Error('La venta no existe.');
             }
-            if (check[0].estado !== 'completada') {
+            if (check[0].estado !== 'completado') {
                 throw new Error('Solo se puede facturar una venta completada.');
             }
             // 2. Verificar que no tenga ya una factura vigente
@@ -398,19 +404,24 @@ const DataVenta = {
             `, [anio]);
             const siguienteNumero = Number(consecutivoFilas[0]?.maxNumero ?? 0) + 1;
             const numeroFactura = `FAC-${anio}${String(siguienteNumero).padStart(5, '0')}`;
-            // 4. Insertar la factura
+            // 4. Insertar la factura replicando el desglose de montos de la venta
+            const subtotal = Number(check[0].subtotal);
+            const descuento = Number(check[0].descuentoTotal);
+            const impuesto = Number(check[0].impuestos);
             const total = Number(check[0].total);
             const insertFactura = await conection.query(`
                 INSERT INTO factura (
                     numeroFactura, tipoFactura, nitCliente, razonSocial,
                     subtotal, descuento, impuesto, total, estado, idVenta
-                ) VALUES (?, ?, ?, ?, ?, 0, 0, ?, 'emitida', ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'emitida', ?)
             `, [
                 numeroFactura,
                 datosFactura.tipoFactura,
                 datosFactura.nitCliente || null,
                 datosFactura.razonSocial || null,
-                total,
+                subtotal,
+                descuento,
+                impuesto,
                 total,
                 idVenta
             ]);
@@ -459,28 +470,28 @@ const DataVenta = {
                     SELECT IFNULL(SUM(total), 0) AS totalMes FROM venta 
                     WHERE MONTH(fechaCreacion) = MONTH(NOW()) 
                     AND YEAR(fechaCreacion) = YEAR(NOW()) 
-                    AND estado = 'completada'
+                    AND estado = 'completado'
                 `),
                 conection.query(`
                     SELECT IFNULL(SUM(total), 0) AS totalMesAnterior FROM venta 
                     WHERE MONTH(fechaCreacion) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) 
                     AND YEAR(fechaCreacion) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH)) 
-                    AND estado = 'completada'
+                    AND estado = 'completado'
                 `),
                 conection.query(`
                     SELECT s.nombre, COUNT(v.idVenta) AS cantidad, SUM(v.total) AS monto 
                     FROM venta v
                     INNER JOIN sucursal s ON s.idSucursal = v.idSucursal
-                    WHERE v.estado = 'completada'
+                    WHERE v.estado = 'completado'
                     GROUP BY v.idSucursal
                     ORDER BY monto DESC LIMIT 5
                 `),
                 conection.query(`
-                    SELECT pr.nombreGenerico, SUM(dv.cantidad) AS unidadesVendidas, SUM(dv.subtotal) AS monto
+                    SELECT ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, SUM(dv.cantidad) AS unidadesVendidas, SUM(dv.subtotal) AS monto
                     FROM detalleventa dv
                     INNER JOIN venta v ON v.idVenta = dv.idVenta
                     INNER JOIN producto pr ON pr.idProducto = dv.idProducto
-                    WHERE v.estado = 'completada'
+                    WHERE v.estado = 'completado'
                     GROUP BY dv.idProducto
                     ORDER BY unidadesVendidas DESC LIMIT 5
                 `)

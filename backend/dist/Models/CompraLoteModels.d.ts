@@ -1,5 +1,5 @@
 export interface ICompraFiltros {
-    estado?: 'pendiente' | 'completado' | 'cancelado';
+    estado?: 'pendiente' | 'parcial' | 'completado' | 'cancelado' | 'rechazado' | 'devuelto_parcial' | 'devuelto_total';
     idProveedor?: number;
     idSucursal?: number;
     fechaDesde?: string;
@@ -38,7 +38,7 @@ declare const DataCompra: {
     crear(datos: ICompraInput, idUsuario: number): Promise<number>;
     completar(idCompra: number): Promise<boolean>;
     cambiarAPendiente(idCompra: number): Promise<boolean>;
-    cancelar(idCompra: number): Promise<boolean>;
+    cancelar(idCompra: number, motivo?: string, idUsuario?: number): Promise<boolean>;
     estadisticas(): Promise<{
         porEstado: {
             estado: any;

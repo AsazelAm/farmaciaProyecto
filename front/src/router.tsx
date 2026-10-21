@@ -1,5 +1,6 @@
 import {HashRouter, Routes, Route} from "react-router-dom"
 import Logins from "./view/Login"
+import VerificarCodigoVista from "./view/VerificarCodigo"
 import Main from "./layouts/Main"
 import Aside from "./layouts/Aside"
 import Dashboard from "./view/Dashboard/Admin/Dashboard"
@@ -36,6 +37,7 @@ export default function Router() {
         <Routes>
             <Route element={<Main/>}>
               <Route path="/"  element={<Logins/>} index/>
+              <Route path="/VerificarCodigo"  element={<VerificarCodigoVista/>}/>
             </Route>
             <Route element={<Aside/>}>
               <Route path="/Dashboard"  element={<Dashboard/>} index/>

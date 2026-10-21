@@ -13,7 +13,7 @@ router.get('/GetResumen', DashboardControllers_1.DashboardControllers.GetResumen
 router.get('/GetVentasPorMeses', DashboardControllers_1.DashboardControllers.GetVentasPorMesesC);
 //  GET: top de productos más vendidos (?limite=8)
 router.get('/GetProductosMasVendidos', DashboardControllers_1.DashboardControllers.GetProductosMasVendidosC);
-//  GET: distribución de ventas por estado (pendiente/completada/anulada)
+//  GET: distribución de ventas por estado (pendiente/completado/cancelado)
 router.get('/GetVentasPorEstado', DashboardControllers_1.DashboardControllers.GetVentasPorEstadoC);
 //  GET: ventas completadas agrupadas por sucursal
 router.get('/GetVentasPorSucursal', DashboardControllers_1.DashboardControllers.GetVentasPorSucursalC);

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
+const ProductoDerivado_1 = require("./ProductoDerivado");
 const DataLote = {
     // ── GET: Listar lotes con datos de producto/proveedor y alerta de vencimiento ──
     async listar(filtros) {
@@ -31,7 +32,7 @@ const DataLote = {
             queryBase += ` AND l.fechaVencimiento <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND l.estado = 'activo'`;
         }
         if (filtros.busqueda) {
-            queryBase += ` AND (l.codigo LIKE ? OR l.numeroLote LIKE ? OR pr.nombreGenerico LIKE ? OR pr.nombreComercial LIKE ?)`;
+            queryBase += ` AND (l.codigo LIKE ? OR l.numeroLote LIKE ? OR ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} LIKE ? OR pr.nombreComercial LIKE ?)`;
             const like = `%${filtros.busqueda}%`;
             queryParams.push(like, like, like, like);
         }
@@ -47,7 +48,7 @@ const DataLote = {
                 l.fechaVencimiento, l.precioCompra, l.fechaIngreso,
                 l.fechaCreacion, l.fechaModificacion, l.fechaFabricacion,
                 l.estado, l.idProducto, l.idProveedor,
-                pr.nombreGenerico, pr.nombreComercial, pr.codigoBarra,
+                ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial, pr.codigoBarra,
                 pv.nombre AS proveedor,
                 DATEDIFF(l.fechaVencimiento, NOW()) AS diasParaVencer
             ${queryBase}
@@ -69,7 +70,7 @@ const DataLote = {
         const result = await conection.query(`
             SELECT
                 l.*,
-                pr.nombreGenerico, pr.nombreComercial, pr.codigoBarra,
+                ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial, pr.codigoBarra,
                 pv.nombre AS proveedor,
                 DATEDIFF(l.fechaVencimiento, NOW()) AS diasParaVencer
             FROM lote l
