@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import Loading from "../../../../Helpers/Loading";
 import { toast } from "react-toastify";
-import { GetUserAllApi, DeleteuserApi } from "../../../../Api/UserApi";
+import { GetUserAllApi, DeleteuserApi, ReenviarCodigoUsuario } from "../../../../Api/UserApi";
 import type { updateuser } from "../../../../types";
 
 const UsuarioForm = lazy(() => import("../../../../Components/Usuario/UsuarioForm"));
 const UpdateUsuario = lazy(() => import("../../../../Components/Usuario/UpdateUsuario"));
 const ResetPassword = lazy(() => import("../../../../Components/Usuario/ResetPassword"));
 const GetUsuario = lazy(() => import("../../../../Components/Usuario/GetUsuario"));
+const VerificarCodigoUsuario = lazy(() => import("../../../../Components/Usuario/VerificarCodigoUsuario"));
 
 // Paleta de colores lila (igual que Presentacion.tsx)
 const COLORS = {
@@ -28,6 +29,7 @@ export default function User() {
   const [viewUser, setViewUser] = useState<updateuser | null>(null);
   const [search, setSearch] = useState("");
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [verificacion, setVerificacion] = useState<{ email: string; correoEnviado: boolean } | null>(null);
 
   // Obtención de datos
   const { data: rows, isLoading } = useQuery({
@@ -43,6 +45,16 @@ export default function User() {
       toast.success(res);
       queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
       setConfirmId(null);
+    },
+  });
+
+  // Envia un codigo al correo del usuario pendiente y abre el modal para verificarlo
+  const { mutate: enviarCodigo, isPending: enviandoCodigo } = useMutation({
+    mutationFn: (email: string) => ReenviarCodigoUsuario(email),
+    onError: (error: Error) => toast.error(error.message),
+    onSuccess: (_res, email) => {
+      toast.info("Se envió un código de verificación al correo");
+      setVerificacion({ email, correoEnviado: true });
     },
   });
 
@@ -247,6 +259,21 @@ export default function User() {
                           </svg>
                         </button>
 
+                        {/* ENVIAR CÓDIGO (solo usuarios pendientes de verificación) */}
+                        {Number(item.confirmed ?? 0) === 0 && (
+                          <button
+                            onClick={() => enviarCodigo(item.email)}
+                            disabled={enviandoCodigo}
+                            title="Enviar código de verificación"
+                            className="p-2 rounded-lg transition-colors hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ color: "#0F766E" }}
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        )}
+
                         {/* RESET PASSWORD */}
                         <button
                           onClick={() => setIsIdUsuario(item.idUsuario)}
@@ -282,13 +309,46 @@ export default function User() {
 
       {/* MODALES CON SUSPENSE */}
       <Suspense fallback={<Loading />}>
-        {isOpen && <UsuarioForm setIsOpen={setIsOpen} isOpen={isOpen} />}
+        {isOpen && (
+          <UsuarioForm
+            setIsOpen={setIsOpen}
+            isOpen={isOpen}
+            onRequiereVerificacion={(email, correoEnviado) => {
+              setIsOpen(false);
+              setVerificacion({ email, correoEnviado });
+            }}
+          />
+        )}
 
-        {selectedUser && <UpdateUsuario SendValor={selectedUser} SetVer={() => setSelectedUser(null)} />}
+        {selectedUser && (
+          <UpdateUsuario
+            SendValor={selectedUser}
+            SetVer={() => setSelectedUser(null)}
+            onRequiereVerificacion={(email, correoEnviado) => {
+              setSelectedUser(null);
+              setVerificacion({ email, correoEnviado });
+            }}
+          />
+        )}
 
         {isIdUsuario && <ResetPassword SendValor={isIdUsuario} SetVer={() => setIsIdUsuario(null)} />}
 
         {viewUser && <GetUsuario SendValor={viewUser} SetVer={() => setViewUser(null)} />}
+
+        {verificacion && (
+          <VerificarCodigoUsuario
+            email={verificacion.email}
+            correoEnviado={verificacion.correoEnviado}
+            onClose={() => {
+              queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
+              setVerificacion(null);
+            }}
+            onVerified={() => {
+              queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
+              setVerificacion(null);
+            }}
+          />
+        )}
       </Suspense>
 
       {/* DIÁLOGO DE CONFIRMACIÓN DE ELIMINACIÓN */}

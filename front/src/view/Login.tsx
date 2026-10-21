@@ -38,9 +38,9 @@ export default function Logins() {
 
   const rutasPorRol: Record<string, string> = {
     Admin: "/Dashboard",
-    Docente: "/Docente",
+    Farmaceutico: "/Farmaceutico",
     Asesor: "/Asesor",
-    Academico: "/Academico",
+    Bodeguero: "/Bodeguero",
   };
 
   const { mutate } = useMutation({

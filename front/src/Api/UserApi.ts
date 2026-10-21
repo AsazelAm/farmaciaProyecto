@@ -101,6 +101,32 @@ export async function DeleteuserApi(id:deleteuser['idUsuario']){
     }
 }
 
+// Valida el codigo de 6 digitos que confirma la cuenta tras el registro
+// o tras cambiar el correo. No inicia sesion: solo activa confirmed = 1.
+export async function VerificarCodigoUsuario({ email, codigo }: { email: string; codigo: string }) {
+    try {
+        const { data } = await api.post('/user/verificar-codigo', { email, codigo });
+        return data;
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            throw new Error(error.response.data.error)
+        }
+        throw new Error('No se pudo verificar el codigo')
+    }
+}
+
+export async function ReenviarCodigoUsuario(email: string) {
+    try {
+        const { data } = await api.post('/user/reenviar-codigo', { email });
+        return data;
+    } catch (error) {
+        if (isAxiosError(error) && error.response) {
+            throw new Error(error.response.data.error)
+        }
+        throw new Error('No se pudo reenviar el codigo')
+    }
+}
+
 export async function UpdateUserApi(formData:FormData,idUsuario:number){
     try {
         const {data} = await api.put(`/user/UpdateUser/${idUsuario}`, formData,{

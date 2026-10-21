@@ -21,6 +21,7 @@ const EyeOffIcon = (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
 type Cua = Readonly<{
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isOpen: boolean;
+    onRequiereVerificacion?: (email: string, correoEnviado: boolean) => void;
 }>;
 
 type FormDataFields = {
@@ -43,7 +44,7 @@ const inputStyles = "w-full p-3 border-2 rounded-xl outline-none focus:ring-2 fo
 const labelStyles = "block text-sm font-semibold text-[#4A1A6E] mb-1";
 const sectionStyles = " p-5 rounded-2xl  grid grid-cols-1 md:grid-cols-2 gap-4";
 
-export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
+export default function UsuarioForm({ setIsOpen, isOpen, onRequiereVerificacion }: Cua) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -89,8 +90,17 @@ export default function UsuarioForm({ setIsOpen, isOpen }: Cua) {
         onError: (error: Error) => toast.error(error.message),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
-            toast.success(data.message || "Usuario creado correctamente");
+            toast.success(data?.message || "Usuario creado correctamente");
             handleReset();
+
+            // El usuario se guardo con confirmed = 0: abrimos el modal para
+            // ingresar el codigo enviado al correo. Si se cierra sin
+            // verificar, la cuenta queda pendiente.
+            if (data?.requiresVerification && data?.email) {
+                onRequiereVerificacion?.(data.email, data.correoEnviado !== false);
+                return;
+            }
+
             setIsOpen(false);
         },
     });

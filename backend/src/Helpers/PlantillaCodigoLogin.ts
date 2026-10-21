@@ -1,7 +1,16 @@
 const COLOR_AMARILLO = '#EEBA29';
 const COLOR_MORADO = '#42137B';
 
-export const plantillaCodigoLogin = (nombre: string, codigo: string): string => `
+type OpcionesPlantilla = {
+  mensaje?: string;
+  nota?: string;
+};
+
+export const plantillaCodigoLogin = (nombre: string, codigo: string, opciones: OpcionesPlantilla = {}): string => {
+  const mensaje = opciones.mensaje ?? 'recibiste este correo porque intentas iniciar sesion en el sistema. Ingresa el siguiente codigo para continuar:';
+  const nota = opciones.nota ?? 'Si no fuiste tu, ignora este correo. Nunca compartas este codigo con nadie.';
+
+  return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,8 +32,7 @@ export const plantillaCodigoLogin = (nombre: string, codigo: string): string => 
             <td style="padding:32px 28px;">
               <h2 style="margin:0 0 12px;color:${COLOR_MORADO};font-size:19px;text-align:center;">Codigo de verificacion</h2>
               <p style="margin:0 0 20px;color:#4b4b4b;font-size:14px;line-height:20px;text-align:center;">
-                Hola <strong>${nombre}</strong>, recibiste este correo porque intentas iniciar sesion en el sistema.
-                Ingresa el siguiente codigo para continuar:
+                Hola <strong>${nombre}</strong>, ${mensaje}
               </p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
@@ -39,7 +47,7 @@ export const plantillaCodigoLogin = (nombre: string, codigo: string): string => 
                 Este codigo caduca en <strong>5 minutos</strong>.
               </p>
               <p style="margin:0;color:#8c8c8c;font-size:12px;line-height:18px;text-align:center;">
-                Si no fuiste tu, ignora este correo. Nunca compartas este codigo con nadie.
+                ${nota}
               </p>
             </td>
           </tr>
@@ -55,3 +63,4 @@ export const plantillaCodigoLogin = (nombre: string, codigo: string): string => 
 </body>
 </html>
 `;
+};

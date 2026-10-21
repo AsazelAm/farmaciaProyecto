@@ -17,6 +17,7 @@ export const UserSchema = z.object({
   telefono: z.string().nullable(),
   email: z.string(),
   ultimoAcceso: z.string().nullable().optional(),
+  confirmed: z.number().nullable(),
   idTipoUs: z.number(),
   idSucursal: z.number(),
   nombreSucursal: z.string().optional(),

@@ -12,6 +12,7 @@ import { soloLetras, soloDigitos, telefono, email, tecladoSoloLetras, tecladoSol
 type Props = Readonly<{
     SetVer: React.Dispatch<React.SetStateAction<boolean>>;
     SendValor: updateuser | null;
+    onRequiereVerificacion?: (email: string, correoEnviado: boolean) => void;
 }>;
 
 type FormDataFields = {
@@ -30,7 +31,7 @@ const inputStyles = "w-full p-3 border-2 rounded-xl outline-none focus:ring-2 fo
 const labelStyles = "block text-sm font-semibold text-[#4A1A6E] mb-1";
 const sectionStyles = " p-5 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4";
 
-export default function UpdateUsuario({ SetVer, SendValor }: Props) {
+export default function UpdateUsuario({ SetVer, SendValor, onRequiereVerificacion }: Props) {
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const queryClient = useQueryClient();
 
@@ -81,7 +82,15 @@ export default function UpdateUsuario({ SetVer, SendValor }: Props) {
         onError: (error: Error) => toast.error(error.message),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["UsuariosAll"] });
-            toast.success(data);
+            toast.success(data?.message || "Datos actualizados");
+
+            // Si el correo cambio, el backend dejo la cuenta en confirmed = 0
+            // y envio un codigo al nuevo email: hay que abrir el modal.
+            if (data?.requiresVerification && data?.email) {
+                onRequiereVerificacion?.(data.email, data.correoEnviado !== false);
+                return;
+            }
+
             SetVer(false);
         }
     });

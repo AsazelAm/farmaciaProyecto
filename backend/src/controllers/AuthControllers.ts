@@ -21,10 +21,6 @@ export class AuthControllers {
         if (!data || !data.exists) {
             return res.status(400).json({ error: 'El Email no está registrado' });
         }
-        const VeriCon = await DataUsers.VerifedConfirmed(email);
-        if (!VeriCon.exists) {
-            return res.status(400).json({ error: 'El usuario no está verificado' });
-        }
         const Pass = await DataUsers.GetPasswd(email);
         const VerPass = Pass[0].passwd;
         const Correct = await CheckPassword(passwd, VerPass);
@@ -94,6 +90,10 @@ export class AuthControllers {
 
             await DataCodigo.LimpiarCodigo(email);
 
+            // Si la cuenta estaba pendiente (confirmed = 0), al validar el
+            // codigo del correo queda verificada y puede iniciar sesion.
+            await DataUsers.SetConfirmed(email, 1);
+
             const token2 = GenerateJwt(usuario.idUsuario);
             const IDRolArray = await DataUsers.GetIdRol(email);
             if (!IDRolArray || IDRolArray.length === 0) {
@@ -117,10 +117,6 @@ export class AuthControllers {
             const data = await DataUsers.GetEmail(email);
             if (!data || !data.exists) {
                 return res.status(400).json({ error: 'El Email no está registrado' });
-            }
-            const VeriCon = await DataUsers.VerifedConfirmed(email);
-            if (!VeriCon.exists) {
-                return res.status(400).json({ error: 'El usuario no está verificado' });
             }
 
             const codigo = GenerarCodigoLogin();

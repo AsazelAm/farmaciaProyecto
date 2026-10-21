@@ -2,6 +2,8 @@ import { Router } from "express";
 import { UserControllers } from "../controllers/UserControllers";
 import multer from "multer";
 import { body } from "express-validator";
+import { limiterOtp } from "../config/limits";
+import { handleInputErrors } from "../Middleware/validation";
 
 const router = Router()
 
@@ -41,6 +43,23 @@ router.delete('/DeleteUser/:idUsuario',
 router.put('/UpdateUser/:idUsuario',
     upload.single('img'),
     UserControllers.UpdateUserControllers
+)
+
+// Valida el codigo enviado al correo tras registrar un usuario o cambiar su email.
+router.post('/verificar-codigo',
+    limiterOtp,
+    body('email').isEmail().withMessage('El Email no es valido'),
+    body('codigo').isLength({ min: 6, max: 6 }).isNumeric().withMessage('El codigo debe tener 6 digitos'),
+    handleInputErrors,
+    UserControllers.VerificarCodigoRegistro
+)
+
+// Reenvia el codigo de verificacion al correo del usuario.
+router.post('/reenviar-codigo',
+    limiterOtp,
+    body('email').isEmail().withMessage('El Email no es valido'),
+    handleInputErrors,
+    UserControllers.ReenviarCodigoRegistro
 )
 
 

@@ -26,7 +26,7 @@ const DataUser = {
     async UserAllModels(){
     const conection = await conectar.getConnection()
     const results = await conection.query(`
-        SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado,
+        SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado, usu.confirmed,
                sucursal.idSucursal, sucursal.nombre AS nombreSucursal,
                tipous.idTipoUs, tipous.nameRol
         FROM usuario usu
@@ -40,7 +40,7 @@ const DataUser = {
 async UserAllModelsId(idUsuario){
     const conection = await conectar.getConnection()
     const results = await conection.query(`
-        SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado,
+        SELECT usu.idUsuario, usu.ci, usu.nombre, usu.apellido, usu.img, usu.telefono, usu.email, usu.estado, usu.confirmed,
                sucursal.idSucursal, sucursal.nombre AS nombreSucursal,
                tipous.idTipoUs, tipous.nameRol
         FROM usuario usu
@@ -163,7 +163,7 @@ async UserAllModelsId(idUsuario){
                     Usuario.passwd,
                     Usuario.telefono,
                     Usuario.email,
-                    1,
+                    0,
                     Usuario.idTipoUs,
                     Usuario.idSucursal
                 ])
@@ -192,6 +192,18 @@ async UserAllModelsId(idUsuario){
         `,[id]);
         Conexion.release()
         return "Usuario Eliminado Correctamente"
+    },
+    async SetConfirmed(email: string, confirmed: number) {
+        const Conexion = await conectar.getConnection();
+        try {
+            await Conexion.query(`UPDATE usuario SET confirmed = ? WHERE email = ?;`, [confirmed, email]);
+            return true;
+        } catch (error) {
+            console.error("Error al actualizar Confirmed:", error);
+            throw new Error("Error al actualizar Confirmed");
+        } finally {
+            Conexion.release();
+        }
     },
     async UpodateUserbyId(data:UpdateAdmins){
         const Conexion  = await conectar.getConnection();
