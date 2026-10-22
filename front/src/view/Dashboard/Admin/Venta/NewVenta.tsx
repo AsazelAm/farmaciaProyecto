@@ -20,6 +20,7 @@ import {
   AddVentaApi,
   ChangeEstadoVentaApi,
   EmitirFacturaApi,
+  GetAlertaFEFOApi,
   GetLotesDisponiblesApi,
   GetDatosFacturacionClienteApi,
 } from "../../../../Api/VentaApi";
@@ -37,6 +38,7 @@ import {
   ClienteArray,
   ProductoArray,
   sucursalArray,
+  type AlertaFEFOType,
   type CreateVentaType,
   type LoteDisponibleType,
 } from "../../../../types";
@@ -91,6 +93,11 @@ export default function NewVenta() {
   );
   const [idSucursalSeleccionada, setIdSucursalSeleccionada] = useState<number | null>(null);
   const [modalFacturaAbierto, setModalFacturaAbierto] = useState(false);
+  const [alertaFEFO, setAlertaFEFO] = useState<AlertaFEFOType | null>(null);
+  const [motivoDesvio, setMotivoDesvio] = useState("");
+  const [modalDesvioAbierto, setModalDesvioAbierto] = useState(false);
+  const datosCobroRef = useRef<IDatosCobro | null>(null);
+  const [desvioFEFO, setDesvioFEFO] = useState<{ permitir: boolean; motivo: string } | null>(null);
 
   // ── Buscador de cliente (reemplaza el <select> por un autocompletado) ──
   // Texto que el cajero está escribiendo mientras busca un cliente.
@@ -299,18 +306,36 @@ export default function NewVenta() {
   // carrito). Si el nuevo lote tiene menos stock que la cantidad actual,
   // la recortamos para no vender más de lo disponible.
   function cambiarLote(idProducto: number, idLoteAnterior: number, idLoteNuevo: number) {
+    const itemActual = carrito.find((i) => i.idProducto === idProducto && i.idLote === idLoteAnterior);
+    const loteNuevo = itemActual?.lotesDisponibles.find((l) => l.idLote === idLoteNuevo);
+
     setCarrito((prev) =>
       prev.map((item) => {
         if (item.idProducto !== idProducto || item.idLote !== idLoteAnterior) return item;
-        const loteNuevo = item.lotesDisponibles.find((l) => l.idLote === idLoteNuevo);
-        if (!loteNuevo) return item;
+        const lote = item.lotesDisponibles.find((l) => l.idLote === idLoteNuevo);
+        if (!lote) return item;
         return {
           ...item,
-          idLote: loteNuevo.idLote,
-          cantidad: Math.min(item.cantidad, loteNuevo.stock),
+          idLote: lote.idLote,
+          cantidad: Math.min(item.cantidad, lote.stock),
         };
       })
     );
+
+    // Al cambiar de lote consultamos la alerta FEFO contra el backend para
+    // avisar en pantalla si se esta desviando la regla First-Expired First-Out.
+    if (loteNuevo) {
+      GetAlertaFEFOApi(idProducto, loteNuevo.idLote)
+        .then((data) => {
+          if (!data.cumpleFEFO) {
+            setAlertaFEFO(data);
+            setModalDesvioAbierto(true);
+          }
+        })
+        .catch(() => {
+          // Si falla la consulta no bloquear el despacho; el backend valida al registrar.
+        });
+    }
   }
 
   // El descuento nunca puede ser negativo ni superar el total bruto de esa
@@ -368,6 +393,8 @@ export default function NewVenta() {
         impuestos,
         total,
         observaciones: datosCobro.observaciones,
+        permitirDesvioFEFO: desvioFEFO?.permitir === true ? true : undefined,
+        motivoDesvioFEFO: desvioFEFO?.motivo,
         detalles: carrito.map((item) => ({
           idProducto: item.idProducto,
           idLote: item.idLote,
@@ -398,12 +425,37 @@ export default function NewVenta() {
       queryClient.invalidateQueries({ queryKey: ["ventasEstadisticas"] });
       queryClient.invalidateQueries({ queryKey: ["lotesDisponibles"] });
       limpiarVenta();
+      setDesvioFEFO(null);
       setModalFacturaAbierto(false);
+      setModalDesvioAbierto(false);
     },
     onError: (error: any) => {
+      // El backend responde con `alertaFEFO` cuando la regla FEFO se incumple.
+      // Abrimos el modal de desvio con el detalle para que el cajero autorice
+      // o cancele el despacho del lote seleccionado.
+      if (error?.alertaFEFO) {
+        setAlertaFEFO(error.alertaFEFO);
+        setMotivoDesvio("");
+        setModalDesvioAbierto(true);
+        return;
+      }
       toast.error(error?.message || "Error al registrar la venta");
     },
   });
+
+  // Confirma el desvio de FEFO con la justificacion registrada por el cajero.
+  // Reintenta la misma operacion de cobro enviando `permitirDesvioFEFO = true`.
+  function confirmarDesvioFEFO() {
+    const dato = datosCobroRef.current;
+    if (!dato) return;
+    setDesvioFEFO({
+      permitir: true,
+      motivo: motivoDesvio.trim() || "Desvio autorizado por el cajero",
+    });
+    setAlertaFEFO(null);
+    setModalDesvioAbierto(false);
+    registrarVentaMutation.mutate(dato);
+  }
 
   return (
     <div className="min-h-screen bg-violet-50/40 p-4 lg:p-6">
@@ -810,6 +862,70 @@ export default function NewVenta() {
         onClose={() => setModalFacturaAbierto(false)}
         onConfirm={(datos) => registrarVentaMutation.mutate(datos)}
       />
+
+      {/* Modal de autorizacion de desvio FEFO */}
+      {modalDesvioAbierto && alertaFEFO && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
+            <div className="mb-3 flex items-start gap-2">
+              <ShieldAlert className="h-5 w-5 text-rose-500 shrink-0" />
+              <div>
+                <h3 className="text-sm font-bold text-gray-800">ALERTA FEFO</h3>
+                <p className="mt-1 text-xs text-gray-600">{alertaFEFO.mensaje}</p>
+              </div>
+            </div>
+
+            {alertaFEFO.idLoteFEFO !== null && alertaFEFO.idLoteFEFO !== undefined ? (
+              <div className="mb-3 rounded-xl bg-violet-50 p-3 text-xs text-violet-800">
+                <p>
+                  Lote actual:{" "}
+                  <span className="font-bold">{alertaFEFO.numeroLote}</span> (vence en {alertaFEFO.diasRestantes} días)
+                </p>
+                <p>
+                  Debería despacharse primero:{" "}
+                  <span className="font-bold">{alertaFEFO.numeroLoteFEFO}</span> (vence en {alertaFEFO.diasRestantesFEFO} días)
+                </p>
+              </div>
+            ) : (
+              <div className="mb-3 rounded-xl bg-violet-50 p-3 text-xs text-violet-800">
+                <p>
+                  Lote actual: <span className="font-bold">{alertaFEFO.numeroLote}</span> (vence en {alertaFEFO.diasRestantes} días)
+                </p>
+              </div>
+            )}
+
+            <label className="mb-1 block text-xs font-semibold text-gray-600">Motivo del desvio</label>
+            <textarea
+              value={motivoDesvio}
+              onChange={(e) => setMotivoDesvio(e.target.value)}
+              rows={3}
+              placeholder="Ej: se despacha del lote alternativo por disponibilidad..."
+              className="mb-4 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+            />
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={confirmarDesvioFEFO}
+                disabled={registrarVentaMutation.isPending}
+                className="flex-1 rounded-xl bg-amber-500 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+              >
+                Confirmar desvio y cobrar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAlertaFEFO(null);
+                  setModalDesvioAbierto(false);
+                }}
+                className="flex-1 rounded-xl border border-violet-200 py-2 text-sm font-semibold text-violet-600 hover:bg-violet-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

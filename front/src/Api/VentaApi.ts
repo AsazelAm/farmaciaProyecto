@@ -6,6 +6,7 @@ import {
   VentaEstadisticasSchema,
   LotesDisponiblesSchema,
   DatosFacturacionClienteSchema,
+  AlertaFEFOSchema,
   type CreateVentaType,
   type UpdateVentaType,
   type IVentaFiltros,
@@ -71,7 +72,10 @@ export async function AddVentaApi(formData: CreateVentaType) {
     return data; // Devuelve { message, idVenta }
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || 'Error al crear la venta');
+      const axiosError = error as any;
+      const errorFinal = new Error(axiosError.response.data?.error || 'Error al crear la venta') as Error & { alertaFEFO?: any };
+      errorFinal.alertaFEFO = axiosError.response.data?.alertaFEFO;
+      throw errorFinal;
     }
     throw error;
   }
@@ -84,7 +88,10 @@ export async function UpdateVentaApi(idVenta: number, formData: UpdateVentaType)
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || 'Error al actualizar la venta');
+      const axiosError = error as any;
+      const errorFinal = new Error(axiosError.response.data?.error || 'Error al actualizar la venta') as Error & { alertaFEFO?: any };
+      errorFinal.alertaFEFO = axiosError.response.data?.alertaFEFO;
+      throw errorFinal;
     }
     throw error;
   }
@@ -150,6 +157,25 @@ export async function GetDatosFacturacionClienteApi(idCliente: number) {
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error || 'Error al obtener los datos de facturación del cliente');
+    }
+    throw error;
+  }
+}
+
+// ── GET: Alerta FEFO de un lote elegido en el POS ────────────────────────────
+// Indica si el lote seleccionado cumple la regla "primero en expirar, primero
+// en salir" o si existe un lote más próximo que debería despacharse antes.
+export async function GetAlertaFEFOApi(idProducto: number, idLote: number) {
+  try {
+    const { data } = await api.get(`/Venta/GetAlertaFEFO/${idProducto}/${idLote}`);
+    const response = AlertaFEFOSchema.safeParse(data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error("Error en la validación de la alerta FEFO");
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'Error al obtener la alerta FEFO del lote');
     }
     throw error;
   }

@@ -2328,6 +2328,9 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `confirmed` tinyint(1) DEFAULT 0,
   `idTipoUs` int(11) NOT NULL,
   `idSucursal` int(11) NOT NULL,
+  `codigoVerificacion` varchar(6) DEFAULT NULL,
+  `codigoExpiracion` datetime DEFAULT NULL,
+  `codigoIntentos` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idUsuario`) USING BTREE,
   UNIQUE KEY `uq_usuario_ci` (`ci`),
   UNIQUE KEY `uq_usuario_email` (`email`) USING BTREE,
@@ -2335,20 +2338,21 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   KEY `fk_usuario_sucursal` (`idSucursal`) USING BTREE,
   CONSTRAINT `fk_usuario_id_tipo_us` FOREIGN KEY (`idTipoUs`) REFERENCES `tipous` (`idTipoUs`),
   CONSTRAINT `fk_usuario_sucursal` FOREIGN KEY (`idSucursal`) REFERENCES `sucursal` (`idSucursal`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.usuario: ~10 rows (aproximadamente)
-INSERT INTO `usuario` (`idUsuario`, `ci`, `nombre`, `apellido`, `img`, `passwd`, `telefono`, `email`, `estado`, `ultimoAcceso`, `fechaCreacion`, `fechaModificacion`, `confirmed`, `idTipoUs`, `idSucursal`) VALUES
-	(1, '12121212', 'Guillermo', 'Mullisaca', 'Uploads\\img\\Usuario\\1-2026-10-1621-42-37\\1-2026-10-1621-42-37.webp', '$2b$10$mJ1c0O.aw1r4SznXKtZbjemWmvu6dq0kQ1xNo7OFW7dH7yo4lJFzC', '41491031', 'guillermoAdmin@gmail.com', 1, '2026-09-04 20:57:51', '2026-03-15 23:37:10', '2026-10-16 21:48:13', 1, 1, 1),
-	(2, '136125412', 'JoseEDITADO', 'ErnestoEDITADO', 'Uploads\\img\\Usuario\\2-2026-04-1315-44-53\\2-2026-04-1315-44-53.webp', '$2b$10$e8jYonwAUdCH64vtj88y9.c04yao3lR.w034M1qbaF9EeuvMOgxBG', '73189038', 'JoseAdmin@gmail.com', 1, NULL, '2026-04-13 15:44:53', '2026-05-20 23:04:49', 1, 1, 1),
-	(3, '1370981', 'P1', 'P11', NULL, '$2b$10$xntPLRs5dXNPaIGzYXv0Yu/7IhlO6Zn.wzUqZSOdHydpFGt5L.oru', '12345', 'guillermoFarma@gmail.com', 0, NULL, '2026-04-13 15:49:43', '2026-04-13 16:10:17', 1, 2, 1),
-	(4, '13612541', 'Asaf Guillermo', 'Ajoruro Mullisaca', 'Uploads\\img\\Usuario\\4-2026-04-1315-58-08\\4-2026-04-1315-58-08.webp', '$2b$10$rps2lZW8ZSzckU1xWZ9Ax.ZwHcooVSNxvTe25xk5xej732LNHacRu', '73189028', 'asafAdmin@gmail.com', 1, NULL, '2026-04-13 15:58:08', '2026-04-13 15:58:13', 1, 1, 1),
-	(5, '12121211', 'ASDFA', 'ASDFD', NULL, '$2b$10$CnL4Yw4FyXq1LAlLc4TPQ.LxlkejSOYLWfNoS/YVs4aaC4dOjoP2i', '2425241', 'XAAdmin@gmail.com', 0, NULL, '2026-04-13 16:28:40', '2026-04-13 17:46:21', 1, 3, 1),
-	(6, '13234119', 'Manuel', 'Arauz', 'Uploads\\img\\Usuario\\6-2026-04-1317-30-55\\6-2026-04-1317-30-55.webp', '$2b$10$V9FGsXRezFsslgHSZ7RkZe71e6z6164UELX09bkSe3EglMISYUIzG', '67808751', 'manuelBodeguero@gmail.com', 1, NULL, '2026-04-13 17:30:55', '2026-10-16 21:14:11', 1, 3, 1),
-	(7, '9782746', 'Brayan Josue', 'Mamani Morales', 'Uploads\\img\\Usuario\\7-2026-04-1317-34-27\\7-2026-04-1317-34-27.webp', '$2b$10$xxy.EG4fMMRGWy2wnmVN2u6QZxm5Q7MDZFfFLCqHFlDcvl7rlCPf.', '', 'brayanFarmaceu@gmail.com', 0, NULL, '2026-04-13 17:34:27', '2026-04-14 01:56:31', 1, 1, 1),
-	(8, '9876242', 'Manuel', 'Arauza', 'Uploads\\img\\Usuario\\8-2026-04-1318-33-15\\8-2026-04-1318-33-15.webp', '$2b$10$nXCvVfAgIOaalGBmtYYgo.86PTCcjS1OMyBs0N399YMoA/r6rB8Ry', '73180745', 'manuleFarma@gmail.com', 0, NULL, '2026-04-13 17:45:42', '2026-04-26 22:28:22', 1, 3, 1),
-	(9, '13414114', 'Jhosmar', 'Angulo', 'Uploads\\img\\Usuario\\9-2026-04-1403-04-45\\9-2026-04-1403-04-45.webp', '$2b$10$PXDsPuqyqz4V2ZoK.cslqelEyxk5F41KSi4ot1CPbrrhKFs6TmLgW', '73180745', 'jhosfarmaceutico@gmail.com', 1, NULL, '2026-04-14 03:04:46', '2026-10-16 21:14:50', 1, 2, 1),
-	(10, '13141231', 'pruebaAdmin', 'pruebaAdmin', NULL, '$2b$10$VBFpX0wLrz6QxOzesDh7feWw2uEvwQvazwmq2/mUAy1H7gZX9jL2C', '136125411', 'pruebaAdmin@gmail.com', 1, NULL, '2026-04-26 23:43:25', '2026-10-16 21:15:15', 1, 1, 1);
+-- Volcando datos para la tabla dbfarmacia.usuario: ~11 rows (aproximadamente)
+INSERT INTO `usuario` (`idUsuario`, `ci`, `nombre`, `apellido`, `img`, `passwd`, `telefono`, `email`, `estado`, `ultimoAcceso`, `fechaCreacion`, `fechaModificacion`, `confirmed`, `idTipoUs`, `idSucursal`, `codigoVerificacion`, `codigoExpiracion`, `codigoIntentos`) VALUES
+	(1, '12121212', 'Guillermo', 'Mullisaca', 'Uploads\\img\\Usuario\\1-2026-10-1621-42-37\\1-2026-10-1621-42-37.webp', '$2b$10$mJ1c0O.aw1r4SznXKtZbjemWmvu6dq0kQ1xNo7OFW7dH7yo4lJFzC', '41491031', 'asafajoruro597@gmail.com', 1, '2026-09-04 20:57:51', '2026-03-15 23:37:10', '2026-10-20 21:52:30', 1, 1, 1, NULL, NULL, 0),
+	(2, '136125412', 'JoseEDITADO', 'ErnestoEDITADO', 'Uploads\\img\\Usuario\\2-2026-04-1315-44-53\\2-2026-04-1315-44-53.webp', '$2b$10$e8jYonwAUdCH64vtj88y9.c04yao3lR.w034M1qbaF9EeuvMOgxBG', '73189038', 'asafajoruro@gmail.com', 1, NULL, '2026-04-13 15:44:53', '2026-10-20 20:38:07', 1, 1, 1, NULL, NULL, 0),
+	(3, '1370981', 'P1', 'P11', NULL, '$2b$10$xntPLRs5dXNPaIGzYXv0Yu/7IhlO6Zn.wzUqZSOdHydpFGt5L.oru', '12345', 'guillermoFarma@gmail.com', 0, NULL, '2026-04-13 15:49:43', '2026-04-13 16:10:17', 1, 2, 1, NULL, NULL, 0),
+	(4, '13612541', 'Asaf Guillermo', 'Ajoruro Mullisaca', 'Uploads\\img\\Usuario\\4-2026-04-1315-58-08\\4-2026-04-1315-58-08.webp', '$2b$10$rps2lZW8ZSzckU1xWZ9Ax.ZwHcooVSNxvTe25xk5xej732LNHacRu', '73189028', 'asafAdmin@gmail.com', 1, NULL, '2026-04-13 15:58:08', '2026-04-13 15:58:13', 1, 1, 1, NULL, NULL, 0),
+	(5, '12121211', 'ASDFA', 'ASDFD', NULL, '$2b$10$CnL4Yw4FyXq1LAlLc4TPQ.LxlkejSOYLWfNoS/YVs4aaC4dOjoP2i', '2425241', 'XAAdmin@gmail.com', 0, NULL, '2026-04-13 16:28:40', '2026-04-13 17:46:21', 1, 3, 1, NULL, NULL, 0),
+	(6, '13234119', 'Manuel', 'Arauz', 'Uploads\\img\\Usuario\\6-2026-04-1317-30-55\\6-2026-04-1317-30-55.webp', '$2b$10$V9FGsXRezFsslgHSZ7RkZe71e6z6164UELX09bkSe3EglMISYUIzG', '67808751', 'manuelBodeguero@gmail.com', 1, NULL, '2026-04-13 17:30:55', '2026-10-16 21:14:11', 1, 3, 1, NULL, NULL, 0),
+	(7, '9782746', 'Brayan Josue', 'Mamani Morales', 'Uploads\\img\\Usuario\\7-2026-04-1317-34-27\\7-2026-04-1317-34-27.webp', '$2b$10$xxy.EG4fMMRGWy2wnmVN2u6QZxm5Q7MDZFfFLCqHFlDcvl7rlCPf.', '', 'brayanFarmaceu@gmail.com', 0, NULL, '2026-04-13 17:34:27', '2026-04-14 01:56:31', 1, 1, 1, NULL, NULL, 0),
+	(8, '9876242', 'Manuel', 'Arauza', 'Uploads\\img\\Usuario\\8-2026-04-1318-33-15\\8-2026-04-1318-33-15.webp', '$2b$10$nXCvVfAgIOaalGBmtYYgo.86PTCcjS1OMyBs0N399YMoA/r6rB8Ry', '73180745', 'manuleFarma@gmail.com', 0, NULL, '2026-04-13 17:45:42', '2026-04-26 22:28:22', 1, 3, 1, NULL, NULL, 0),
+	(9, '13414114', 'Jhosmar', 'Angulo', 'Uploads\\img\\Usuario\\9-2026-04-1403-04-45\\9-2026-04-1403-04-45.webp', '$2b$10$PXDsPuqyqz4V2ZoK.cslqelEyxk5F41KSi4ot1CPbrrhKFs6TmLgW', '73180745', 'jhosfarmaceutico@gmail.com', 1, NULL, '2026-04-14 03:04:46', '2026-10-16 21:14:50', 1, 2, 1, NULL, NULL, 0),
+	(10, '13141231', 'Sandoval ', 'Jimenez Helaman', NULL, '$2b$10$XE5xNNDBpQwGMK4MMuMGx.S2oQ12qx1yN/wJJnz1Evq482TqYwgwS', '136125411', 'sandovaljimenezhelamanjeshuah@gmail.com', 1, NULL, '2026-04-26 23:43:25', '2026-10-20 19:57:22', 1, 1, 1, NULL, NULL, 0),
+	(14, '68911311', 'Josue Asaf', 'Ajoruro Mullisaca', NULL, '$2b$10$2dlrR82DJ8jSV6AvPGg0luKhReV4ORcVlYFXTBvK5fBJ9Er0ykAoW', '67808751', 'agajoruro2024@incos-santacruz.edu.bo', 1, NULL, '2026-10-20 21:50:22', '2026-10-20 21:50:22', 0, 1, 1, '616323', '2026-10-20 21:55:22', 0);
 
 -- Volcando estructura para tabla dbfarmacia.venta
 CREATE TABLE IF NOT EXISTS `venta` (

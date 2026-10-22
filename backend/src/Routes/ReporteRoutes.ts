@@ -37,4 +37,27 @@ router.get('/DescargarPdfCompra',
     ReporteControllers.DescargarPdfCompraC
 );
 
+//  GET: parámetros de los filtros del reporte de vencimientos
+//      (laboratorios, tipos de producto, proveedores y umbrales del semáforo)
+router.get('/GetParametrosVencimientos',
+    ReporteControllers.GetParametrosVencimientosC
+);
+
+//  GET: datos del reporte de control de vencimientos y alerta FEFO (JSON)
+//      ?diasMin=&diasMax=&idLaboratorio=&idTipoProducto=&idProveedor=
+//      &estados=activo,cuarentena&busqueda=&soloConStock=true
+router.get('/GetDatosVencimientos',
+    ReporteControllers.GetDatosVencimientosC
+);
+
+//  GET: descargar reporte de control de vencimientos en Excel (.xlsx)
+router.get('/DescargarExcelVencimientos',
+    ReporteControllers.DescargarExcelVencimientosC
+);
+
+//  GET: descargar reporte de control de vencimientos en PDF
+router.get('/DescargarPdfVencimientos',
+    ReporteControllers.DescargarPdfVencimientosC
+);
+
 export default router;

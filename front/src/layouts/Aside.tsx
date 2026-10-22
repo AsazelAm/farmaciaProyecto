@@ -103,6 +103,7 @@ export default function Aside() {
             <SubMenu label="Reportes" icon={iconuser}>
               <NavItem to="/Dashboard/Reportes" icon={iconuser} label="Ventas" />
               <NavItem to="/Dashboard/ReportesCompras" icon={iconuser} label="Compras" />
+              <NavItem to="/Dashboard/ReportesVencimientos" icon={iconuser} label="Control Vencimientos" />
             </SubMenu>
 
   

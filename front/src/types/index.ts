@@ -615,6 +615,8 @@ export const CreateVentaSchema = z.object({
   subtotal: z.number(),
   total: z.number(),
   observaciones: z.string().optional(),
+  permitirDesvioFEFO: z.boolean().optional(),
+  motivoDesvioFEFO: z.string().optional(),
   detalles: z.array(DetalleVentaInputSchema).min(1, 'Debe agregar al menos un producto'),
   idUsuario: z.number().optional(), // Opcional si el backend lo toma del token
 });
@@ -1159,3 +1161,187 @@ export const DevProveedorFiltrosSchema = z.object({
   porPagina: z.number().optional(),
 });
 export type IDevProveedorFiltros = z.infer<typeof DevProveedorFiltrosSchema>;
+
+// ========================================================================
+// TYPES: REPORTE DE CONTROL DE VENCIMIENTOS Y ALERTA FEFO
+// ========================================================================
+
+// ── Niveles del semáforo de vencimiento ─────────────────────────────────────
+export const NivelVencimientoSchema = z.enum(["vencido", "critico", "advertencia", "optimo"]);
+export type NivelVencimiento = z.infer<typeof NivelVencimientoSchema>;
+
+export const ETIQUETA_NIVEL: Record<NivelVencimiento, string> = {
+  vencido: "Vencido",
+  critico: "Crítico",
+  advertencia: "Advertencia",
+  optimo: "Óptimo",
+};
+
+// ── Producto normalizado dentro de la fila del reporte ───────────────────────
+export const VencimientoProductoSchema = z.object({
+  idProducto: z.number(),
+  codigoBarra: z.string(),
+  nombreComercial: z.string(),
+  nombreGenerico: z.string().nullable(),
+  concentracion: z.string().nullable(),
+  presentacion: z.string().nullable(),
+  viaAdministracion: z.string().nullable(),
+  requiereReceta: z.number(),
+});
+export type VencimientoProductoType = z.infer<typeof VencimientoProductoSchema>;
+
+// ── Fila del reporte: un lote con su semáforo y valor en riesgo ─────────────
+export const LoteVencimientoSchema = z.object({
+  idLote: z.number(),
+  codigo: z.string(),
+  numeroLote: z.string(),
+  stock: z.number(),
+  fechaVencimiento: z.string(),
+  fechaIngreso: z.string().nullable(),
+  fechaFabricacion: z.string().nullable(),
+  estadoLote: z.string(),
+  estadoLoteLabel: z.string(),
+  precioCompra: z.number(),
+  precioVenta: z.number(),
+  valorEnRiesgo: z.number(),
+  diasRestantes: z.number(),
+  nivel: NivelVencimientoSchema,
+  nivelLabel: z.string(),
+  accion: z.string(),
+  esFEFO: z.boolean(),
+  idLoteFEFO: z.number(),
+  requiereReceta: z.number(),
+  viaAdministracion: z.string().nullable(),
+  producto: VencimientoProductoSchema,
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  idTipoProd: z.number(),
+  tipoProducto: z.string().nullable(),
+  idProveedor: z.number(),
+  proveedor: z.string(),
+});
+export const LotesVencimientoSchema = z.array(LoteVencimientoSchema);
+export type LoteVencimientoType = z.infer<typeof LoteVencimientoSchema>;
+export type LotesVencimientoType = z.infer<typeof LotesVencimientoSchema>;
+
+// ── Resumen por nivel del semáforo ───────────────────────────────────────────
+export const VencimientoNivelResumenSchema = z.object({
+  nivel: NivelVencimientoSchema,
+  etiqueta: z.string(),
+  accion: z.string(),
+  lotes: z.number(),
+  unidades: z.number(),
+  valor: z.number(),
+});
+export const VencimientoPorNivelSchema = z.array(VencimientoNivelResumenSchema);
+export type VencimientoPorNivelType = z.infer<typeof VencimientoPorNivelSchema>;
+
+// ── Resumen por laboratorio ──────────────────────────────────────────────────
+export const VencimientoLaboratorioSchema = z.object({
+  laboratorio: z.string(),
+  lotes: z.number(),
+  unidades: z.number(),
+  valor: z.number(),
+});
+export const VencimientoPorLaboratorioSchema = z.array(VencimientoLaboratorioSchema);
+export type VencimientoPorLaboratorioType = z.infer<typeof VencimientoPorLaboratorioSchema>;
+
+// ── Control FEFO por producto ────────────────────────────────────────────────
+export const VencimientoControlFEFOSchema = z.object({
+  idProducto: z.number(),
+  producto: z.string(),
+  idLoteFEFO: z.number(),
+  codigoFEFO: z.string(),
+  numeroLoteFEFO: z.string(),
+  fechaVencimientoFEFO: z.string(),
+  diasRestantesFEFO: z.number(),
+  nivelFEFO: NivelVencimientoSchema,
+  totalLotes: z.number(),
+  stockLotesPosteriores: z.number(),
+  valorLotesPosteriores: z.number(),
+});
+export const VencimientoControlFEFOArraySchema = z.array(VencimientoControlFEFOSchema);
+export type VencimientoControlFEFOType = z.infer<typeof VencimientoControlFEFOSchema>;
+
+// ── Resumen general ──────────────────────────────────────────────────────────
+export const VencimientosResumenSchema = z.object({
+  totalLotes: z.number(),
+  totalUnidades: z.number(),
+  valorTotal: z.number(),
+  valorEnRiesgo: z.number(),
+  valorCritico: z.number(),
+  porNivel: VencimientoPorNivelSchema,
+  porLaboratorio: VencimientoPorLaboratorioSchema,
+  controlFEFO: VencimientoControlFEFOArraySchema,
+});
+export type VencimientosResumenType = z.infer<typeof VencimientosResumenSchema>;
+
+// ── Parámetros aplicados a la consulta ───────────────────────────────────────
+export const VencimientosParametrosSchema = z.object({
+  diasMin: z.number().nullable(),
+  diasMax: z.number().nullable(),
+  idLaboratorio: z.number().nullable(),
+  idTipoProducto: z.number().nullable(),
+  idProveedor: z.number().nullable(),
+  estados: z.array(z.string()),
+  busqueda: z.string().nullable(),
+  soloConStock: z.boolean(),
+  umbrales: z.object({
+    critico: z.number(),
+    advertencia: z.number(),
+  }),
+});
+export type VencimientosParametrosType = z.infer<typeof VencimientosParametrosSchema>;
+
+// ── Respuesta completa de /Reporte/GetDatosVencimientos ─────────────────────
+export const ReporteVencimientosDatosSchema = z.object({
+  parametros: VencimientosParametrosSchema,
+  lotes: LotesVencimientoSchema,
+  resumen: VencimientosResumenSchema,
+});
+export type ReporteVencimientosDatosType = z.infer<typeof ReporteVencimientosDatosSchema>;
+
+// ── Filtros que envía el frontend ────────────────────────────────────────────
+export const ReporteVencimientosFiltrosSchema = z.object({
+  diasMin: z.number().optional(),
+  diasMax: z.number().optional(),
+  idLaboratorio: z.number().optional(),
+  idTipoProducto: z.number().optional(),
+  idProveedor: z.number().optional(),
+  estados: z.array(z.string()).optional(),
+  busqueda: z.string().optional(),
+  soloConStock: z.boolean().optional(),
+});
+export type ReporteVencimientosFiltrosType = z.infer<typeof ReporteVencimientosFiltrosSchema>;
+
+// ── Catálogos para los filtros ───────────────────────────────────────────────
+export const VencimientosParametrosCatalogoSchema = z.object({
+  umbrales: z.object({
+    critico: z.number(),
+    advertencia: z.number(),
+  }),
+  laboratorios: z.array(z.object({ idLaboratorio: z.number(), nombre: z.string() })),
+  tiposProducto: z.array(z.object({ idTipoProd: z.number(), nombre: z.string() })),
+  proveedores: z.array(z.object({ idProveedor: z.number(), nombre: z.string() })),
+});
+export type VencimientosParametrosCatalogoType = z.infer<typeof VencimientosParametrosCatalogoSchema>;
+
+// ── Alerta FEFO del POS ──────────────────────────────────────────────────────
+export const AlertaFEFOSchema = z.object({
+  existe: z.boolean(),
+  cumpleFEFO: z.boolean(),
+  idLote: z.number().optional(),
+  codigo: z.string().optional(),
+  numeroLote: z.string().optional(),
+  stock: z.number().optional(),
+  fechaVencimiento: z.string().optional(),
+  diasRestantes: z.number().optional(),
+  idLoteFEFO: z.number().nullable().optional(),
+  numeroLoteFEFO: z.string().nullable().optional(),
+  fechaVencimientoFEFO: z.string().nullable().optional(),
+  diasRestantesFEFO: z.number().optional(),
+  stockLoteFEFO: z.number().optional(),
+  diasDiferencia: z.number().optional(),
+  mensaje: z.string(),
+});
+export type AlertaFEFOType = z.infer<typeof AlertaFEFOSchema>;

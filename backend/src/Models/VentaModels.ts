@@ -638,6 +638,172 @@ const DataVenta = {
         conection.release();
         return results;
     },
+
+    // ── FEFO: Lote que debe salir primero (el de vencimiento más próximo) ─────
+    async loteFEFODeProducto(idProducto: number) {
+        const conection = await conectar.getConnection();
+        try {
+            const rows = await conection.query(`
+                SELECT idLote, codigo, numeroLote, stock, fechaVencimiento,
+                       DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes
+                FROM lote
+                WHERE idProducto = ? AND estado = 'activo' AND stock > 0
+                ORDER BY fechaVencimiento ASC, idLote ASC
+                LIMIT 1
+            `, [idProducto]);
+            return (rows as any[])[0] ?? null;
+        } finally {
+            conection.release();
+        }
+    },
+
+    // ── FEFO: Alerta visual del POS para un lote seleccionado ─────────────────
+    // Compara el lote elegido con el lote FEFO del mismo producto e informa
+    // cuántos días de vencimiento se están dejando en el almacén.
+    async AlertaFEFO(idProducto: number, idLote: number) {
+        const conection = await conectar.getConnection();
+        try {
+            const [lotes] = await conection.query(`
+                SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, estado,
+                       DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes
+                FROM lote
+                WHERE idLote = ?
+            `, [idLote]);
+
+            const seleccionado = (lotes as any[])[0];
+            if (!seleccionado) {
+                return { existe: false, cumpleFEFO: true, mensaje: '' };
+            }
+
+            const [fefo] = await conection.query(`
+                SELECT idLote, codigo, numeroLote, stock, fechaVencimiento,
+                       DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes
+                FROM lote
+                WHERE idProducto = ? AND estado = 'activo' AND stock > 0
+                ORDER BY fechaVencimiento ASC, idLote ASC
+                LIMIT 1
+            `, [idProducto]);
+
+            const loteFEFO = (fefo as any[])[0] ?? null;
+
+            const diasSeleccionado = Number(seleccionado.diasRestantes ?? 0);
+            const diasFEFO = loteFEFO ? Number(loteFEFO.diasRestantes ?? 0) : diasSeleccionado;
+            const cumpleFEFO = !loteFEFO || Number(loteFEFO.idLote) === Number(seleccionado.idLote);
+
+            const diasDiferencia = diasSeleccionado - diasFEFO;
+
+            const mensaje = cumpleFEFO
+                ? `El lote ${seleccionado.numeroLote} cumple la regla FEFO: es el de vencimiento más próximo (${diasSeleccionado} días).`
+                : `ALERTA FEFO: el lote ${seleccionado.numeroLote} vence en ${diasSeleccionado} días, pero existe el lote ${loteFEFO!.numeroLote} que vence en ${diasFEFO} días (${diasDiferencia} días antes) y debe despacharse primero.`;
+
+            return {
+                existe: true,
+                cumpleFEFO,
+                idLote: Number(seleccionado.idLote),
+                codigo: seleccionado.codigo,
+                numeroLote: seleccionado.numeroLote,
+                stock: Number(seleccionado.stock ?? 0),
+                fechaVencimiento: seleccionado.fechaVencimiento,
+                diasRestantes: diasSeleccionado,
+                idLoteFEFO: loteFEFO ? Number(loteFEFO.idLote) : null,
+                numeroLoteFEFO: loteFEFO ? loteFEFO.numeroLote : null,
+                fechaVencimientoFEFO: loteFEFO ? loteFEFO.fechaVencimiento : null,
+                diasRestantesFEFO: diasFEFO,
+                stockLoteFEFO: loteFEFO ? Number(loteFEFO.stock ?? 0) : 0,
+                diasDiferencia,
+                mensaje,
+            };
+        } finally {
+            conection.release();
+        }
+    },
+
+    // ── FEFO: Validar una venta completa contra la regla First-Expired ────────
+    // Devuelve null si todo cumple FEFO; en caso contrario devuelve el primer
+    // incumplimiento detectado (para bloquear la venta o exigir justificación).
+    async ValidarFEFODetalles(detalles: { idLote: number; cantidad: number }[]) {
+        if (!detalles || detalles.length === 0) return null;
+
+        const idsLote = detalles.map((d) => Number(d.idLote)).filter((id) => id > 0);
+        if (idsLote.length === 0) return null;
+
+        const conection = await conectar.getConnection();
+        try {
+            const filas = await conection.query(`
+                SELECT l.idLote, l.idProducto, l.codigo, l.numeroLote, l.stock, l.fechaVencimiento,
+                       DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasRestantes,
+                       (SELECT l2.idLote
+                          FROM lote l2
+                         WHERE l2.idProducto = l.idProducto
+                           AND l2.estado = 'activo'
+                           AND l2.stock > 0
+                         ORDER BY l2.fechaVencimiento ASC, l2.idLote ASC LIMIT 1) AS idLoteFEFO
+                FROM lote l
+                WHERE l.idLote IN (${idsLote.map(() => '?').join(', ')})
+            `, idsLote);
+
+            const lotes = filas as any[];
+            if (lotes.length === 0) return null;
+
+            // Stock del lote FEFO de cada producto considerado en la venta.
+            const idsProducto = [...new Set(lotes.map((l) => Number(l.idProducto)))];
+            const fEFOPorProducto = new Map<number, any>();
+            for (const idProducto of idsProducto) {
+                const [res] = await conection.query(`
+                    SELECT idLote, codigo, numeroLote, stock, fechaVencimiento,
+                           DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes
+                    FROM lote
+                    WHERE idProducto = ? AND estado = 'activo' AND stock > 0
+                    ORDER BY fechaVencimiento ASC, idLote ASC
+                    LIMIT 1
+                `, [idProducto]);
+                const loteFEFO = (res as any[])[0];
+                if (loteFEFO) fEFOPorProducto.set(idProducto, loteFEFO);
+            }
+
+            // Unidades de la propia venta ya asignadas a cada lote.
+            const asignadoPorLote = new Map<number, number>();
+            detalles.forEach((d) => {
+                const id = Number(d.idLote);
+                asignadoPorLote.set(id, (asignadoPorLote.get(id) ?? 0) + Number(d.cantidad ?? 0));
+            });
+
+            for (const lote of lotes) {
+                const loteFEFO = fEFOPorProducto.get(Number(lote.idProducto));
+                if (!loteFEFO) continue; // el producto no tiene lotes FEFO disponibles
+                if (Number(loteFEFO.idLote) === Number(lote.idLote)) continue; // ya es el FEFO
+
+                // Si el lote FEFO queda sin existencias con esta misma venta,
+                // no hay desvío real (se está agotando en la misma operación).
+                const asignadoAlFEFO = asignadoPorLote.get(Number(loteFEFO.idLote)) ?? 0;
+                const restanteFEFO = Number(loteFEFO.stock ?? 0) - asignadoAlFEFO;
+                if (restanteFEFO <= 0) continue;
+
+                const diasSeleccionado = Number(lote.diasRestantes ?? 0);
+                const diasFEFO = Number(loteFEFO.diasRestantes ?? 0);
+
+                return {
+                    idLote: Number(lote.idLote),
+                    numeroLote: lote.numeroLote,
+                    codigo: lote.codigo,
+                    diasRestantes: diasSeleccionado,
+                    idLoteFEFO: Number(loteFEFO.idLote),
+                    numeroLoteFEFO: loteFEFO.numeroLote,
+                    diasRestantesFEFO: diasFEFO,
+                    stockRestanteFEFO: restanteFEFO,
+                    diasDiferencia: diasSeleccionado - diasFEFO,
+                    mensaje:
+                        `El lote ${lote.numeroLote} (vence en ${diasSeleccionado} días) no cumple la regla FEFO: ` +
+                        `el lote ${loteFEFO.numeroLote} (vence en ${diasFEFO} días) debe despacharse primero ` +
+                        `y aún tiene ${restanteFEFO} unidades disponibles.`,
+                };
+            }
+
+            return null;
+        } finally {
+            conection.release();
+        }
+    },
 };
 
 export default DataVenta;

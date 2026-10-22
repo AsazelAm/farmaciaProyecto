@@ -20,6 +20,12 @@ router.get('/GetLotesDisponibles/:idProducto',
     VentaControllers.GetLotesDisponiblesC
 );
 
+//  GET: alerta FEFO de un lote elegido en el POS (compara con el lote que
+//       vence primero). También debe ir ANTES de las rutas con /:idVenta.
+router.get('/GetAlertaFEFO/:idProducto/:idLote',
+    VentaControllers.GetAlertaFEFOC
+);
+
 //  GET: datos de facturación (NIT/razón social) usados antes por un cliente 
 router.get('/GetDatosFacturacionCliente/:idCliente',
     VentaControllers.GetDatosFacturacionClienteC
