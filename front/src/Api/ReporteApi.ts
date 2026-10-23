@@ -5,6 +5,10 @@ import {
   ReporteCompraDatosSchema,
   ReporteVencimientosDatosSchema,
   VencimientosParametrosCatalogoSchema,
+  ReporteInventarioDatosSchema,
+  InventarioParametrosCatalogoSchema,
+  ReporteDevolucionesDatosSchema,
+  DevolucionesParametrosCatalogoSchema,
 } from "../types";
 import type {
   FrecuenciaReporte,
@@ -13,6 +17,12 @@ import type {
   ReporteVencimientosDatosType,
   ReporteVencimientosFiltrosType,
   VencimientosParametrosCatalogoType,
+  ReporteInventarioDatosType,
+  ReporteInventarioFiltrosType,
+  InventarioParametrosCatalogoType,
+  ReporteDevolucionesDatosType,
+  ReporteDevolucionesFiltrosType,
+  DevolucionesParametrosCatalogoType,
 } from "../types";
 
 // Extrae el mensaje de error del backend o lanza un fallback genérico
@@ -57,6 +67,12 @@ function nombreArchivoVencimientos(ext: string): string {
   const hoy = new Date();
   const sello = `${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`;
   return `Reporte_Control_Vencimientos_FEFO_${sello}.${ext}`;
+}
+
+function nombreArchivoInventario(ext: string): string {
+  const hoy = new Date();
+  const sello = `${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`;
+  return `Reporte_Inventario_${sello}.${ext}`;
 }
 
 // ── GET: Datos del reporte de ventas (JSON) para previsualización ─────────────
@@ -229,5 +245,130 @@ export async function DescargarReporteVencimientosPdfApi(
     descargarBlob(blob, nombreArchivoVencimientos('pdf'));
   } catch (error) {
     throw mensajeError(error, "Error al descargar el reporte de vencimientos en PDF");
+  }
+}
+export async function GetParametrosInventarioApi(): Promise<InventarioParametrosCatalogoType> {
+  try {
+    const { data } = await api.get('/Reporte/GetParametrosInventario');
+    return validar(
+      InventarioParametrosCatalogoSchema,
+      data,
+      "Error en la validación de los parámetros del reporte de inventario"
+    );
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los parámetros del reporte de inventario");
+  }
+}
+
+export async function GetReporteInventarioDatosApi(
+  filtros: ReporteInventarioFiltrosType
+): Promise<ReporteInventarioDatosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetDatosInventario', { params: filtros });
+    return validar(
+      ReporteInventarioDatosSchema,
+      data,
+      "Error en la validación de los datos del reporte de inventario"
+    );
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los datos del reporte de inventario");
+  }
+}
+
+export async function DescargarReporteInventarioExcelApi(
+  filtros: ReporteInventarioFiltrosType
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarExcelInventario', {
+      params: filtros,
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoInventario('xlsx'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de inventario en Excel");
+  }
+}
+
+export async function DescargarReporteInventarioPdfApi(
+  filtros: ReporteInventarioFiltrosType
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarPdfInventario', {
+      params: filtros,
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoInventario('pdf'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de inventario en PDF");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// REPORTE DE DEVOLUCIONES DE CLIENTES Y AN�LISIS DE CAUSAS
+// ---------------------------------------------------------------------------
+
+function nombreArchivoDevoluciones(ext: string): string {
+  const hoy = new Date();
+  const sello = `${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`;
+  return `Reporte_Devoluciones_Clientes_${sello}.${ext}`;
+}
+
+export async function GetParametrosDevolucionesApi(): Promise<DevolucionesParametrosCatalogoType> {
+  try {
+    const { data } = await api.get('/Reporte/GetParametrosDevoluciones');
+    return validar(
+      DevolucionesParametrosCatalogoSchema,
+      data,
+      "Error en la validaci�n de los par�metros del reporte de devoluciones"
+    );
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los par�metros del reporte de devoluciones");
+  }
+}
+
+export async function GetReporteDevolucionesDatosApi(
+  filtros: ReporteDevolucionesFiltrosType
+): Promise<ReporteDevolucionesDatosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetDatosDevoluciones', { params: filtros });
+    return validar(
+      ReporteDevolucionesDatosSchema,
+      data,
+      "Error en la validaci�n de los datos del reporte de devoluciones"
+    );
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los datos del reporte de devoluciones");
+  }
+}
+
+export async function DescargarReporteDevolucionesExcelApi(
+  filtros: ReporteDevolucionesFiltrosType
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarExcelDevoluciones', {
+      params: filtros,
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoDevoluciones('xlsx'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de devoluciones en Excel");
+  }
+}
+
+export async function DescargarReporteDevolucionesPdfApi(
+  filtros: ReporteDevolucionesFiltrosType
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarPdfDevoluciones', {
+      params: filtros,
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoDevoluciones('pdf'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de devoluciones en PDF");
   }
 }

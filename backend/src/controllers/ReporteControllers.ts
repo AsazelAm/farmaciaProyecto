@@ -8,7 +8,17 @@ import DataVencimientos, {
     UMBRAL_ADVERTENCIA_DIAS,
     UMBRAL_CRITICO_DIAS,
 } from '../Models/ReporteVencimientosModels';
-
+import DataInventario from '../Models/ReporteInventarioModels';
+import DataDevoluciones, {
+    ESTADOS_DEVOLUCION,
+    IFiltrosDevoluciones,
+    MOTIVOS_DEVOLUCION,
+} from '../Models/ReporteDevolucionesModels';
+import DataDevolucionesProveedor, {
+    ESTADOS_NOTA_CREDITO,
+    IFiltrosDevolucionesProveedor,
+    MOTIVOS_DEVOLUCION_PROVEEDOR,
+} from '../Models/ReporteDevolucionesProveedorModels';
 const FRECUENCIAS_VALIDAS: FrecuenciaReporte[] = ['diario', 'semanal', 'mensual'];
 
 const TITULO_HUMANO: Record<FrecuenciaReporte, string> = {
@@ -1105,6 +1115,958 @@ async function generarPdfVencimientos(datos: any): Promise<Buffer> {
     }
 }
 
+// ─── Generador EXCEL del reporte de inventario ───────────────────────────────
+async function generarExcelInventario(datos: any): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema de Farmacia';
+    workbook.created = new Date();
+
+    const hojaResumen = workbook.addWorksheet('Resumen');
+    hojaResumen.columns = [
+        { header: 'Tipo de producto / Laboratorio', key: 'nombre', width: 30 },
+        { header: 'Lotes', key: 'lotes', width: 10 },
+        { header: 'Unidades', key: 'unidades', width: 12 },
+        { header: 'Valor (Bs)', key: 'valor', width: 16 },
+    ];
+    hojaResumen.mergeCells('A1:D1');
+    hojaResumen.getCell('A1').value = 'Reporte de Inventario';
+    hojaResumen.getCell('A1').font = { bold: true, size: 16 };
+    hojaResumen.getCell('A1').alignment = { horizontal: 'center' };
+
+    const hojaDetalle = workbook.addWorksheet('Detalle de Inventario');
+    hojaDetalle.columns = [
+        { header: 'Código', key: 'codigo', width: 14 },
+        { header: 'N° Lote', key: 'numeroLote', width: 14 },
+        { header: 'Producto', key: 'producto', width: 28 },
+        { header: 'Laboratorio', key: 'laboratorio', width: 24 },
+        { header: 'Tipo de producto', key: 'tipoProducto', width: 18 },
+        { header: 'Stock', key: 'stock', width: 9 },
+        { header: 'Costo unitario', key: 'costoUnitario', width: 13 },
+        { header: 'Subtotal', key: 'subtotal', width: 13 },
+        { header: 'Vencimiento', key: 'fechaVencimiento', width: 14 },
+    ];
+    hojaDetalle.mergeCells('A1:I1');
+    hojaDetalle.getCell('A1').value = 'Detalle de Inventario';
+    hojaDetalle.getCell('A1').font = { bold: true, size: 16 };
+    hojaDetalle.getCell('A1').alignment = { horizontal: 'center' };
+
+    const headerRow = hojaDetalle.getRow(3);
+    headerRow.height = 20;
+    headerRow.eachCell((c) => {
+        c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+        c.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    datos.lotes.forEach((l: any, i: number) => {
+        const fila = hojaDetalle.getRow(4 + i);
+        fila.values = [
+            l.codigo,
+            l.numeroLote,
+            l.producto?.nombreComercial ?? l.producto?.nombreGenerico ?? '',
+            l.laboratorio,
+            l.tipoProducto,
+            l.stock,
+            l.costoUnitario,
+            l.subtotal,
+            l.fechaVencimiento,
+        ];
+    });
+
+    return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
+}
+
+function generarHtmlInventario(datos: any): string {
+    const filas = datos.lotes.map((l: any) => `
+        <tr>
+            <td>${escapeHtml(l.codigo)}</td>
+            <td>${escapeHtml(l.numeroLote)}</td>
+            <td>${escapeHtml(l.producto?.nombreComercial ?? '')}</td>
+            <td>${escapeHtml(l.laboratorio ?? '')}</td>
+            <td>${escapeHtml(l.tipoProducto ?? '')}</td>
+            <td class="num">${l.stock}</td>
+            <td class="num">${formatoMoneda(l.costoUnitario)}</td>
+            <td class="num">${formatoMoneda(l.subtotal)}</td>
+            <td>${escapeHtml(l.fechaVencimiento ?? '')}</td>
+        </tr>`).join('');
+    return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+        *{box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;color:#1f2937;font-size:11px;margin:0;padding:0}
+        .header{border-bottom:3px solid #2563eb;padding-bottom:10px;margin-bottom:16px}
+        .header h1{margin:0;font-size:19px;color:#1d4ed8}
+        table{width:100%;border-collapse:collapse}
+        th{background:#2563eb;color:#fff;text-align:left;padding:5px 7px;font-size:9.5px}
+        td{padding:4px 7px;border-bottom:1px solid #e5e7eb}
+        tr:nth-child(even) td{background:#f9fafb}
+        .num{text-align:right;font-variant-numeric:tabular-nums}
+        .footer{margin-top:20px;color:#9ca3af;font-size:9.5px;text-align:center}
+    </style></head><body>
+        <div class="header"><h1>Reporte de Inventario</h1><p>Sistema de Farmacia</p></div>
+        <table><thead><tr><th>Código</th><th>N° Lote</th><th>Producto</th><th>Laboratorio</th><th>Tipo de producto</th><th class="num">Stock</th><th class="num">Costo</th><th class="num">Subtotal</th><th>Vencimiento</th></tr></thead><tbody>${filas}</tbody></table>
+        <div class="footer">Documento generado automáticamente por el sistema de farmacia.</div>
+    </body></html>`;
+}
+
+async function generarPdfInventario(datos: any): Promise<Buffer> {
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    try {
+        const page = await browser.newPage();
+        await page.setContent(generarHtmlInventario(datos), { waitUntil: 'load' });
+        const pdf = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', bottom: '30px', left: '25px', right: '25px' },
+        });
+        return Buffer.from(pdf);
+    } finally {
+        await browser.close();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORTE DE DEVOLUCIONES DE CLIENTES Y ANÁLISIS DE CAUSAS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function fechaQuery(valor: any): string | null {
+    return typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor.trim()) ? valor.trim() : null;
+}
+
+function filtrosDevoluciones(req: Request): IFiltrosDevoluciones {
+    const q = req.query;
+    const numero = (valor: any): number | null => {
+        if (valor === undefined || valor === null || valor === '') return null;
+        const n = Number(valor);
+        return Number.isFinite(n) ? Math.trunc(n) : null;
+    };
+    const id = (valor: any): number | null => {
+        const n = numero(valor);
+        return n !== null && n > 0 ? n : null;
+    };
+    const texto = (valor: any): string | null =>
+        typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : null;
+
+    return {
+        fechaInicio: fechaQuery(q.fechaInicio),
+        fechaFin: fechaQuery(q.fechaFin),
+        motivo: texto(q.motivo),
+        estado: texto(q.estado),
+        idUsuario: id(q.idUsuario),
+        idCliente: id(q.idCliente),
+        idLaboratorio: id(q.idLaboratorio),
+        idTipoProducto: id(q.idTipoProducto),
+        producto: texto(q.producto),
+        cliente: texto(q.cliente),
+        busqueda: texto(q.busqueda),
+    };
+}
+
+function descripcionFiltrosDevoluciones(parametros: any): string {
+    const partes: string[] = [];
+    partes.push(
+        parametros.fechaInicio || parametros.fechaFin
+            ? `Periodo: ${parametros.fechaInicio ? formatearFecha(parametros.fechaInicio) : 'inicio'} al ${parametros.fechaFin ? formatearFecha(parametros.fechaFin) : 'hoy'}`
+            : 'Periodo: todos los registros',
+    );
+    if (parametros.motivo) partes.push(`Motivo: ${MOTIVOS_DEVOLUCION[parametros.motivo as keyof typeof MOTIVOS_DEVOLUCION] ?? parametros.motivo}`);
+    if (parametros.estado) partes.push(`Estado: ${ESTADOS_DEVOLUCION[parametros.estado] ?? parametros.estado}`);
+    if (parametros.cliente) partes.push(`Cliente: "${parametros.cliente}"`);
+    if (parametros.producto) partes.push(`Producto: "${parametros.producto}"`);
+    if (parametros.busqueda) partes.push(`Búsqueda: "${parametros.busqueda}"`);
+    return partes.join('  |  ');
+}
+
+const COLOR_DESTINO: Record<string, { fondo: string; texto: string }> = {
+    reingreso_stock: { fondo: 'FFD1FAE5', texto: 'FF047857' },
+    cuarentena: { fondo: 'FFFEF3C7', texto: 'FFB45309' },
+    merma: { fondo: 'FFFEE2E2', texto: 'FFB91C1C' },
+    sin_definir: { fondo: 'FFF3F4F6', texto: 'FF6B7280' },
+};
+
+// ─── Generador EXCEL del reporte de devoluciones ───────────────────────────
+async function generarExcelDevoluciones(datos: any): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema de Farmacia';
+    workbook.created = new Date();
+
+    const estiloTitulo = (hoja: ExcelJS.Worksheet, rango: string, titulo: string) => {
+        hoja.mergeCells(rango);
+        const celda = hoja.getCell(rango.split(':')[0]);
+        celda.value = titulo;
+        celda.font = { bold: true, size: 16, color: { argb: 'FF1D4ED8' } };
+        celda.alignment = { horizontal: 'center', vertical: 'middle' };
+    };
+    const estiloSubtitulo = (hoja: ExcelJS.Worksheet, rango: string, texto: string) => {
+        hoja.mergeCells(rango);
+        const celda = hoja.getCell(rango.split(':')[0]);
+        celda.value = texto;
+        celda.font = { italic: true, size: 10, color: { argb: 'FF6B7280' } };
+        celda.alignment = { horizontal: 'center', vertical: 'middle' };
+    };
+    const estiloHeader = (fila: ExcelJS.Row) => {
+        fila.height = 22;
+        fila.eachCell((celda) => {
+            celda.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+            celda.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            celda.border = { bottom: { style: 'thin', color: { argb: 'FFB0B0B0' } } };
+        });
+    };
+    const bordeFila = (fila: ExcelJS.Row) => {
+        fila.eachCell((celda) => {
+            celda.border = { bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } } };
+        });
+    };
+
+    // ── Hoja 1: Resumen ───────────────────────────────────────────────────
+    const hojaResumen = workbook.addWorksheet('Resumen');
+    hojaResumen.columns = [
+        { header: 'Indicador', key: 'indicador', width: 46 },
+        { header: 'Valor', key: 'valor', width: 20 },
+    ];
+    estiloTitulo(hojaResumen, 'A1:B1', 'Reporte de Devoluciones de Clientes y Análisis de Causas');
+    estiloSubtitulo(hojaResumen, 'A2:B2', `Generado: ${fechaHoy()}  |  ${descripcionFiltrosDevoluciones(datos.parametros)}`);
+
+    hojaResumen.getRow(4).values = ['Indicador', 'Valor'];
+    estiloHeader(hojaResumen.getRow(4));
+    const kpis: [string, string | number][] = [
+        ['Total de devoluciones', datos.resumen.totalDevoluciones],
+        ['Líneas de detalle', datos.resumen.totalLineas],
+        ['Unidades devueltas', datos.resumen.totalUnidades],
+        ['Monto total devuelto (Bs)', datos.resumen.montoTotalDevuelto],
+        ['Monto promedio por devolución (Bs)', datos.resumen.montoPromedio],
+    ];
+    kpis.forEach(([label, valor], i) => {
+        const fila = hojaResumen.getRow(5 + i);
+        fila.getCell(1).value = label;
+        fila.getCell(2).value = valor;
+        fila.getCell(1).font = { bold: true };
+        fila.getCell(2).numFmt = typeof valor === 'number' ? '#,##0.00' : 'General';
+        fila.getCell(2).alignment = { horizontal: 'right' };
+        bordeFila(fila);
+    });
+
+    // Sección genérica de tabla resumen
+    let cursor = 12;
+    const seccion = (
+        titulo: string,
+        encabezados: string[],
+        filas: (string | number)[][],
+        formatos: number[] = [],
+    ) => {
+        hojaResumen.mergeCells(`A${cursor}:D${cursor}`);
+        const celda = hojaResumen.getCell(`A${cursor}`);
+        celda.value = titulo;
+        celda.font = { bold: true, size: 13, color: { argb: 'FF1D4ED8' } };
+        cursor += 1;
+        const header = hojaResumen.getRow(cursor);
+        header.values = encabezados;
+        estiloHeader(header);
+        cursor += 1;
+        filas.forEach((valores) => {
+            const fila = hojaResumen.getRow(cursor);
+            valores.forEach((valor, idx) => {
+                const c = fila.getCell(idx + 1);
+                c.value = valor;
+                if (formatos.includes(idx + 1) && typeof valor === 'number') c.numFmt = '#,##0.00';
+                if (idx >= 1) c.alignment = { horizontal: 'right' };
+            });
+            bordeFila(fila);
+            cursor += 1;
+        });
+        cursor += 1;
+    };
+
+    seccion(
+        'Devoluciones por motivo',
+        ['Motivo', 'Devoluciones', 'Unidades', 'Monto (Bs)'],
+        datos.resumen.porMotivo.map((m: any) => [m.etiqueta, m.devoluciones, m.unidades, m.monto]),
+        [4],
+    );
+    seccion(
+        'Devoluciones por destino',
+        ['Destino', 'Devoluciones', 'Unidades', 'Monto (Bs)'],
+        datos.resumen.porDestino.map((d: any) => [d.etiqueta, d.devoluciones, d.unidades, d.monto]),
+        [4],
+    );
+    seccion(
+        'Top productos devueltos',
+        ['Producto', 'Unidades', 'Monto (Bs)'],
+        datos.resumen.topProductos.map((p: any) => [p.producto, p.unidades, p.monto]),
+        [3],
+    );
+    seccion(
+        'Top usuarios / cajeros',
+        ['Usuario', 'Devoluciones', 'Unidades', 'Monto (Bs)'],
+        datos.resumen.topUsuarios.map((u: any) => [u.usuario, u.devoluciones, u.unidades, u.monto]),
+        [4],
+    );
+    seccion(
+        'Devoluciones por laboratorio',
+        ['Laboratorio', 'Unidades', 'Monto (Bs)'],
+        datos.resumen.porLaboratorio.map((l: any) => [l.laboratorio, l.unidades, l.monto]),
+        [3],
+    );
+
+    // ── Hoja 2: Detalle ───────────────────────────────────────────────────
+    const hojaDetalle = workbook.addWorksheet('Detalle de Devoluciones');
+    hojaDetalle.columns = [
+        { header: 'N° devolución', key: 'numeroDevolucion', width: 15 },
+        { header: 'Fecha', key: 'fechaCreacion', width: 18 },
+        { header: 'N° venta', key: 'idVenta', width: 10 },
+        { header: 'N° factura', key: 'numeroFactura', width: 14 },
+        { header: 'Cliente', key: 'cliente', width: 28 },
+        { header: 'CI / NIT', key: 'clienteCi', width: 14 },
+        { header: 'Producto', key: 'nombreComercial', width: 28 },
+        { header: 'Genérico', key: 'nombreGenerico', width: 22 },
+        { header: 'Concentración', key: 'concentracion', width: 15 },
+        { header: 'Laboratorio', key: 'laboratorio', width: 22 },
+        { header: 'Tipo de producto', key: 'tipoProducto', width: 18 },
+        { header: 'Lote', key: 'numeroLote', width: 14 },
+        { header: 'Vencimiento', key: 'fechaVencimiento', width: 14 },
+        { header: 'Cantidad', key: 'cantidad', width: 10 },
+        { header: 'Motivo', key: 'motivoLabel', width: 22 },
+        { header: 'Destino', key: 'destinoLabel', width: 18 },
+        { header: 'Monto devuelto (Bs)', key: 'montoDevuelto', width: 17 },
+        { header: 'Usuario', key: 'usuario', width: 24 },
+        { header: 'Cajero venta', key: 'cajero', width: 24 },
+        { header: 'Estado', key: 'estadoLabel', width: 13 },
+    ];
+    estiloTitulo(hojaDetalle, 'A1:T1', 'Detalle de Devoluciones de Clientes');
+    estiloSubtitulo(hojaDetalle, 'A2:T2', `Generado: ${fechaHoy()}  |  ${descripcionFiltrosDevoluciones(datos.parametros)}`);
+    estiloHeader(hojaDetalle.getRow(4));
+    hojaDetalle.views = [{ state: 'frozen', ySplit: 4 }];
+
+    datos.detalles.forEach((d: any, i: number) => {
+        const fila = hojaDetalle.getRow(5 + i);
+        fila.values = [
+            d.numeroDevolucion,
+            formatearFechaHora(d.fechaCreacion),
+            d.idVenta,
+            d.numeroFactura ?? '',
+            d.cliente,
+            d.clienteCi ?? '',
+            d.nombreComercial,
+            d.nombreGenerico ?? '',
+            d.concentracion ?? '',
+            d.laboratorio,
+            d.tipoProducto ?? '',
+            d.numeroLote,
+            d.fechaVencimiento,
+            d.cantidad,
+            d.motivoLabel,
+            d.destinoLabel,
+            d.montoDevuelto,
+            d.usuario,
+            d.cajero ?? '',
+            d.estadoLabel,
+        ];
+        bordeFila(fila);
+        [3, 14, 17].forEach((col) => { fila.getCell(col).alignment = { horizontal: 'right' }; });
+        fila.getCell(17).numFmt = '#,##0.00';
+
+        const color = COLOR_DESTINO[d.destino] ?? COLOR_DESTINO.sin_definir;
+        const celdaDestino = fila.getCell(16);
+        celdaDestino.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color.fondo } };
+        celdaDestino.font = { bold: true, color: { argb: color.texto } };
+    });
+
+    hojaDetalle.autoFilter = {
+        from: { row: 4, column: 1 },
+        to: { row: 4 + datos.detalles.length, column: 20 },
+    };
+
+    return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
+}
+
+// ─── Generador HTML + PDF del reporte de devoluciones ──────────────────────
+function generarHtmlDevoluciones(datos: any): string {
+    const colorDestinoHtml: Record<string, { fondo: string; texto: string }> = {
+        reingreso_stock: { fondo: '#d1fae5', texto: '#047857' },
+        cuarentena: { fondo: '#fef3c7', texto: '#b45309' },
+        merma: { fondo: '#fee2e2', texto: '#b91c1c' },
+        sin_definir: { fondo: '#f3f4f6', texto: '#6b7280' },
+    };
+
+    const filasMotivo = datos.resumen.porMotivo
+        .map(
+            (m: any) => `
+            <tr>
+                <td>${escapeHtml(m.etiqueta)}</td>
+                <td class="num">${m.devoluciones}</td>
+                <td class="num">${m.unidades}</td>
+                <td class="num">${formatoMoneda(m.monto)}</td>
+            </tr>`,
+        )
+        .join('');
+
+    const filasDestino = datos.resumen.porDestino
+        .map((d: any) => {
+            const c = colorDestinoHtml[d.destino] ?? colorDestinoHtml.sin_definir;
+            return `
+            <tr>
+                <td style="background:${c.fondo}; color:${c.texto}; font-weight:bold;">${escapeHtml(d.etiqueta)}</td>
+                <td class="num">${d.devoluciones}</td>
+                <td class="num">${d.unidades}</td>
+                <td class="num">${formatoMoneda(d.monto)}</td>
+            </tr>`;
+        })
+        .join('');
+
+    const filasProducto = datos.resumen.topProductos
+        .map(
+            (p: any) => `
+            <tr>
+                <td>${escapeHtml(p.producto)}</td>
+                <td class="num">${p.unidades}</td>
+                <td class="num">${formatoMoneda(p.monto)}</td>
+            </tr>`,
+        )
+        .join('');
+
+    const filasUsuario = datos.resumen.topUsuarios
+        .map(
+            (u: any) => `
+            <tr>
+                <td>${escapeHtml(u.usuario)}</td>
+                <td class="num">${u.devoluciones}</td>
+                <td class="num">${u.unidades}</td>
+                <td class="num">${formatoMoneda(u.monto)}</td>
+            </tr>`,
+        )
+        .join('');
+
+    const filasDetalle = datos.detalles
+        .map((d: any) => {
+            const c = colorDestinoHtml[d.destino] ?? colorDestinoHtml.sin_definir;
+            return `
+            <tr>
+                <td>${escapeHtml(d.numeroDevolucion)}<br><small>${escapeHtml(formatearFechaHora(d.fechaCreacion))}</small></td>
+                <td>${d.idVenta}${d.numeroFactura ? `<br><small>${escapeHtml(d.numeroFactura)}</small>` : ''}</td>
+                <td>${escapeHtml(d.cliente)}<br><small>${escapeHtml(d.clienteCi ?? '')}</small></td>
+                <td>${escapeHtml(d.nombreComercial)}<br><small>${escapeHtml(d.laboratorio ?? '')}</small></td>
+                <td>${escapeHtml(d.numeroLote)}<br><small>Vence ${escapeHtml(d.fechaVencimiento)}</small></td>
+                <td class="num">${d.cantidad}</td>
+                <td>${escapeHtml(d.motivoLabel)}</td>
+                <td style="background:${c.fondo}; color:${c.texto}; font-weight:bold; text-align:center;">${escapeHtml(d.destinoLabel)}</td>
+                <td class="num">${formatoMoneda(d.montoDevuelto)}</td>
+                <td>${escapeHtml(d.usuario)}<br><small>${escapeHtml(d.cajero ?? '')}</small></td>
+            </tr>`;
+        })
+        .join('');
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; font-size: 10.5px; margin: 0; padding: 0; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2563eb; padding-bottom: 10px; margin-bottom: 16px; }
+    .header h1 { margin: 0; font-size: 19px; color: #1d4ed8; }
+    .header p { margin: 2px 0 0; color: #6b7280; font-size: 11px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; padding: 10px 14px; background: #eff6ff; border-radius: 8px; font-size: 11px; }
+    .meta b { color: #1d4ed8; }
+    h2 { font-size: 13px; color: #1d4ed8; margin: 18px 0 6px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #2563eb; color: #fff; text-align: left; padding: 5px 7px; font-size: 9.5px; }
+    td { padding: 4px 7px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    tr:nth-child(even) td { background: #f9fafb; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.num, th.num { text-align: right; }
+    small { color: #6b7280; }
+    .grid { display: flex; gap: 16px; }
+    .grid > div { flex: 1; }
+    .footer { margin-top: 20px; color: #9ca3af; font-size: 9.5px; text-align: center; }
+</style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Reporte de Devoluciones de Clientes y Análisis de Causas</h1>
+            <p>Sistema de Farmacia</p>
+        </div>
+        <p><b>Generado:</b> ${fechaHoy()}<br><b>Usuario:</b> Administrador</p>
+    </div>
+
+    <div class="meta">
+        <span>Devoluciones: <b>${datos.resumen.totalDevoluciones}</b></span>
+        <span>Unidades: <b>${datos.resumen.totalUnidades}</b></span>
+        <span>Monto devuelto: <b>${formatoMoneda(datos.resumen.montoTotalDevuelto)} Bs</b></span>
+        <span>Promedio: <b>${formatoMoneda(datos.resumen.montoPromedio)} Bs</b></span>
+        <span>${escapeHtml(descripcionFiltrosDevoluciones(datos.parametros))}</span>
+    </div>
+
+    <div class="grid">
+        <div>
+            <h2>Devoluciones por motivo</h2>
+            <table><thead><tr><th>Motivo</th><th class="num">Devol.</th><th class="num">Unid.</th><th class="num">Monto (Bs)</th></tr></thead><tbody>${filasMotivo}</tbody></table>
+        </div>
+        <div>
+            <h2>Devoluciones por destino</h2>
+            <table><thead><tr><th>Destino</th><th class="num">Devol.</th><th class="num">Unid.</th><th class="num">Monto (Bs)</th></tr></thead><tbody>${filasDestino}</tbody></table>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div>
+            <h2>Top productos devueltos</h2>
+            <table><thead><tr><th>Producto</th><th class="num">Unid.</th><th class="num">Monto (Bs)</th></tr></thead><tbody>${filasProducto}</tbody></table>
+        </div>
+        <div>
+            <h2>Top usuarios / cajeros</h2>
+            <table><thead><tr><th>Usuario</th><th class="num">Devol.</th><th class="num">Unid.</th><th class="num">Monto (Bs)</th></tr></thead><tbody>${filasUsuario}</tbody></table>
+        </div>
+    </div>
+
+    <h2>Detalle de devoluciones (${datos.detalles.length} líneas)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Devolución</th>
+                <th>Venta / Factura</th>
+                <th>Cliente</th>
+                <th>Producto</th>
+                <th>Lote / Vence</th>
+                <th class="num">Cant.</th>
+                <th>Motivo</th>
+                <th style="text-align:center;">Destino</th>
+                <th class="num">Monto (Bs)</th>
+                <th>Usuario / Cajero</th>
+            </tr>
+        </thead>
+        <tbody>${filasDetalle}</tbody>
+    </table>
+
+    <div class="footer">Documento generado automáticamente por el sistema de farmacia.</div>
+</body>
+</html>`;
+}
+
+async function generarPdfDevoluciones(datos: any): Promise<Buffer> {
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    try {
+        const page = await browser.newPage();
+        await page.setContent(generarHtmlDevoluciones(datos), { waitUntil: 'load' });
+        const pdf = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', bottom: '30px', left: '25px', right: '25px' },
+        });
+        return Buffer.from(pdf);
+    } finally {
+        await browser.close();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORTE DE DEVOLUCIONES A PROVEEDORES Y RECUPERACIÓN DE NOTAS DE CRÉDITO
+// ═══════════════════════════════════════════════════════════════════════════
+
+const COLOR_NC_EXCEL: Record<string, { fondo: string; texto: string }> = {
+    pendiente: { fondo: 'FFFEF3C7', texto: 'FFB45309' },
+    emitida: { fondo: 'FFDBEAFE', texto: 'FF1D4ED8' },
+    aplicada: { fondo: 'FFD1FAE5', texto: 'FF047857' },
+    reembolsada: { fondo: 'FFEDE9FE', texto: 'FF6D28D9' },
+};
+
+const COLOR_NC_HTML: Record<string, { fondo: string; texto: string }> = {
+    pendiente: { fondo: '#fef3c7', texto: '#b45309' },
+    emitida: { fondo: '#dbeafe', texto: '#1d4ed8' },
+    aplicada: { fondo: '#d1fae5', texto: '#047857' },
+    reembolsada: { fondo: '#ede9fe', texto: '#6d28d9' },
+};
+
+function filtrosDevolucionesProveedor(req: Request): IFiltrosDevolucionesProveedor {
+    const q = req.query;
+    const numero = (valor: any): number | null => {
+        if (valor === undefined || valor === null || valor === '') return null;
+        const n = Number(valor);
+        return Number.isFinite(n) ? Math.trunc(n) : null;
+    };
+    const id = (valor: any): number | null => {
+        const n = numero(valor);
+        return n !== null && n > 0 ? n : null;
+    };
+    const texto = (valor: any): string | null =>
+        typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : null;
+
+    return {
+        fechaInicio: fechaQuery(q.fechaInicio),
+        fechaFin: fechaQuery(q.fechaFin),
+        idProveedor: id(q.idProveedor),
+        idLaboratorio: id(q.idLaboratorio),
+        motivo: texto(q.motivo),
+        estadoNotaCredito: texto(q.estadoNotaCredito),
+        idUsuario: id(q.idUsuario),
+        producto: texto(q.producto),
+        busqueda: texto(q.busqueda),
+    };
+}
+
+function descripcionFiltrosDevolucionesProveedor(parametros: any): string {
+    const partes: string[] = [];
+    partes.push(
+        parametros.fechaInicio || parametros.fechaFin
+            ? `Periodo: ${parametros.fechaInicio ? formatearFecha(parametros.fechaInicio) : 'inicio'} al ${parametros.fechaFin ? formatearFecha(parametros.fechaFin) : 'hoy'}`
+            : 'Periodo: todos los registros',
+    );
+    if (parametros.motivo) partes.push(`Motivo: ${MOTIVOS_DEVOLUCION_PROVEEDOR[parametros.motivo] ?? parametros.motivo}`);
+    if (parametros.estadoNotaCredito) partes.push(`Estado NC: ${ESTADOS_NOTA_CREDITO[parametros.estadoNotaCredito] ?? parametros.estadoNotaCredito}`);
+    if (parametros.producto) partes.push(`Producto: "${parametros.producto}"`);
+    if (parametros.busqueda) partes.push(`Búsqueda: "${parametros.busqueda}"`);
+    return partes.join('  |  ');
+}
+
+async function generarExcelDevolucionesProveedor(datos: any): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema de Farmacia';
+    workbook.created = new Date();
+
+    const estiloTitulo = (hoja: ExcelJS.Worksheet, rango: string, titulo: string) => {
+        hoja.mergeCells(rango);
+        const celda = hoja.getCell(rango.split(':')[0]);
+        celda.value = titulo;
+        celda.font = { bold: true, size: 16, color: { argb: 'FF1D4ED8' } };
+        celda.alignment = { horizontal: 'center', vertical: 'middle' };
+    };
+    const estiloSubtitulo = (hoja: ExcelJS.Worksheet, rango: string, texto: string) => {
+        hoja.mergeCells(rango);
+        const celda = hoja.getCell(rango.split(':')[0]);
+        celda.value = texto;
+        celda.font = { italic: true, size: 10, color: { argb: 'FF6B7280' } };
+        celda.alignment = { horizontal: 'center', vertical: 'middle' };
+    };
+    const estiloHeader = (fila: ExcelJS.Row) => {
+        fila.height = 22;
+        fila.eachCell((celda) => {
+            celda.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+            celda.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            celda.border = { bottom: { style: 'thin', color: { argb: 'FFB0B0B0' } } };
+        });
+    };
+    const bordeFila = (fila: ExcelJS.Row) => {
+        fila.eachCell((celda) => {
+            celda.border = { bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } } };
+        });
+    };
+
+    const hojaResumen = workbook.addWorksheet('Resumen');
+    hojaResumen.columns = [
+        { header: 'Indicador', key: 'indicador', width: 46 },
+        { header: 'Valor', key: 'valor', width: 20 },
+        { header: 'Detalle', key: 'detalle', width: 20 },
+        { header: 'Monto NC (Bs)', key: 'monto', width: 18 },
+    ];
+    estiloTitulo(hojaResumen, 'A1:D1', 'Reporte de Devoluciones a Proveedores y Recuperación de Notas de Crédito');
+    estiloSubtitulo(hojaResumen, 'A2:D2', `Generado: ${fechaHoy()}  |  ${descripcionFiltrosDevolucionesProveedor(datos.parametros)}`);
+
+    hojaResumen.getRow(4).values = ['Indicador', 'Valor'];
+    estiloHeader(hojaResumen.getRow(4));
+    const kpis: [string, string | number][] = [
+        ['Total de devoluciones', datos.resumen.totalDevoluciones],
+        ['Líneas de detalle', datos.resumen.totalLineas],
+        ['Unidades devueltas', datos.resumen.totalUnidades],
+        ['Monto total de notas de crédito (Bs)', datos.resumen.montoTotalNC],
+        ['Monto promedio por devolución (Bs)', datos.resumen.montoPromedio],
+    ];
+    kpis.forEach(([label, valor], i) => {
+        const fila = hojaResumen.getRow(5 + i);
+        fila.getCell(1).value = label;
+        fila.getCell(2).value = valor;
+        fila.getCell(1).font = { bold: true };
+        fila.getCell(2).numFmt = typeof valor === 'number' ? '#,##0.00' : 'General';
+        fila.getCell(2).alignment = { horizontal: 'right' };
+        bordeFila(fila);
+    });
+
+    let cursor = 12;
+    const seccion = (
+        titulo: string,
+        encabezados: string[],
+        filas: (string | number)[][],
+        formatos: number[] = [],
+    ) => {
+        hojaResumen.mergeCells(`A${cursor}:D${cursor}`);
+        const celda = hojaResumen.getCell(`A${cursor}`);
+        celda.value = titulo;
+        celda.font = { bold: true, size: 13, color: { argb: 'FF1D4ED8' } };
+        cursor += 1;
+        const header = hojaResumen.getRow(cursor);
+        header.values = encabezados;
+        estiloHeader(header);
+        cursor += 1;
+        filas.forEach((valores) => {
+            const fila = hojaResumen.getRow(cursor);
+            valores.forEach((valor, idx) => {
+                const c = fila.getCell(idx + 1);
+                c.value = valor;
+                if (formatos.includes(idx + 1) && typeof valor === 'number') c.numFmt = '#,##0.00';
+                if (idx >= 1) c.alignment = { horizontal: 'right' };
+            });
+            bordeFila(fila);
+            cursor += 1;
+        });
+        cursor += 1;
+    };
+
+    seccion(
+        'Devoluciones por proveedor',
+        ['Proveedor', 'Devoluciones', 'Unidades', 'Monto NC (Bs)'],
+        datos.resumen.porProveedor.map((p: any) => [p.proveedor, p.devoluciones, p.unidades, p.montoNC]),
+        [4],
+    );
+    seccion(
+        'Estado de las notas de crédito',
+        ['Estado NC', 'Devoluciones', 'Unidades', 'Monto NC (Bs)'],
+        datos.resumen.porEstadoNotaCredito.map((e: any) => [e.etiqueta, e.devoluciones, e.unidades, e.montoNC]),
+        [4],
+    );
+    seccion(
+        'Devoluciones por motivo',
+        ['Motivo', 'Devoluciones', 'Unidades', 'Monto NC (Bs)'],
+        datos.resumen.porMotivo.map((m: any) => [m.etiqueta, m.devoluciones, m.unidades, m.montoNC]),
+        [4],
+    );
+    seccion(
+        'Devoluciones por laboratorio (Top 10)',
+        ['Laboratorio', 'Devoluciones', 'Unidades', 'Monto NC (Bs)'],
+        datos.resumen.porLaboratorio.map((l: any) => [l.laboratorio, l.devoluciones, l.unidades, l.montoNC]),
+        [4],
+    );
+    seccion(
+        'Productos devueltos (Top 10)',
+        ['Producto', 'Unidades', 'Monto devuelto (Bs)'],
+        datos.resumen.topProductos.map((p: any) => [p.producto, p.unidades, p.monto]),
+        [3],
+    );
+
+    const hojaDetalle = workbook.addWorksheet('Detalle de Devoluciones');
+    hojaDetalle.columns = [
+        { header: 'N° devolución', key: 'numeroDevolucion', width: 16 },
+        { header: 'Fecha', key: 'fechaCreacion', width: 18 },
+        { header: 'Proveedor', key: 'proveedor', width: 28 },
+        { header: 'Compra / factura', key: 'numeroFacturaCompra', width: 16 },
+        { header: 'Fecha compra', key: 'fechaCompra', width: 18 },
+        { header: 'Producto', key: 'nombreComercial', width: 28 },
+        { header: 'Genérico', key: 'nombreGenerico', width: 22 },
+        { header: 'Concentración', key: 'concentracion', width: 15 },
+        { header: 'Laboratorio', key: 'laboratorio', width: 22 },
+        { header: 'Lote', key: 'numeroLote', width: 14 },
+        { header: 'Vencimiento', key: 'fechaVencimiento', width: 14 },
+        { header: 'Cantidad', key: 'cantidad', width: 10 },
+        { header: 'Precio unitario', key: 'precioUnitario', width: 15 },
+        { header: 'Monto línea (Bs)', key: 'montoLinea', width: 16 },
+        { header: 'Motivo', key: 'motivoLabel', width: 22 },
+        { header: 'Estado devolución', key: 'estadoLabel', width: 16 },
+        { header: 'Estado NC', key: 'estadoNotaCreditoLabel', width: 15 },
+        { header: 'N° NC', key: 'numeroNotaCredito', width: 16 },
+        { header: 'Monto NC (Bs)', key: 'montoNotaCredito', width: 16 },
+        { header: 'Usuario', key: 'usuario', width: 24 },
+        { header: 'Autoriza', key: 'usuarioAutoriza', width: 24 },
+    ];
+    estiloTitulo(hojaDetalle, 'A1:U1', 'Detalle de Devoluciones a Proveedores');
+    estiloSubtitulo(hojaDetalle, 'A2:U2', `Generado: ${fechaHoy()}  |  ${descripcionFiltrosDevolucionesProveedor(datos.parametros)}`);
+    estiloHeader(hojaDetalle.getRow(4));
+    hojaDetalle.views = [{ state: 'frozen', ySplit: 4 }];
+
+    datos.detalles.forEach((d: any, i: number) => {
+        const fila = hojaDetalle.getRow(5 + i);
+        fila.values = [
+            d.numeroDevolucion,
+            formatearFechaHora(d.fechaCreacion),
+            d.proveedor,
+            d.numeroFacturaCompra ?? '',
+            d.fechaCompra ? formatearFechaHora(d.fechaCompra) : '',
+            d.nombreComercial,
+            d.nombreGenerico ?? '',
+            d.concentracion ?? '',
+            d.laboratorio,
+            d.numeroLote,
+            d.fechaVencimiento,
+            d.cantidad,
+            d.precioUnitario,
+            d.montoLinea,
+            d.motivoLabel,
+            d.estadoLabel,
+            d.estadoNotaCreditoLabel,
+            d.numeroNotaCredito ?? '',
+            d.montoNotaCredito,
+            d.usuario,
+            d.usuarioAutoriza ?? '',
+        ];
+        bordeFila(fila);
+        [4, 12, 13, 14, 19].forEach((col) => { fila.getCell(col).alignment = { horizontal: 'right' }; });
+        [13, 14, 19].forEach((col) => { fila.getCell(col).numFmt = '#,##0.00'; });
+
+        const color = COLOR_NC_EXCEL[d.estadoNotaCredito] ?? COLOR_NC_EXCEL.pendiente;
+        const celdaEstado = fila.getCell(17);
+        celdaEstado.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color.fondo } };
+        celdaEstado.font = { bold: true, color: { argb: color.texto } };
+        celdaEstado.alignment = { horizontal: 'center' };
+    });
+
+    hojaDetalle.autoFilter = {
+        from: { row: 4, column: 1 },
+        to: { row: 4 + datos.detalles.length, column: 21 },
+    };
+
+    return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
+}
+
+function generarHtmlDevolucionesProveedor(datos: any): string {
+    const filasProveedor = datos.resumen.porProveedor
+        .map((p: any) => `
+            <tr>
+                <td>${escapeHtml(p.proveedor)}</td>
+                <td class="num">${p.devoluciones}</td>
+                <td class="num">${p.unidades}</td>
+                <td class="num">${formatoMoneda(p.montoNC)}</td>
+            </tr>`)
+        .join('');
+
+    const filasEstado = datos.resumen.porEstadoNotaCredito
+        .map((e: any) => {
+            const c = COLOR_NC_HTML[e.estado] ?? COLOR_NC_HTML.pendiente;
+            return `
+            <tr>
+                <td style="background:${c.fondo}; color:${c.texto}; font-weight:bold;">${escapeHtml(e.etiqueta)}</td>
+                <td class="num">${e.devoluciones}</td>
+                <td class="num">${e.unidades}</td>
+                <td class="num">${formatoMoneda(e.montoNC)}</td>
+            </tr>`;
+        })
+        .join('');
+
+    const filasMotivo = datos.resumen.porMotivo
+        .map((m: any) => `
+            <tr>
+                <td>${escapeHtml(m.etiqueta)}</td>
+                <td class="num">${m.devoluciones}</td>
+                <td class="num">${m.unidades}</td>
+                <td class="num">${formatoMoneda(m.montoNC)}</td>
+            </tr>`)
+        .join('');
+
+    const filasDetalle = datos.detalles
+        .map((d: any) => {
+            const c = COLOR_NC_HTML[d.estadoNotaCredito] ?? COLOR_NC_HTML.pendiente;
+            return `
+            <tr>
+                <td>${escapeHtml(d.numeroDevolucion)}<br><small>${escapeHtml(formatearFechaHora(d.fechaCreacion))}</small></td>
+                <td>${escapeHtml(d.proveedor)}</td>
+                <td>${escapeHtml(d.numeroFacturaCompra ?? 'Sin factura')}${d.fechaCompra ? `<br><small>${escapeHtml(formatearFechaHora(d.fechaCompra))}</small>` : ''}</td>
+                <td>${escapeHtml(d.nombreComercial)}<br><small>${escapeHtml(d.laboratorio)}</small></td>
+                <td>${escapeHtml(d.numeroLote)}<br><small>Vence ${escapeHtml(d.fechaVencimiento)}</small></td>
+                <td class="num">${d.cantidad}</td>
+                <td>${escapeHtml(d.motivoLabel)}</td>
+                <td style="background:${c.fondo}; color:${c.texto}; font-weight:bold; text-align:center;">${escapeHtml(d.estadoNotaCreditoLabel)}</td>
+                <td>${escapeHtml(d.numeroNotaCredito ?? '—')}</td>
+                <td class="num">${formatoMoneda(d.montoNotaCredito)}</td>
+                <td>${escapeHtml(d.usuario)}</td>
+            </tr>`;
+        })
+        .join('');
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; font-size: 10.5px; margin: 0; padding: 0; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2563eb; padding-bottom: 10px; margin-bottom: 16px; }
+    .header h1 { margin: 0; font-size: 19px; color: #1d4ed8; }
+    .header p { margin: 2px 0 0; color: #6b7280; font-size: 11px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; padding: 10px 14px; background: #eff6ff; border-radius: 8px; font-size: 11px; }
+    .meta b { color: #1d4ed8; }
+    h2 { font-size: 13px; color: #1d4ed8; margin: 18px 0 6px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #2563eb; color: #fff; text-align: left; padding: 5px 7px; font-size: 9.5px; }
+    td { padding: 4px 7px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    tr:nth-child(even) td { background: #f9fafb; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.num, th.num { text-align: right; }
+    small { color: #6b7280; }
+    .grid { display: flex; gap: 16px; }
+    .grid > div { flex: 1; }
+    .footer { margin-top: 20px; color: #9ca3af; font-size: 9.5px; text-align: center; }
+</style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Reporte de Devoluciones a Proveedores y Recuperación de Notas de Crédito</h1>
+            <p>Sistema de Farmacia</p>
+        </div>
+        <p><b>Generado:</b> ${fechaHoy()}<br><b>Usuario:</b> Administrador</p>
+    </div>
+
+    <div class="meta">
+        <span>Devoluciones: <b>${datos.resumen.totalDevoluciones}</b></span>
+        <span>Unidades: <b>${datos.resumen.totalUnidades}</b></span>
+        <span>Monto total NC: <b>${formatoMoneda(datos.resumen.montoTotalNC)} Bs</b></span>
+        <span>Promedio por devolución: <b>${formatoMoneda(datos.resumen.montoPromedio)} Bs</b></span>
+        <span>${escapeHtml(descripcionFiltrosDevolucionesProveedor(datos.parametros))}</span>
+    </div>
+
+    <div class="grid">
+        <div>
+            <h2>Devoluciones por proveedor</h2>
+            <table><thead><tr><th>Proveedor</th><th class="num">Devol.</th><th class="num">Unid.</th><th class="num">Monto NC (Bs)</th></tr></thead><tbody>${filasProveedor}</tbody></table>
+        </div>
+        <div>
+            <h2>Estado de notas de crédito</h2>
+            <table><thead><tr><th>Estado NC</th><th class="num">Devol.</th><th class="num">Unid.</th><th class="num">Monto NC (Bs)</th></tr></thead><tbody>${filasEstado}</tbody></table>
+        </div>
+    </div>
+
+    <h2>Devoluciones por motivo</h2>
+    <table><thead><tr><th>Motivo</th><th class="num">Devol.</th><th class="num">Unid.</th><th class="num">Monto NC (Bs)</th></tr></thead><tbody>${filasMotivo}</tbody></table>
+
+    <h2>Detalle de devoluciones (${datos.detalles.length} líneas)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Devolución</th>
+                <th>Proveedor</th>
+                <th>Compra / factura</th>
+                <th>Producto</th>
+                <th>Lote / vence</th>
+                <th class="num">Cant.</th>
+                <th>Motivo</th>
+                <th style="text-align:center;">Estado NC</th>
+                <th>N° NC</th>
+                <th class="num">Monto NC (Bs)</th>
+                <th>Usuario</th>
+            </tr>
+        </thead>
+        <tbody>${filasDetalle}</tbody>
+    </table>
+
+    <div class="footer">Documento generado automáticamente por el sistema de farmacia.</div>
+</body>
+</html>`;
+}
+
+async function generarPdfDevolucionesProveedor(datos: any): Promise<Buffer> {
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    try {
+        const page = await browser.newPage();
+        await page.setContent(generarHtmlDevolucionesProveedor(datos), { waitUntil: 'load' });
+        const pdf = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '30px', bottom: '30px', left: '25px', right: '25px' },
+        });
+        return Buffer.from(pdf);
+    } finally {
+        await browser.close();
+    }
+}
+
 // ─── CONTROLADOR ──────────────────────────────────────────────────────────────
 export class ReporteControllers {
 
@@ -1249,6 +2211,178 @@ export class ReporteControllers {
         } catch (error) {
             console.error('Error al generar el PDF de vencimientos:', error);
             res.status(500).json({ error: 'Error al generar el reporte de vencimientos en PDF' });
+        }
+    };
+
+    static readonly GetParametrosInventarioC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const parametros = await DataInventario.getParametros();
+            res.status(200).json(parametros);
+        } catch (error) {
+            console.error('Error al obtener los parámetros del reporte de inventario:', error);
+            res.status(500).json({ error: 'Error al obtener los parámetros del reporte de inventario' });
+        }
+    };
+
+    static readonly GetDatosInventarioC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                idLaboratorio: req.query.idLaboratorio ?? null,
+                idTipoProducto: req.query.idTipoProducto ?? null,
+                busqueda: req.query.busqueda ?? null,
+                soloConStock: req.query.soloConStock !== 'false',
+            };
+            const datos = await DataInventario.getDatos(filtros as any);
+            res.status(200).json(datos);
+        } catch (error) {
+            console.error('Error al generar los datos del reporte de inventario:', error);
+            res.status(500).json({ error: 'Error al generar los datos del reporte de inventario' });
+        }
+    };
+
+    static readonly DescargarExcelInventarioC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                idLaboratorio: req.query.idLaboratorio ?? null,
+                idTipoProducto: req.query.idTipoProducto ?? null,
+                busqueda: req.query.busqueda ?? null,
+                soloConStock: req.query.soloConStock !== 'false',
+            };
+            const datos = await DataInventario.getDatos(filtros as any);
+            const buffer = await generarExcelInventario(datos);
+            const nombre = `Reporte_Inventario_${fechaArchivo()}.xlsx`;
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el Excel de inventario:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de inventario en Excel' });
+        }
+    };
+
+    static readonly DescargarPdfInventarioC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                idLaboratorio: req.query.idLaboratorio ?? null,
+                idTipoProducto: req.query.idTipoProducto ?? null,
+                busqueda: req.query.busqueda ?? null,
+                soloConStock: req.query.soloConStock !== 'false',
+            };
+            const datos = await DataInventario.getDatos(filtros as any);
+            const buffer = await generarPdfInventario(datos);
+            const nombre = `Reporte_Inventario_${fechaArchivo()}.pdf`;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el PDF de inventario:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de inventario en PDF' });
+        }
+    };
+
+    // ── GET: Parámetros de los filtros del reporte de devoluciones ────────────
+    static readonly GetParametrosDevolucionesC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const parametros = await DataDevoluciones.getParametros();
+            res.status(200).json(parametros);
+        } catch (error) {
+            console.error('Error al obtener los parámetros del reporte de devoluciones:', error);
+            res.status(500).json({ error: 'Error al obtener los parámetros del reporte de devoluciones' });
+        }
+    };
+
+    // ── GET: Datos del reporte de devoluciones (JSON) ─────────────────────────
+    static readonly GetDatosDevolucionesC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = filtrosDevoluciones(req);
+            const datos = await DataDevoluciones.getDatos(filtros);
+            res.status(200).json(datos);
+        } catch (error) {
+            console.error('Error al generar los datos del reporte de devoluciones:', error);
+            res.status(500).json({ error: 'Error al generar los datos del reporte de devoluciones' });
+        }
+    };
+
+    // ── GET: Descargar reporte de devoluciones en Excel (.xlsx) ───────────────
+    static readonly DescargarExcelDevolucionesC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = filtrosDevoluciones(req);
+            const datos = await DataDevoluciones.getDatos(filtros);
+            const buffer = await generarExcelDevoluciones(datos);
+            const nombre = `Reporte_Devoluciones_Clientes_${fechaArchivo()}.xlsx`;
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el Excel de devoluciones:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de devoluciones en Excel' });
+        }
+    };
+
+    // ── GET: Descargar reporte de devoluciones en PDF ─────────────────────────
+    static readonly DescargarPdfDevolucionesC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = filtrosDevoluciones(req);
+            const datos = await DataDevoluciones.getDatos(filtros);
+            const buffer = await generarPdfDevoluciones(datos);
+            const nombre = `Reporte_Devoluciones_Clientes_${fechaArchivo()}.pdf`;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el PDF de devoluciones:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de devoluciones en PDF' });
+        }
+    };
+
+    static readonly GetParametrosDevolucionesProveedorC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const parametros = await DataDevolucionesProveedor.getParametros();
+            res.status(200).json(parametros);
+        } catch (error) {
+            console.error('Error al obtener los parámetros del reporte de devoluciones a proveedores:', error);
+            res.status(500).json({ error: 'Error al obtener los parámetros del reporte de devoluciones a proveedores' });
+        }
+    };
+
+    static readonly GetDatosDevolucionesProveedorC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = filtrosDevolucionesProveedor(req);
+            const datos = await DataDevolucionesProveedor.getDatos(filtros);
+            res.status(200).json(datos);
+        } catch (error) {
+            console.error('Error al generar los datos del reporte de devoluciones a proveedores:', error);
+            res.status(500).json({ error: 'Error al generar los datos del reporte de devoluciones a proveedores' });
+        }
+    };
+
+    static readonly DescargarExcelDevolucionesProveedorC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = filtrosDevolucionesProveedor(req);
+            const datos = await DataDevolucionesProveedor.getDatos(filtros);
+            const buffer = await generarExcelDevolucionesProveedor(datos);
+            const nombre = `Reporte_Devoluciones_Proveedores_NC_${fechaArchivo()}.xlsx`;
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el Excel de devoluciones a proveedores:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de devoluciones a proveedores en Excel' });
+        }
+    };
+
+    static readonly DescargarPdfDevolucionesProveedorC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = filtrosDevolucionesProveedor(req);
+            const datos = await DataDevolucionesProveedor.getDatos(filtros);
+            const buffer = await generarPdfDevolucionesProveedor(datos);
+            const nombre = `Reporte_Devoluciones_Proveedores_NC_${fechaArchivo()}.pdf`;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el PDF de devoluciones a proveedores:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de devoluciones a proveedores en PDF' });
         }
     };
 }

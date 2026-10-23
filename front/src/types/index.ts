@@ -1345,3 +1345,421 @@ export const AlertaFEFOSchema = z.object({
   mensaje: z.string(),
 });
 export type AlertaFEFOType = z.infer<typeof AlertaFEFOSchema>;
+
+export const InventarioProductoSchema = z.object({
+  idProducto: z.number(),
+  nombreComercial: z.string(),
+  nombreGenerico: z.string().nullable(),
+  concentracion: z.string().nullable(),
+});
+export type InventarioProductoType = z.infer<typeof InventarioProductoSchema>;
+
+export const LoteInventarioSchema = z.object({
+  idLote: z.number(),
+  codigo: z.string(),
+  numeroLote: z.string(),
+  stock: z.number(),
+  costoUnitario: z.number(),
+  subtotal: z.number(),
+  fechaVencimiento: z.string().nullable(),
+  producto: InventarioProductoSchema,
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  idTipoProducto: z.number(),
+  tipoProducto: z.string().nullable(),
+});
+export const LotesInventarioSchema = z.array(LoteInventarioSchema);
+export type LoteInventarioType = z.infer<typeof LoteInventarioSchema>;
+export type LotesInventarioType = z.infer<typeof LotesInventarioSchema>;
+
+export const InventarioTipoProductoResumenSchema = z.object({
+  tipoProducto: z.string(),
+  lotes: z.number(),
+  unidades: z.number(),
+  valor: z.number(),
+});
+export const InventarioPorTipoProductoSchema = z.array(InventarioTipoProductoResumenSchema);
+export type InventarioTipoProductoResumenType = z.infer<typeof InventarioTipoProductoResumenSchema>;
+export type InventarioPorTipoProductoType = z.infer<typeof InventarioPorTipoProductoSchema>;
+
+export const InventarioLaboratorioResumenSchema = z.object({
+  laboratorio: z.string(),
+  lotes: z.number(),
+  unidades: z.number(),
+  valor: z.number(),
+});
+export const InventarioPorLaboratorioSchema = z.array(InventarioLaboratorioResumenSchema);
+export type InventarioLaboratorioResumenType = z.infer<typeof InventarioLaboratorioResumenSchema>;
+export type InventarioPorLaboratorioType = z.infer<typeof InventarioPorLaboratorioSchema>;
+
+export const InventarioProductoResumenSchema = z.object({
+  idProducto: z.number(),
+  producto: z.string(),
+  lotes: z.number(),
+  unidades: z.number(),
+  valor: z.number(),
+});
+export const InventarioPorProductoSchema = z.array(InventarioProductoResumenSchema);
+export type InventarioProductoResumenType = z.infer<typeof InventarioProductoResumenSchema>;
+export type InventarioPorProductoType = z.infer<typeof InventarioPorProductoSchema>;
+
+export const InventarioResumenSchema = z.object({
+  totalLotes: z.number(),
+  totalUnidades: z.number(),
+  valorTotal: z.number(),
+  porTipoProducto: InventarioPorTipoProductoSchema,
+  porLaboratorio: InventarioPorLaboratorioSchema,
+  porProducto: InventarioPorProductoSchema,
+});
+export type InventarioResumenType = z.infer<typeof InventarioResumenSchema>;
+
+export const InventarioParametrosSchema = z.object({
+  idLaboratorio: z.number().nullable(),
+  idTipoProducto: z.number().nullable(),
+  busqueda: z.string().nullable(),
+  soloConStock: z.boolean(),
+});
+export type InventarioParametrosType = z.infer<typeof InventarioParametrosSchema>;
+
+export const ReporteInventarioDatosSchema = z.object({
+  parametros: InventarioParametrosSchema,
+  lotes: LotesInventarioSchema,
+  resumen: InventarioResumenSchema,
+});
+export type ReporteInventarioDatosType = z.infer<typeof ReporteInventarioDatosSchema>;
+
+export const ReporteInventarioFiltrosSchema = z.object({
+  idLaboratorio: z.number().optional(),
+  idTipoProducto: z.number().optional(),
+  busqueda: z.string().optional(),
+  soloConStock: z.boolean().optional(),
+});
+export type ReporteInventarioFiltrosType = z.infer<typeof ReporteInventarioFiltrosSchema>;
+
+export const InventarioParametrosCatalogoSchema = z.object({
+  laboratorios: z.array(z.object({ idLaboratorio: z.number(), nombre: z.string() })),
+  tiposProducto: z.array(z.object({ idTipoProd: z.number(), nombre: z.string() })),
+});
+export type InventarioParametrosCatalogoType = z.infer<typeof InventarioParametrosCatalogoSchema>;
+
+// ========================================================================
+// TYPES: REPORTE DE DEVOLUCIONES DE CLIENTES Y ANÁLISIS DE CAUSAS
+// ========================================================================
+
+export const DevolucionReporteMotivoSchema = z.object({
+  motivo: z.string(),
+  etiqueta: z.string(),
+  devoluciones: z.number(),
+  lineas: z.number(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+export const DevolucionesReportePorMotivoSchema = z.array(DevolucionReporteMotivoSchema);
+export type DevolucionReporteMotivoType = z.infer<typeof DevolucionReporteMotivoSchema>;
+
+export const DevolucionReporteDestinoSchema = z.object({
+  destino: z.string(),
+  etiqueta: z.string(),
+  devoluciones: z.number(),
+  lineas: z.number(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+export const DevolucionesReportePorDestinoSchema = z.array(DevolucionReporteDestinoSchema);
+export type DevolucionReporteDestinoType = z.infer<typeof DevolucionReporteDestinoSchema>;
+
+export const DevolucionReporteProductoSchema = z.object({
+  idProducto: z.number(),
+  producto: z.string(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+export const DevolucionesReporteTopProductosSchema = z.array(DevolucionReporteProductoSchema);
+export type DevolucionReporteProductoType = z.infer<typeof DevolucionReporteProductoSchema>;
+
+export const DevolucionReporteUsuarioSchema = z.object({
+  idUsuario: z.number(),
+  usuario: z.string(),
+  devoluciones: z.number(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+export const DevolucionesReporteTopUsuariosSchema = z.array(DevolucionReporteUsuarioSchema);
+export type DevolucionReporteUsuarioType = z.infer<typeof DevolucionReporteUsuarioSchema>;
+
+export const DevolucionReporteLaboratorioSchema = z.object({
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+export const DevolucionesReportePorLaboratorioSchema = z.array(DevolucionReporteLaboratorioSchema);
+export type DevolucionReporteLaboratorioType = z.infer<typeof DevolucionReporteLaboratorioSchema>;
+
+export const DevolucionesReporteResumenSchema = z.object({
+  totalDevoluciones: z.number(),
+  totalLineas: z.number(),
+  totalUnidades: z.number(),
+  montoTotalDevuelto: z.number(),
+  montoPromedio: z.number(),
+  porMotivo: DevolucionesReportePorMotivoSchema,
+  porDestino: DevolucionesReportePorDestinoSchema,
+  porLaboratorio: DevolucionesReportePorLaboratorioSchema,
+  topProductos: DevolucionesReporteTopProductosSchema,
+  topUsuarios: DevolucionesReporteTopUsuariosSchema,
+});
+export type DevolucionesReporteResumenType = z.infer<typeof DevolucionesReporteResumenSchema>;
+
+export const DevolucionReporteParametrosSchema = z.object({
+  fechaInicio: z.string().nullable(),
+  fechaFin: z.string().nullable(),
+  motivo: z.string().nullable(),
+  estado: z.string().nullable(),
+  idUsuario: z.number().nullable(),
+  idCliente: z.number().nullable(),
+  idLaboratorio: z.number().nullable(),
+  idTipoProducto: z.number().nullable(),
+  producto: z.string().nullable(),
+  cliente: z.string().nullable(),
+  busqueda: z.string().nullable(),
+});
+export type DevolucionReporteParametrosType = z.infer<typeof DevolucionReporteParametrosSchema>;
+
+export const DevolucionReporteDetalleSchema = z.object({
+  idDevolucionVenta: z.number(),
+  numeroDevolucion: z.string(),
+  fechaCreacion: z.string(),
+  fechaResolucion: z.string().nullable(),
+  tipo: z.string(),
+  motivo: z.string(),
+  motivoLabel: z.string(),
+  estado: z.string(),
+  estadoLabel: z.string(),
+  montoReembolso: z.number(),
+  metodoReembolso: z.string().nullable(),
+  numeroNotaCredito: z.string().nullable(),
+  observaciones: z.string().nullable(),
+  idVenta: z.number(),
+  numeroFactura: z.string().nullable(),
+  fechaVenta: z.string().nullable(),
+  estadoVenta: z.string().nullable(),
+  idCliente: z.number(),
+  cliente: z.string(),
+  clienteCi: z.string().nullable(),
+  idUsuario: z.number(),
+  usuario: z.string(),
+  idCajero: z.number(),
+  cajero: z.string().nullable(),
+  idLote: z.number(),
+  codigoLote: z.string(),
+  numeroLote: z.string(),
+  fechaVencimiento: z.string(),
+  idProducto: z.number(),
+  codigoBarra: z.string(),
+  nombreComercial: z.string(),
+  nombreGenerico: z.string().nullable(),
+  concentracion: z.string().nullable(),
+  presentacion: z.string().nullable(),
+  cantidad: z.number(),
+  precioUnitario: z.number(),
+  montoDevuelto: z.number(),
+  destino: z.string(),
+  destinoLabel: z.string(),
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  idTipoProducto: z.number(),
+  tipoProducto: z.string().nullable(),
+});
+export const DevolucionesReporteDetalleSchema = z.array(DevolucionReporteDetalleSchema);
+export type DevolucionReporteDetalleType = z.infer<typeof DevolucionReporteDetalleSchema>;
+
+export const ReporteDevolucionesDatosSchema = z.object({
+  parametros: DevolucionReporteParametrosSchema,
+  detalles: DevolucionesReporteDetalleSchema,
+  resumen: DevolucionesReporteResumenSchema,
+});
+export type ReporteDevolucionesDatosType = z.infer<typeof ReporteDevolucionesDatosSchema>;
+
+export const ReporteDevolucionesFiltrosSchema = z.object({
+  fechaInicio: z.string().optional(),
+  fechaFin: z.string().optional(),
+  motivo: z.string().optional(),
+  estado: z.string().optional(),
+  idUsuario: z.number().optional(),
+  idCliente: z.number().optional(),
+  idLaboratorio: z.number().optional(),
+  idTipoProducto: z.number().optional(),
+  producto: z.string().optional(),
+  cliente: z.string().optional(),
+  busqueda: z.string().optional(),
+});
+export type ReporteDevolucionesFiltrosType = z.infer<typeof ReporteDevolucionesFiltrosSchema>;
+
+export const DevolucionesOpcionSchema = z.object({ value: z.string(), label: z.string() });
+export const DevolucionesParametrosCatalogoSchema = z.object({
+  motivos: z.array(DevolucionesOpcionSchema),
+  destinos: z.array(DevolucionesOpcionSchema),
+  estados: z.array(DevolucionesOpcionSchema),
+  usuarios: z.array(z.object({ idUsuario: z.number(), nombre: z.string() })),
+  clientes: z.array(z.object({ idCliente: z.number(), nombre: z.string() })),
+  laboratorios: z.array(z.object({ idLaboratorio: z.number(), nombre: z.string() })),
+  tiposProducto: z.array(z.object({ idTipoProd: z.number(), nombre: z.string() })),
+});
+export type DevolucionesParametrosCatalogoType = z.infer<typeof DevolucionesParametrosCatalogoSchema>;
+
+// ========================================================================
+// TYPES: REPORTE DE DEVOLUCIONES A PROVEEDORES Y NOTAS DE CREDITO
+// ========================================================================
+
+export const DevolucionProveedorReporteParametrosSchema = z.object({
+  fechaInicio: z.string().nullable(),
+  fechaFin: z.string().nullable(),
+  idProveedor: z.number().nullable(),
+  idLaboratorio: z.number().nullable(),
+  motivo: z.string().nullable(),
+  estadoNotaCredito: z.string().nullable(),
+  idUsuario: z.number().nullable(),
+  producto: z.string().nullable(),
+  busqueda: z.string().nullable(),
+});
+export type DevolucionProveedorReporteParametrosType = z.infer<typeof DevolucionProveedorReporteParametrosSchema>;
+
+export const DevolucionProveedorReporteDetalleSchema = z.object({
+  idDevolucionProveedor: z.number(),
+  numeroDevolucion: z.string(),
+  fechaCreacion: z.string(),
+  fechaResolucion: z.string().nullable(),
+  tipo: z.string(),
+  motivo: z.string(),
+  motivoLabel: z.string(),
+  estado: z.string(),
+  estadoLabel: z.string(),
+  estadoNotaCredito: z.string(),
+  estadoNotaCreditoLabel: z.string(),
+  numeroNotaCredito: z.string().nullable(),
+  montoNotaCredito: z.number(),
+  observaciones: z.string().nullable(),
+  idCompra: z.number(),
+  numeroFacturaCompra: z.string().nullable(),
+  fechaCompra: z.string().nullable(),
+  fechaEntrega: z.string().nullable(),
+  montoCompra: z.number(),
+  idProveedor: z.number(),
+  proveedor: z.string(),
+  idUsuario: z.number(),
+  usuario: z.string(),
+  idUsuarioAutoriza: z.number().nullable(),
+  usuarioAutoriza: z.string().nullable(),
+  idLote: z.number(),
+  codigoLote: z.string(),
+  numeroLote: z.string(),
+  fechaVencimiento: z.string(),
+  idProducto: z.number(),
+  codigoBarra: z.string(),
+  nombreComercial: z.string(),
+  nombreGenerico: z.string().nullable(),
+  concentracion: z.string().nullable(),
+  presentacion: z.string().nullable(),
+  cantidad: z.number(),
+  precioUnitario: z.number(),
+  montoLinea: z.number(),
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  idTipoProducto: z.number(),
+  tipoProducto: z.string().nullable(),
+});
+export const DevolucionesProveedorReporteDetalleSchema = z.array(DevolucionProveedorReporteDetalleSchema);
+export type DevolucionProveedorReporteDetalleType = z.infer<typeof DevolucionProveedorReporteDetalleSchema>;
+
+export const DevolucionProveedorReporteProveedorSchema = z.object({
+  idProveedor: z.number(),
+  proveedor: z.string(),
+  devoluciones: z.number(),
+  unidades: z.number(),
+  montoNC: z.number(),
+});
+export const DevolucionesProveedorReportePorProveedorSchema = z.array(DevolucionProveedorReporteProveedorSchema);
+export type DevolucionProveedorReporteProveedorType = z.infer<typeof DevolucionProveedorReporteProveedorSchema>;
+
+export const DevolucionProveedorReporteMotivoSchema = z.object({
+  motivo: z.string(),
+  etiqueta: z.string(),
+  devoluciones: z.number(),
+  unidades: z.number(),
+  montoNC: z.number(),
+});
+export const DevolucionesProveedorReportePorMotivoSchema = z.array(DevolucionProveedorReporteMotivoSchema);
+export type DevolucionProveedorReporteMotivoType = z.infer<typeof DevolucionProveedorReporteMotivoSchema>;
+
+export const DevolucionProveedorReporteEstadoNCSchema = z.object({
+  estado: z.string(),
+  etiqueta: z.string(),
+  devoluciones: z.number(),
+  unidades: z.number(),
+  montoNC: z.number(),
+});
+export const DevolucionesProveedorReportePorEstadoNCSchema = z.array(DevolucionProveedorReporteEstadoNCSchema);
+export type DevolucionProveedorReporteEstadoNCType = z.infer<typeof DevolucionProveedorReporteEstadoNCSchema>;
+
+export const DevolucionProveedorReporteLaboratorioSchema = z.object({
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  devoluciones: z.number(),
+  unidades: z.number(),
+  montoNC: z.number(),
+});
+export const DevolucionesProveedorReportePorLaboratorioSchema = z.array(DevolucionProveedorReporteLaboratorioSchema);
+export type DevolucionProveedorReporteLaboratorioType = z.infer<typeof DevolucionProveedorReporteLaboratorioSchema>;
+
+export const DevolucionProveedorReporteProductoSchema = z.object({
+  idProducto: z.number(),
+  producto: z.string(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+export const DevolucionesProveedorReporteTopProductosSchema = z.array(DevolucionProveedorReporteProductoSchema);
+export type DevolucionProveedorReporteProductoType = z.infer<typeof DevolucionProveedorReporteProductoSchema>;
+
+export const DevolucionesProveedorReporteResumenSchema = z.object({
+  totalDevoluciones: z.number(),
+  totalLineas: z.number(),
+  totalUnidades: z.number(),
+  montoTotalNC: z.number(),
+  montoPromedio: z.number(),
+  porProveedor: DevolucionesProveedorReportePorProveedorSchema,
+  porMotivo: DevolucionesProveedorReportePorMotivoSchema,
+  porEstadoNotaCredito: DevolucionesProveedorReportePorEstadoNCSchema,
+  porLaboratorio: DevolucionesProveedorReportePorLaboratorioSchema,
+  topProductos: DevolucionesProveedorReporteTopProductosSchema,
+});
+export type DevolucionesProveedorReporteResumenType = z.infer<typeof DevolucionesProveedorReporteResumenSchema>;
+
+export const ReporteDevolucionesProveedorDatosSchema = z.object({
+  parametros: DevolucionProveedorReporteParametrosSchema,
+  detalles: DevolucionesProveedorReporteDetalleSchema,
+  resumen: DevolucionesProveedorReporteResumenSchema,
+});
+export type ReporteDevolucionesProveedorDatosType = z.infer<typeof ReporteDevolucionesProveedorDatosSchema>;
+
+export const ReporteDevolucionesProveedorFiltrosSchema = z.object({
+  fechaInicio: z.string().optional(),
+  fechaFin: z.string().optional(),
+  idProveedor: z.number().optional(),
+  idLaboratorio: z.number().optional(),
+  motivo: z.string().optional(),
+  estadoNotaCredito: z.string().optional(),
+  idUsuario: z.number().optional(),
+  producto: z.string().optional(),
+  busqueda: z.string().optional(),
+});
+export type ReporteDevolucionesProveedorFiltrosType = z.infer<typeof ReporteDevolucionesProveedorFiltrosSchema>;
+
+export const DevolucionesProveedorParametrosCatalogoSchema = z.object({
+  motivos: z.array(DevolucionesOpcionSchema),
+  estadosNotaCredito: z.array(DevolucionesOpcionSchema),
+  estadosDevolucion: z.array(DevolucionesOpcionSchema),
+  proveedores: z.array(z.object({ idProveedor: z.number(), nombre: z.string() })),
+  laboratorios: z.array(z.object({ idLaboratorio: z.number(), nombre: z.string() })),
+  usuarios: z.array(z.object({ idUsuario: z.number(), nombre: z.string() })),
+});
+export type DevolucionesProveedorParametrosCatalogoType = z.infer<typeof DevolucionesProveedorParametrosCatalogoSchema>;

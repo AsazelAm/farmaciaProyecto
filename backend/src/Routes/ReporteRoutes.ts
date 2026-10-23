@@ -60,4 +60,66 @@ router.get('/DescargarPdfVencimientos',
     ReporteControllers.DescargarPdfVencimientosC
 );
 
+//  GET: parámetros del reporte de inventario actual y valorización
+router.get('/GetParametrosInventario',
+    ReporteControllers.GetParametrosInventarioC
+);
+
+router.get('/GetDatosInventario',
+    ReporteControllers.GetDatosInventarioC
+);
+
+router.get('/DescargarExcelInventario',
+    ReporteControllers.DescargarExcelInventarioC
+);
+
+router.get('/DescargarPdfInventario',
+    ReporteControllers.DescargarPdfInventarioC
+);
+
+//  GET: parámetros del reporte de devoluciones de clientes
+//      (motivos, destinos, estados, usuarios, clientes, laboratorios y tipos)
+router.get('/GetParametrosDevoluciones',
+    ReporteControllers.GetParametrosDevolucionesC
+);
+
+//  GET: datos del reporte de devoluciones de clientes (JSON)
+//      ?fechaInicio=&fechaFin=&motivo=&estado=&idUsuario=&idCliente=
+//      &idLaboratorio=&idTipoProducto=&producto=&cliente=&busqueda=
+router.get('/GetDatosDevoluciones',
+    ReporteControllers.GetDatosDevolucionesC
+);
+
+//  GET: descargar reporte de devoluciones en Excel (.xlsx)
+router.get('/DescargarExcelDevoluciones',
+    ReporteControllers.DescargarExcelDevolucionesC
+);
+
+//  GET: descargar reporte de devoluciones en PDF
+router.get('/DescargarPdfDevoluciones',
+    ReporteControllers.DescargarPdfDevolucionesC
+);
+
+//  GET: parámetros del reporte de devoluciones a proveedores y notas de crédito
+router.get('/GetParametrosDevolucionesProveedor',
+    ReporteControllers.GetParametrosDevolucionesProveedorC
+);
+
+//  GET: datos del reporte de devoluciones a proveedores (JSON)
+//      ?fechaInicio=&fechaFin=&idProveedor=&idLaboratorio=&motivo=
+//      &estadoNotaCredito=&idUsuario=&producto=&busqueda=
+router.get('/GetDatosDevolucionesProveedor',
+    ReporteControllers.GetDatosDevolucionesProveedorC
+);
+
+//  GET: descargar reporte de devoluciones a proveedores en Excel (.xlsx)
+router.get('/DescargarExcelDevolucionesProveedor',
+    ReporteControllers.DescargarExcelDevolucionesProveedorC
+);
+
+//  GET: descargar reporte de devoluciones a proveedores en PDF
+router.get('/DescargarPdfDevolucionesProveedor',
+    ReporteControllers.DescargarPdfDevolucionesProveedorC
+);
+
 export default router;
