@@ -65,5 +65,54 @@ declare const DataVenta: {
     }>;
     VerificarStockLote(idLote: number, cantidad: number): Promise<boolean>;
     LotesDisponiblesPorProducto(idProducto: number): Promise<any>;
+    loteFEFODeProducto(idProducto: number): Promise<any>;
+    AlertaFEFO(idProducto: number, idLote: number): Promise<{
+        existe: boolean;
+        cumpleFEFO: boolean;
+        mensaje: string;
+        idLote?: undefined;
+        codigo?: undefined;
+        numeroLote?: undefined;
+        stock?: undefined;
+        fechaVencimiento?: undefined;
+        diasRestantes?: undefined;
+        idLoteFEFO?: undefined;
+        numeroLoteFEFO?: undefined;
+        fechaVencimientoFEFO?: undefined;
+        diasRestantesFEFO?: undefined;
+        stockLoteFEFO?: undefined;
+        diasDiferencia?: undefined;
+    } | {
+        existe: boolean;
+        cumpleFEFO: boolean;
+        idLote: number;
+        codigo: any;
+        numeroLote: any;
+        stock: number;
+        fechaVencimiento: any;
+        diasRestantes: number;
+        idLoteFEFO: number;
+        numeroLoteFEFO: any;
+        fechaVencimientoFEFO: any;
+        diasRestantesFEFO: number;
+        stockLoteFEFO: number;
+        diasDiferencia: number;
+        mensaje: string;
+    }>;
+    ValidarFEFODetalles(detalles: {
+        idLote: number;
+        cantidad: number;
+    }[]): Promise<{
+        idLote: number;
+        numeroLote: any;
+        codigo: any;
+        diasRestantes: number;
+        idLoteFEFO: number;
+        numeroLoteFEFO: any;
+        diasRestantesFEFO: number;
+        stockRestanteFEFO: number;
+        diasDiferencia: number;
+        mensaje: string;
+    }>;
 };
 export default DataVenta;

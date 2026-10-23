@@ -45,6 +45,7 @@ declare const DataUser: {
     CreateUsuarioM(Usuario: CreateAdmins): Promise<number>;
     UpdateRutaimg(ruta: string, idUsuario: number | string): Promise<string>;
     DeleteUserId(id: any): Promise<string>;
+    SetConfirmed(email: string, confirmed: number): Promise<boolean>;
     UpodateUserbyId(data: UpdateAdmins): Promise<string>;
 };
 export default DataUser;

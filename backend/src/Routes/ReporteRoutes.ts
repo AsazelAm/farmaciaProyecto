@@ -122,4 +122,44 @@ router.get('/DescargarPdfDevolucionesProveedor',
     ReporteControllers.DescargarPdfDevolucionesProveedorC
 );
 
+//  GET: parámetros del reporte de rotación y clasificación ABC de productos
+router.get('/GetParametrosRotacionProductos',
+    ReporteControllers.GetParametrosRotacionProductosC
+);
+
+//  GET: datos del reporte de rotación y clasificación ABC de productos (JSON)
+router.get('/GetDatosRotacionProductos',
+    ReporteControllers.GetDatosRotacionProductosC
+);
+
+//  GET: descargar reporte de rotación en Excel
+router.get('/DescargarExcelRotacionProductos',
+    ReporteControllers.DescargarExcelRotacionProductosC
+);
+
+//  GET: descargar reporte de rotación en PDF
+router.get('/DescargarPdfRotacionProductos',
+    ReporteControllers.DescargarPdfRotacionProductosC
+);
+
+//  GET: parámetros del reporte de facturación
+router.get('/GetParametrosFacturacion',
+    ReporteControllers.GetParametrosFacturacionC
+);
+
+//  GET: datos del reporte de facturación
+router.get('/GetDatosFacturacion',
+    ReporteControllers.GetDatosFacturacionC
+);
+
+//  GET: descargar reporte de facturación en Excel
+router.get('/DescargarExcelFacturacion',
+    ReporteControllers.DescargarExcelFacturacionC
+);
+
+//  GET: descargar reporte de facturación en PDF
+router.get('/DescargarPdfFacturacion',
+    ReporteControllers.DescargarPdfFacturacionC
+);
+
 export default router;

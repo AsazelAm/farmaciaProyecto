@@ -56,10 +56,6 @@ class AuthControllers {
             if (!data || !data.exists) {
                 return res.status(400).json({ error: 'El Email no está registrado' });
             }
-            const VeriCon = await UserModels_1.default.VerifedConfirmed(email);
-            if (!VeriCon.exists) {
-                return res.status(400).json({ error: 'El usuario no está verificado' });
-            }
             const Pass = await UserModels_1.default.GetPasswd(email);
             const VerPass = Pass[0].passwd;
             const Correct = await (0, auth_1.CheckPassword)(passwd, VerPass);
@@ -116,6 +112,9 @@ class AuthControllers {
                 return res.status(401).json({ error: `El código es incorrecto, te quedan ${restantes} intento(s)` });
             }
             await CodigoModels_1.default.LimpiarCodigo(email);
+            // Si la cuenta estaba pendiente (confirmed = 0), al validar el
+            // codigo del correo queda verificada y puede iniciar sesion.
+            await UserModels_1.default.SetConfirmed(email, 1);
             const token2 = (0, jwt_1.GenerateJwt)(usuario.idUsuario);
             const IDRolArray = await UserModels_1.default.GetIdRol(email);
             if (!IDRolArray || IDRolArray.length === 0) {
@@ -136,10 +135,6 @@ class AuthControllers {
             const data = await UserModels_1.default.GetEmail(email);
             if (!data || !data.exists) {
                 return res.status(400).json({ error: 'El Email no está registrado' });
-            }
-            const VeriCon = await UserModels_1.default.VerifedConfirmed(email);
-            if (!VeriCon.exists) {
-                return res.status(400).json({ error: 'El usuario no está verificado' });
             }
             const codigo = GenerarCodigoLogin();
             await CodigoModels_1.default.GuardarCodigo(codigo, email);

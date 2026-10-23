@@ -30,6 +30,9 @@ import ReporteCompra from "./view/Dashboard/Admin/Reportes/ReporteCompra";
 import ReporteVencimientos from "./view/Dashboard/Admin/Reportes/ReporteVencimientos";
 import ReporteInventario from "./view/Dashboard/Admin/Reportes/ReporteInventario";
 import ReporteDevoluciones from "./view/Dashboard/Admin/Reportes/ReporteDevoluciones";
+import ReporteDevolucionesProveedor from "./view/Dashboard/Admin/Reportes/ReporteDevolucionesProveedor";
+import ReporteRotacionProductos from "./view/Dashboard/Admin/Reportes/ReporteRotacionProductos";
+import ReporteFacturacion from "./view/Dashboard/Admin/Reportes/ReporteFacturacion";
 
 
 
@@ -63,6 +66,9 @@ export default function Router() {
               <Route path="/Dashboard/ReportesVencimientos" element={<ReporteVencimientos/>}/>
               <Route path="/Dashboard/ReportesInventario" element={<ReporteInventario/>}/>
               <Route path="/Dashboard/ReportesDevoluciones" element={<ReporteDevoluciones/>}/>
+              <Route path="/Dashboard/ReportesDevolucionesProveedor" element={<ReporteDevolucionesProveedor/>}/>
+              <Route path="/Dashboard/ReportesRotacionProductos" element={<ReporteRotacionProductos/>}/>
+              <Route path="/Dashboard/ReportesFacturacion" element={<ReporteFacturacion/>}/>
             </Route>
 
 

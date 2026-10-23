@@ -106,6 +106,9 @@ export default function Aside() {
               <NavItem to="/Dashboard/ReportesVencimientos" icon={iconuser} label="Control Vencimientos" />
               <NavItem to="/Dashboard/ReportesInventario" icon={iconuser} label="Inventario Valorizado" />
               <NavItem to="/Dashboard/ReportesDevoluciones" icon={iconuser} label="Devoluciones y Causas" />
+              <NavItem to="/Dashboard/ReportesDevolucionesProveedor" icon={iconuser} label="Devoluciones Proveedores" />
+              <NavItem to="/Dashboard/ReportesRotacionProductos" icon={iconuser} label="Rotación ABC Productos" />
+              <NavItem to="/Dashboard/ReportesFacturacion" icon={iconuser} label="Facturación y Anulaciones" />
             </SubMenu>
 
   

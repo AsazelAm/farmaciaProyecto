@@ -7,6 +7,7 @@ export declare class VentaControllers {
     static readonly ChangeEstadoVentaC: (req: Request, res: Response) => Promise<any>;
     static readonly EmitirFacturaC: (req: Request, res: Response) => Promise<any>;
     static readonly GetLotesDisponiblesC: (req: Request, res: Response) => Promise<any>;
+    static readonly GetAlertaFEFOC: (req: Request, res: Response) => Promise<any>;
     static readonly GetDatosFacturacionClienteC: (req: Request, res: Response) => Promise<any>;
     static readonly GetEstadisticasC: (req: Request, res: Response) => Promise<any>;
 }

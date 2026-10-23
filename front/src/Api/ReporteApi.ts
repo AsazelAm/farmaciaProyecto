@@ -9,6 +9,12 @@ import {
   InventarioParametrosCatalogoSchema,
   ReporteDevolucionesDatosSchema,
   DevolucionesParametrosCatalogoSchema,
+  ReporteDevolucionesProveedorDatosSchema,
+  DevolucionesProveedorParametrosCatalogoSchema,
+  ReporteRotacionProductosDatosSchema,
+  RotacionProductosParametrosSchema,
+  ReporteFacturacionDatosSchema,
+  FacturacionParametrosSchema,
 } from "../types";
 import type {
   FrecuenciaReporte,
@@ -23,6 +29,15 @@ import type {
   ReporteDevolucionesDatosType,
   ReporteDevolucionesFiltrosType,
   DevolucionesParametrosCatalogoType,
+  ReporteDevolucionesProveedorDatosType,
+  ReporteDevolucionesProveedorFiltrosType,
+  DevolucionesProveedorParametrosCatalogoType,
+  ReporteRotacionProductosDatosType,
+  ReporteRotacionProductosFiltrosType,
+  RotacionProductosParametrosType,
+  ReporteFacturacionDatosType,
+  ReporteFacturacionFiltrosType,
+  FacturacionParametrosType,
 } from "../types";
 
 // Extrae el mensaje de error del backend o lanza un fallback gen茅rico
@@ -370,5 +385,180 @@ export async function DescargarReporteDevolucionesPdfApi(
     descargarBlob(blob, nombreArchivoDevoluciones('pdf'));
   } catch (error) {
     throw mensajeError(error, "Error al descargar el reporte de devoluciones en PDF");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// REPORTE DE DEVOLUCIONES A PROVEEDORES Y NOTAS DE CREDITO
+// ---------------------------------------------------------------------------
+
+function nombreArchivoDevolucionesProveedor(ext: string): string {
+  const hoy = new Date();
+  const sello = `${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}`;
+  return `Reporte_Devoluciones_Proveedores_NC_${sello}.${ext}`;
+}
+
+export async function GetParametrosDevolucionesProveedorApi(): Promise<DevolucionesProveedorParametrosCatalogoType> {
+  try {
+    const { data } = await api.get('/Reporte/GetParametrosDevolucionesProveedor');
+    return validar(
+      DevolucionesProveedorParametrosCatalogoSchema,
+      data,
+      "Error en la validaci贸n de los par谩metros del reporte de devoluciones a proveedores"
+    );
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los par谩metros del reporte de devoluciones a proveedores");
+  }
+}
+
+export async function GetReporteDevolucionesProveedorDatosApi(
+  filtros: ReporteDevolucionesProveedorFiltrosType
+): Promise<ReporteDevolucionesProveedorDatosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetDatosDevolucionesProveedor', { params: filtros });
+    return validar(
+      ReporteDevolucionesProveedorDatosSchema,
+      data,
+      "Error en la validaci贸n de los datos del reporte de devoluciones a proveedores"
+    );
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los datos del reporte de devoluciones a proveedores");
+  }
+}
+
+export async function DescargarReporteDevolucionesProveedorExcelApi(
+  filtros: ReporteDevolucionesProveedorFiltrosType
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarExcelDevolucionesProveedor', {
+      params: filtros,
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoDevolucionesProveedor('xlsx'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de devoluciones a proveedores en Excel");
+  }
+}
+
+export async function DescargarReporteDevolucionesProveedorPdfApi(
+  filtros: ReporteDevolucionesProveedorFiltrosType
+) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarPdfDevolucionesProveedor', {
+      params: filtros,
+      responseType: 'blob',
+    });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    descargarBlob(blob, nombreArchivoDevolucionesProveedor('pdf'));
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de devoluciones a proveedores en PDF");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// REPORTE DE ROTACION Y CLASIFICACION ABC DE PRODUCTOS
+// ---------------------------------------------------------------------------
+
+export async function GetParametrosRotacionProductosApi(): Promise<RotacionProductosParametrosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetParametrosRotacionProductos');
+    return validar(RotacionProductosParametrosSchema, data, "Error en la validaci贸n de los par谩metros del reporte de rotaci贸n de productos");
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los par谩metros del reporte de rotaci贸n de productos");
+  }
+}
+
+export async function GetReporteRotacionProductosDatosApi(
+  filtros: ReporteRotacionProductosFiltrosType
+): Promise<ReporteRotacionProductosDatosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetDatosRotacionProductos', { params: filtros });
+    return validar(ReporteRotacionProductosDatosSchema, data, "Error en la validaci贸n de los datos del reporte de rotaci贸n de productos");
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los datos del reporte de rotaci贸n de productos");
+  }
+}
+
+export async function DescargarReporteRotacionProductosExcelApi(filtros: ReporteRotacionProductosFiltrosType) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarExcelRotacionProductos', { params: filtros, responseType: 'blob' });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    const url = window.URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = `Reporte_Rotacion_ABC.xlsx`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de rotaci贸n de productos en Excel");
+  }
+}
+
+export async function DescargarReporteRotacionProductosPdfApi(filtros: ReporteRotacionProductosFiltrosType) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarPdfRotacionProductos', { params: filtros, responseType: 'blob' });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    const url = window.URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = `Reporte_Rotacion_ABC.pdf`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de rotaci贸n de productos en PDF");
+  }
+}
+// ---------------------------------------------------------------------------
+// REPORTE DE FACTURACION, EMISIONES Y ANULACIONES
+// ---------------------------------------------------------------------------
+
+export async function GetParametrosFacturacionApi(): Promise<FacturacionParametrosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetParametrosFacturacion');
+    return validar(FacturacionParametrosSchema, data, "Error en la validaci髇 de los par醡etros del reporte de facturaci髇");
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los par醡etros del reporte de facturaci髇");
+  }
+}
+
+export async function GetReporteFacturacionDatosApi(filtros: ReporteFacturacionFiltrosType): Promise<ReporteFacturacionDatosType> {
+  try {
+    const { data } = await api.get('/Reporte/GetDatosFacturacion', { params: filtros });
+    return validar(ReporteFacturacionDatosSchema, data, "Error en la validaci髇 de los datos del reporte de facturaci髇");
+  } catch (error) {
+    throw mensajeError(error, "Error al obtener los datos del reporte de facturaci髇");
+  }
+}
+
+export async function DescargarReporteFacturacionExcelApi(filtros: ReporteFacturacionFiltrosType) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarExcelFacturacion', { params: filtros, responseType: 'blob' });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    const url = window.URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url; enlace.download = "Reporte_Facturacion.xlsx";
+    document.body.appendChild(enlace); enlace.click(); enlace.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de facturaci髇 en Excel");
+  }
+}
+
+export async function DescargarReporteFacturacionPdfApi(filtros: ReporteFacturacionFiltrosType) {
+  try {
+    const { data } = await api.get('/Reporte/DescargarPdfFacturacion', { params: filtros, responseType: 'blob' });
+    const blob = data instanceof Blob ? data : new Blob([data]);
+    const url = window.URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url; enlace.download = "Reporte_Facturacion.pdf";
+    document.body.appendChild(enlace); enlace.click(); enlace.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    throw mensajeError(error, "Error al descargar el reporte de facturaci髇 en PDF");
   }
 }

@@ -19,6 +19,8 @@ import DataDevolucionesProveedor, {
     IFiltrosDevolucionesProveedor,
     MOTIVOS_DEVOLUCION_PROVEEDOR,
 } from '../Models/ReporteDevolucionesProveedorModels';
+import DataRotacionProductos from '../Models/ReporteRotacionProductosModels';
+import DataFacturacion from '../Models/ReporteFacturacionModels';
 const FRECUENCIAS_VALIDAS: FrecuenciaReporte[] = ['diario', 'semanal', 'mensual'];
 
 const TITULO_HUMANO: Record<FrecuenciaReporte, string> = {
@@ -2068,6 +2070,140 @@ async function generarPdfDevolucionesProveedor(datos: any): Promise<Buffer> {
 }
 
 // ─── CONTROLADOR ──────────────────────────────────────────────────────────────
+async function generarExcelRotacionProductos(datos: any): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema de Farmacia';
+    workbook.created = new Date();
+    const hoja = workbook.addWorksheet('Rotacion ABC');
+    hoja.columns = [
+        { header: 'Producto', key: 'nombreComercial', width: 30 },
+        { header: 'Laboratorio', key: 'laboratorio', width: 24 },
+        { header: 'Clase', key: 'clasificacion', width: 8 },
+        { header: 'Unid. vendidas', key: 'unidadesVendidas', width: 14 },
+        { header: 'Frecuencia', key: 'frecuenciaSalida', width: 12 },
+        { header: 'Monto vendido', key: 'montoVendido', width: 16 },
+        { header: 'Stock', key: 'stockActual', width: 10 },
+        { header: 'Valor stock', key: 'valorStock', width: 16 },
+        { header: 'Proximo vencimiento', key: 'proximoVencimiento', width: 16 },
+    ];
+    hoja.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    hoja.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    datos.detalles.forEach((d: any) => {
+        hoja.addRow({
+            nombreComercial: d.nombreComercial,
+            laboratorio: d.laboratorio,
+            clasificacion: d.clasificacion,
+            unidadesVendidas: d.unidadesVendidas,
+            frecuenciaSalida: d.frecuenciaSalida,
+            montoVendido: d.montoVendido,
+            stockActual: d.stockActual,
+            valorStock: d.valorStock,
+            proximoVencimiento: d.proximoVencimiento ?? '',
+        });
+    });
+    return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
+}
+
+function generarHtmlRotacionProductos(datos: any): string {
+    const filas = datos.detalles.map((d: any) => `
+        <tr>
+            <td>${escapeHtml(d.nombreComercial)}</td>
+            <td>${escapeHtml(d.laboratorio)}</td>
+            <td style="text-align:center;font-weight:bold;color:${d.clasificacion === 'A' ? '#059669' : d.clasificacion === 'B' ? '#D97706' : '#DC2626'}">${d.clasificacion}</td>
+            <td class="num">${d.unidadesVendidas}</td>
+            <td class="num">${d.frecuenciaSalida}</td>
+            <td class="num">${formatoMoneda(d.montoVendido)}</td>
+            <td class="num">${d.stockActual}</td>
+            <td class="num">${formatoMoneda(d.valorStock)}</td>
+            <td>${escapeHtml(d.proximoVencimiento ?? '—')}</td>
+        </tr>`).join('');
+    return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #2563eb; color: #fff; padding: 5px 7px; font-size: 9.5px; }
+    td { padding: 4px 7px; border-bottom: 1px solid #e5e7eb; }
+    .num { text-align: right; }
+    </style></head><body>
+    <h1>Rotacion y Clasificacion ABC de Productos</h1>
+    <p>Generado: ${fechaHoy()}</p>
+    <table><thead><tr><th>Producto</th><th>Laboratorio</th><th>Clase</th><th>Unid.</th><th>Freq.</th><th>Monto vendido</th><th>Stock</th><th>Valor stock</th><th>Prox. vence</th></tr></thead><tbody>${filas}</tbody></table>
+    </body></html>`;
+}
+
+async function generarPdfRotacionProductos(datos: any): Promise<Buffer> {
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    try {
+        const page = await browser.newPage();
+        await page.setContent(generarHtmlRotacionProductos(datos), { waitUntil: 'load' });
+        const pdf = await page.pdf({ format: 'A4', landscape: true, printBackground: true, margin: { top: '30px', bottom: '30px', left: '25px', right: '25px' } });
+        return Buffer.from(pdf);
+    } finally {
+        await browser.close();
+    }
+}
+
+async function generarExcelFacturacion(datos: any): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    const hoja = workbook.addWorksheet('Facturacion');
+    hoja.columns = [
+        { header: 'Nro factura', key: 'numeroFactura', width: 14 },
+        { header: 'Fecha emision', key: 'fechaEmision', width: 18 },
+        { header: 'Tipo', key: 'tipoFactura', width: 14 },
+        { header: 'NIT cliente', key: 'nitCliente', width: 14 },
+        { header: 'Razon social', key: 'razonSocial', width: 24 },
+        { header: 'Subtotal', key: 'subtotal', width: 12 },
+        { header: 'Descuento', key: 'descuento', width: 12 },
+        { header: 'Impuesto', key: 'impuesto', width: 12 },
+        { header: 'Total', key: 'total', width: 12 },
+        { header: 'Estado', key: 'estado', width: 12 },
+        { header: 'Fecha anulacion', key: 'fechaAnulacion', width: 18 },
+        { header: 'Motivo anulacion', key: 'motivoAnulacion', width: 30 },
+        { header: 'Usuario emisor', key: 'usuarioEmisor', width: 20 },
+    ];
+    hoja.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    hoja.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    datos.detalles.forEach((d: any) => hoja.addRow(d));
+    return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
+}
+
+function generarHtmlFacturacion(datos: any): string {
+    const filas = datos.detalles.map((d: any) => `<tr>
+        <td>${escapeHtml(d.numeroFactura)}</td>
+        <td>${escapeHtml(d.fechaEmision)}</td>
+        <td>${escapeHtml(d.tipoFactura)}</td>
+        <td>${escapeHtml(d.nitCliente)}</td>
+        <td>${escapeHtml(d.razonSocial)}</td>
+        <td class="num">${formatoMoneda(d.subtotal)}</td>
+        <td class="num">${formatoMoneda(d.descuento)}</td>
+        <td class="num">${formatoMoneda(d.impuesto)}</td>
+        <td class="num">${formatoMoneda(d.total)}</td>
+        <td>${escapeHtml(d.estado)}</td>
+        <td>${escapeHtml(d.fechaAnulacion ?? '—')}</td>
+        <td>${escapeHtml(d.motivoAnulacion ?? '')}</td>
+    </tr>`).join('');
+    return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+    body { font-family:'Segoe UI',Arial,sans-serif; font-size:10.5px; }
+    table { width:100%; border-collapse:collapse; }
+    th { background:#2563eb; color:#fff; padding:5px 7px; font-size:9.5px; }
+    td { padding:4px 7px; border-bottom:1px solid #e5e7eb; }
+    .num { text-align:right; }
+    </style></head><body>
+    <h1>Reporte de Facturacion y Anulaciones</h1>
+    <p>Generado: ${fechaHoy()}</p>
+    <table><thead><tr><th>Nro</th><th>Fecha</th><th>Tipo</th><th>NIT</th><th>Razon social</th><th>Subtotal</th><th>Desc.</th><th>Impuesto</th><th>Total</th><th>Estado</th><th>F. Anulacion</th><th>Motivo</th></tr></thead><tbody>${filas}</tbody></table>
+    </body></html>`;
+}
+
+async function generarPdfFacturacion(datos: any): Promise<Buffer> {
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox','--disable-setuid-sandbox'] });
+    try {
+        const page = await browser.newPage();
+        await page.setContent(generarHtmlFacturacion(datos), { waitUntil: 'load' });
+        const pdf = await page.pdf({ format:'A4', landscape:true, printBackground:true, margin:{top:'30px',bottom:'30px',left:'25px',right:'25px'} });
+        return Buffer.from(pdf);
+    } finally { await browser.close(); }
+}
+
 export class ReporteControllers {
 
     // ── GET: Datos del reporte (JSON) para previsualizar en el frontend ───────
@@ -2383,6 +2519,150 @@ export class ReporteControllers {
         } catch (error) {
             console.error('Error al generar el PDF de devoluciones a proveedores:', error);
             res.status(500).json({ error: 'Error al generar el reporte de devoluciones a proveedores en PDF' });
+        }
+    };
+
+    static readonly GetParametrosRotacionProductosC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const parametros = await DataRotacionProductos.getParametros();
+            res.status(200).json(parametros);
+        } catch (error) {
+            console.error('Error al obtener los parámetros del reporte de rotación de productos:', error);
+            res.status(500).json({ error: 'Error al obtener los parámetros del reporte de rotación de productos' });
+        }
+    };
+
+    static readonly GetDatosRotacionProductosC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                fechaInicio: req.query.fechaInicio ?? null,
+                fechaFin: req.query.fechaFin ?? null,
+                idLaboratorio: req.query.idLaboratorio ?? null,
+                idTipoProducto: req.query.idTipoProducto ?? null,
+                clasificacion: req.query.clasificacion ?? null,
+                busqueda: req.query.busqueda ?? null,
+                soloConStock: req.query.soloConStock !== 'false',
+            };
+            const datos = await DataRotacionProductos.getDatos(filtros as any);
+            res.status(200).json(datos);
+        } catch (error) {
+            console.error('Error al generar los datos del reporte de rotación de productos:', error);
+            res.status(500).json({ error: 'Error al generar los datos del reporte de rotación de productos' });
+        }
+    };
+
+    static readonly DescargarExcelRotacionProductosC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                fechaInicio: req.query.fechaInicio ?? null,
+                fechaFin: req.query.fechaFin ?? null,
+                idLaboratorio: req.query.idLaboratorio ?? null,
+                idTipoProducto: req.query.idTipoProducto ?? null,
+                clasificacion: req.query.clasificacion ?? null,
+                busqueda: req.query.busqueda ?? null,
+                soloConStock: req.query.soloConStock !== 'false',
+            };
+            const datos = await DataRotacionProductos.getDatos(filtros as any);
+            const buffer = await generarExcelRotacionProductos(datos);
+            const nombre = `Reporte_Rotacion_ABC_${fechaArchivo()}.xlsx`;
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el Excel de rotación de productos:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de rotación de productos en Excel' });
+        }
+    };
+
+    static readonly DescargarPdfRotacionProductosC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                fechaInicio: req.query.fechaInicio ?? null,
+                fechaFin: req.query.fechaFin ?? null,
+                idLaboratorio: req.query.idLaboratorio ?? null,
+                idTipoProducto: req.query.idTipoProducto ?? null,
+                clasificacion: req.query.clasificacion ?? null,
+                busqueda: req.query.busqueda ?? null,
+                soloConStock: req.query.soloConStock !== 'false',
+            };
+            const datos = await DataRotacionProductos.getDatos(filtros as any);
+            const buffer = await generarPdfRotacionProductos(datos);
+            const nombre = `Reporte_Rotacion_ABC_${fechaArchivo()}.pdf`;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el PDF de rotación de productos:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de rotación de productos en PDF' });
+        }
+    };
+
+    static readonly GetParametrosFacturacionC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const parametros = await DataFacturacion.getParametros();
+            res.status(200).json(parametros);
+        } catch (error) {
+            console.error('Error al obtener los parámetros del reporte de facturación:', error);
+            res.status(500).json({ error: 'Error al obtener los parámetros del reporte de facturación' });
+        }
+    };
+
+    static readonly GetDatosFacturacionC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                fechaInicio: req.query.fechaInicio ?? null,
+                fechaFin: req.query.fechaFin ?? null,
+                estado: req.query.estado ?? null,
+                tipoFactura: req.query.tipoFactura ?? null,
+                busqueda: req.query.busqueda ?? null,
+            };
+            const datos = await DataFacturacion.getDatos(filtros as any);
+            res.status(200).json(datos);
+        } catch (error) {
+            console.error('Error al generar los datos del reporte de facturación:', error);
+            res.status(500).json({ error: 'Error al generar los datos del reporte de facturación' });
+        }
+    };
+
+    static readonly DescargarExcelFacturacionC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                fechaInicio: req.query.fechaInicio ?? null,
+                fechaFin: req.query.fechaFin ?? null,
+                estado: req.query.estado ?? null,
+                tipoFactura: req.query.tipoFactura ?? null,
+                busqueda: req.query.busqueda ?? null,
+            };
+            const datos = await DataFacturacion.getDatos(filtros as any);
+            const buffer = await generarExcelFacturacion(datos);
+            const nombre = `Reporte_Facturacion_${fechaArchivo()}.xlsx`;
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el Excel de facturación:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de facturación en Excel' });
+        }
+    };
+
+    static readonly DescargarPdfFacturacionC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const filtros = {
+                fechaInicio: req.query.fechaInicio ?? null,
+                fechaFin: req.query.fechaFin ?? null,
+                estado: req.query.estado ?? null,
+                tipoFactura: req.query.tipoFactura ?? null,
+                busqueda: req.query.busqueda ?? null,
+            };
+            const datos = await DataFacturacion.getDatos(filtros as any);
+            const buffer = await generarPdfFacturacion(datos);
+            const nombre = `Reporte_Facturacion_${fechaArchivo()}.pdf`;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+            res.status(200).send(buffer);
+        } catch (error) {
+            console.error('Error al generar el PDF de facturación:', error);
+            res.status(500).json({ error: 'Error al generar el reporte de facturación en PDF' });
         }
     };
 }

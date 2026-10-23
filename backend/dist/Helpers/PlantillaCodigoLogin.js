@@ -3,7 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.plantillaCodigoLogin = void 0;
 const COLOR_AMARILLO = '#EEBA29';
 const COLOR_MORADO = '#42137B';
-const plantillaCodigoLogin = (nombre, codigo) => `
+const plantillaCodigoLogin = (nombre, codigo, opciones = {}) => {
+    const mensaje = opciones.mensaje ?? 'recibiste este correo porque intentas iniciar sesion en el sistema. Ingresa el siguiente codigo para continuar:';
+    const nota = opciones.nota ?? 'Si no fuiste tu, ignora este correo. Nunca compartas este codigo con nadie.';
+    return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -25,8 +28,7 @@ const plantillaCodigoLogin = (nombre, codigo) => `
             <td style="padding:32px 28px;">
               <h2 style="margin:0 0 12px;color:${COLOR_MORADO};font-size:19px;text-align:center;">Codigo de verificacion</h2>
               <p style="margin:0 0 20px;color:#4b4b4b;font-size:14px;line-height:20px;text-align:center;">
-                Hola <strong>${nombre}</strong>, recibiste este correo porque intentas iniciar sesion en el sistema.
-                Ingresa el siguiente codigo para continuar:
+                Hola <strong>${nombre}</strong>, ${mensaje}
               </p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
@@ -41,13 +43,13 @@ const plantillaCodigoLogin = (nombre, codigo) => `
                 Este codigo caduca en <strong>5 minutos</strong>.
               </p>
               <p style="margin:0;color:#8c8c8c;font-size:12px;line-height:18px;text-align:center;">
-                Si no fuiste tu, ignora este correo. Nunca compartas este codigo con nadie.
+                ${nota}
               </p>
             </td>
           </tr>
           <tr>
             <td style="background-color:#f4f4f4;padding:16px;text-align:center;">
-              <p style="margin:0;color:#8c8c8c;font-size:11px;">Sistema de Gestion de Farmacia</p>
+              <p style="margin:0;color:#8c8c8c;font-size:11px;">Copyright 2024 Dr. Osvaldo</p>
             </td>
           </tr>
         </table>
@@ -57,5 +59,6 @@ const plantillaCodigoLogin = (nombre, codigo) => `
 </body>
 </html>
 `;
+};
 exports.plantillaCodigoLogin = plantillaCodigoLogin;
 //# sourceMappingURL=PlantillaCodigoLogin.js.map

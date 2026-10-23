@@ -1763,3 +1763,172 @@ export const DevolucionesProveedorParametrosCatalogoSchema = z.object({
   usuarios: z.array(z.object({ idUsuario: z.number(), nombre: z.string() })),
 });
 export type DevolucionesProveedorParametrosCatalogoType = z.infer<typeof DevolucionesProveedorParametrosCatalogoSchema>;
+// =========================================================================
+// TYPES: REPORTE DE ROTACION Y CLASIFICACION ABC DE PRODUCTOS
+// =========================================================================
+
+export const RotacionProductosParametrosSchema = z.object({
+  laboratorios: z.array(z.object({ idLaboratorio: z.number(), nombre: z.string() })),
+  tiposProducto: z.array(z.object({ idTipoProd: z.number(), nombre: z.string() })),
+});
+export type RotacionProductosParametrosType = z.infer<typeof RotacionProductosParametrosSchema>;
+
+export const RotacionProductosDetalleSchema = z.object({
+  idProducto: z.number(),
+  codigoBarra: z.string(),
+  nombreComercial: z.string(),
+  nombreGenerico: z.string().nullable(),
+  concentracion: z.string().nullable(),
+  presentacion: z.string().nullable(),
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  tipoProducto: z.string().nullable(),
+  unidadesVendidas: z.number(),
+  frecuenciaSalida: z.number(),
+  montoVendido: z.number(),
+  stockActual: z.number(),
+  valorStock: z.number(),
+  proximoVencimiento: z.string().nullable(),
+  clasificacion: z.string(),
+});
+export const RotacionProductosDetalleArraySchema = z.array(RotacionProductosDetalleSchema);
+export type RotacionProductosDetalleType = z.infer<typeof RotacionProductosDetalleSchema>;
+
+export const RotacionProductosResumenClasificacionSchema = z.object({
+  clasificacion: z.string(),
+  productos: z.number(),
+  unidadesVendidas: z.number(),
+  montoVendido: z.number(),
+  valorStock: z.number(),
+});
+
+export const RotacionProductosResumenLaboratorioSchema = z.object({
+  idLaboratorio: z.number(),
+  laboratorio: z.string(),
+  productos: z.number(),
+  montoVendido: z.number(),
+  valorStock: z.number(),
+});
+
+export const RotacionProductosTopProductoSchema = z.object({
+  idProducto: z.number(),
+  producto: z.string(),
+  clasificacion: z.string(),
+  unidades: z.number(),
+  monto: z.number(),
+});
+
+export const RotacionProductosCriticoSchema = z.object({
+  idProducto: z.number(),
+  producto: z.string(),
+  stock: z.number(),
+  proximoVencimiento: z.string().nullable(),
+  valorStock: z.number(),
+});
+
+export const ReporteRotacionProductosResumenSchema = z.object({
+  totalProductos: z.number(),
+  totalUnidadesVendidas: z.number(),
+  totalMontoVendido: z.number(),
+  totalStock: z.number(),
+  totalValorStock: z.number(),
+  porClasificacion: z.array(RotacionProductosResumenClasificacionSchema),
+  porLaboratorio: z.array(RotacionProductosResumenLaboratorioSchema),
+  topProductos: z.array(RotacionProductosTopProductoSchema),
+  criticos: z.array(RotacionProductosCriticoSchema),
+});
+
+export const ReporteRotacionProductosDatosSchema = z.object({
+  parametros: z.object({
+    fechaInicio: z.string().nullable(),
+    fechaFin: z.string().nullable(),
+    idLaboratorio: z.number().nullable(),
+    idTipoProducto: z.number().nullable(),
+    clasificacion: z.string().nullable(),
+    busqueda: z.string().nullable(),
+    soloConStock: z.boolean(),
+  }),
+  detalles: RotacionProductosDetalleArraySchema,
+  resumen: ReporteRotacionProductosResumenSchema,
+});
+export type ReporteRotacionProductosDatosType = z.infer<typeof ReporteRotacionProductosDatosSchema>;
+
+export const ReporteRotacionProductosFiltrosSchema = z.object({
+  fechaInicio: z.string().optional(),
+  fechaFin: z.string().optional(),
+  idLaboratorio: z.number().optional(),
+  idTipoProducto: z.number().optional(),
+  clasificacion: z.string().optional(),
+  busqueda: z.string().optional(),
+  soloConStock: z.boolean().optional(),
+});
+export type ReporteRotacionProductosFiltrosType = z.infer<typeof ReporteRotacionProductosFiltrosSchema>;
+// =========================================================================
+// TYPES: REPORTE DE FACTURACION, EMISIONES Y ANULACIONES
+// =========================================================================
+
+export const FacturacionParametrosSchema = z.object({
+  estados: z.array(z.object({ value: z.string(), label: z.string() })),
+  tiposFactura: z.array(z.object({ value: z.string(), label: z.string() })),
+});
+export type FacturacionParametrosType = z.infer<typeof FacturacionParametrosSchema>;
+
+export const FacturacionDetalleSchema = z.object({
+  idFactura: z.number(),
+  numeroFactura: z.string(),
+  fechaEmision: z.string(),
+  tipoFactura: z.string(),
+  nitCliente: z.string(),
+  razonSocial: z.string(),
+  emailCliente: z.string().nullable(),
+  subtotal: z.number(),
+  descuento: z.number(),
+  impuesto: z.number(),
+  total: z.number(),
+  estado: z.string(),
+  fechaAnulacion: z.string().nullable(),
+  motivoAnulacion: z.string().nullable(),
+  idVenta: z.number(),
+  usuarioEmisor: z.string(),
+  usuarioAnulacion: z.string().nullable(),
+});
+export const FacturacionDetalleArraySchema = z.array(FacturacionDetalleSchema);
+export type FacturacionDetalleType = z.infer<typeof FacturacionDetalleSchema>;
+
+export const FacturacionResumenSchema = z.object({
+  totalFacturas: z.number(),
+  facturasEmitidas: z.number(),
+  facturasAnuladas: z.number(),
+  porcentajeAnuladas: z.number(),
+  montoTotal: z.number(),
+  montoEmitido: z.number(),
+  montoAnulado: z.number(),
+  subtotalTotal: z.number(),
+  descuentoTotal: z.number(),
+  impuestoTotal: z.number(),
+  porEstado: z.array(z.object({ estado: z.string(), facturas: z.number(), total: z.number() })),
+  porTipo: z.array(z.object({ tipo: z.string(), facturas: z.number(), total: z.number() })),
+  motivosAnulacion: z.array(z.object({ motivo: z.string(), facturas: z.number() })),
+});
+
+export const ReporteFacturacionDatosSchema = z.object({
+  parametros: z.object({
+    fechaInicio: z.string().nullable(),
+    fechaFin: z.string().nullable(),
+    estado: z.string().nullable(),
+    tipoFactura: z.string().nullable(),
+    busqueda: z.string().nullable(),
+  }),
+  detalles: FacturacionDetalleArraySchema,
+  resumen: FacturacionResumenSchema,
+});
+export type ReporteFacturacionDatosType = z.infer<typeof ReporteFacturacionDatosSchema>;
+
+export const ReporteFacturacionFiltrosSchema = z.object({
+  fechaInicio: z.string().optional(),
+  fechaFin: z.string().optional(),
+  estado: z.string().optional(),
+  tipoFactura: z.string().optional(),
+  busqueda: z.string().optional(),
+});
+export type ReporteFacturacionFiltrosType = z.infer<typeof ReporteFacturacionFiltrosSchema>;

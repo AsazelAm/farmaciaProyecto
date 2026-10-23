@@ -61,7 +61,28 @@ class VentaControllers {
                     return res.status(400).json({ error: `Stock insuficiente o lote no disponible (idLote ${detalle.idLote})` });
                 }
             }
-            // 3. Crear venta
+            // 3. Regla FEFO: el lote despachado debe ser el de vencimiento más próximo.
+            //    Si hay un lote más próximo aún disponible, la venta se detiene salvo
+            //    que el cajero lo justifique explícitamente (desvío autorizado).
+            const incumplimientoFEFO = await VentaModels_1.default.ValidarFEFODetalles(datos.detalles);
+            if (incumplimientoFEFO) {
+                if (datos.permitirDesvioFEFO === true) {
+                    const motivo = (datos.motivoDesvioFEFO || 'Sin motivo declarado').toString().trim();
+                    const auditoria = `[FEFO] Se despachó el lote ${incumplimientoFEFO.numeroLote} (vence en ${incumplimientoFEFO.diasRestantes} días) ` +
+                        `en lugar del lote ${incumplimientoFEFO.numeroLoteFEFO} (vence en ${incumplimientoFEFO.diasRestantesFEFO} días). ` +
+                        `Motivo: ${motivo}`;
+                    datos.observaciones = datos.observaciones
+                        ? `${datos.observaciones} | ${auditoria}`
+                        : auditoria;
+                }
+                else {
+                    return res.status(400).json({
+                        error: incumplimientoFEFO.mensaje,
+                        alertaFEFO: incumplimientoFEFO,
+                    });
+                }
+            }
+            // 4. Crear venta
             const idVenta = await VentaModels_1.default.crear(datos, idUsuario);
             res.status(201).json({
                 message: 'Venta registrada exitosamente',
@@ -84,6 +105,14 @@ class VentaControllers {
             const datos = req.body;
             if (!datos.detalles || datos.detalles.length === 0) {
                 return res.status(400).json({ error: 'Debe ingresar al menos un producto para actualizar la venta' });
+            }
+            // Regla FEFO también aplica a la edición de ventas pendientes.
+            const incumplimientoFEFO = await VentaModels_1.default.ValidarFEFODetalles(datos.detalles);
+            if (incumplimientoFEFO && datos.permitirDesvioFEFO !== true) {
+                return res.status(400).json({
+                    error: incumplimientoFEFO.mensaje,
+                    alertaFEFO: incumplimientoFEFO,
+                });
             }
             await VentaModels_1.default.actualizar(idVenta, datos);
             res.status(200).json({ message: 'Venta actualizada exitosamente' });
@@ -159,6 +188,21 @@ class VentaControllers {
         catch (error) {
             console.error('Error al obtener lotes disponibles del producto:', error);
             res.status(500).json({ error: 'Error al obtener los lotes disponibles' });
+        }
+    };
+    // ── GET: Alerta FEFO de un lote seleccionado en el POS ───────────────────
+    // Compara el lote elegido con el lote de vencimiento más próximo del mismo
+    // producto para avisar al personal cuando se está desviando la regla FEFO.
+    static GetAlertaFEFOC = async (req, res) => {
+        try {
+            const idProducto = Number(req.params.idProducto);
+            const idLote = Number(req.params.idLote);
+            const data = await VentaModels_1.default.AlertaFEFO(idProducto, idLote);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.error('Error al obtener la alerta FEFO del lote:', error);
+            res.status(500).json({ error: 'Error al obtener la alerta FEFO del lote' });
         }
     };
     // ── GET: Datos de facturación (NIT/razón social) previos de un cliente ────

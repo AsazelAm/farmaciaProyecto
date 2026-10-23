@@ -12,6 +12,9 @@ router.get('/GetEstadisticasVentas', VentaControllers_1.VentaControllers.GetEsta
 //  GET: lotes activos disponibles de un producto (para el selector del POS) 
 // También debe ir ANTES de las rutas con /:idVenta para no chocar con Express.
 router.get('/GetLotesDisponibles/:idProducto', VentaControllers_1.VentaControllers.GetLotesDisponiblesC);
+//  GET: alerta FEFO de un lote elegido en el POS (compara con el lote que
+//       vence primero). También debe ir ANTES de las rutas con /:idVenta.
+router.get('/GetAlertaFEFO/:idProducto/:idLote', VentaControllers_1.VentaControllers.GetAlertaFEFOC);
 //  GET: datos de facturación (NIT/razón social) usados antes por un cliente 
 router.get('/GetDatosFacturacionCliente/:idCliente', VentaControllers_1.VentaControllers.GetDatosFacturacionClienteC);
 //  GET: lista todas las ventas (soporta filtros y paginación por query) ──
