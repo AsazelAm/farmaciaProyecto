@@ -19,10 +19,9 @@ import { GetProductoApi } from "../../../../Api/ProductoApi";
 import {
   AddVentaApi,
   ChangeEstadoVentaApi,
-  EmitirFacturaApi,
+  EmitirReciboApi,
   GetAlertaFEFOApi,
   GetLotesDisponiblesApi,
-  GetDatosFacturacionClienteApi,
 } from "../../../../Api/VentaApi";
 // TODO: estos dos archivos API no venían en lo que compartiste. Los asumo
 // con la misma forma que ProductoApi/VentaApi (axios + safeParse con Zod).
@@ -42,7 +41,7 @@ import {
   type CreateVentaType,
   type LoteDisponibleType,
 } from "../../../../types";
-import Factura, { type IDatosCobro } from "./Factura";
+import Recibo, { type IDatosCobro } from "./Factura";
 
 // ── Tipos derivados de los schemas de Zod que ya tienes en types/index.ts ──
 // ProductoArray, ClienteArray y sucursalArray SÍ están exportados como
@@ -92,7 +91,7 @@ export default function NewVenta() {
     ID_CLIENTE_PUBLICO_GENERAL
   );
   const [idSucursalSeleccionada, setIdSucursalSeleccionada] = useState<number | null>(null);
-  const [modalFacturaAbierto, setModalFacturaAbierto] = useState(false);
+  const [modalReciboAbierto, setModalReciboAbierto] = useState(false);
   const [alertaFEFO, setAlertaFEFO] = useState<AlertaFEFOType | null>(null);
   const [motivoDesvio, setMotivoDesvio] = useState("");
   const [modalDesvioAbierto, setModalDesvioAbierto] = useState(false);
@@ -138,17 +137,6 @@ export default function NewVenta() {
   const { data: clientes = [] } = useQuery({
     queryKey: ["ClienteAll"],
     queryFn: GetClienteApi,
-  });
-
-  // Combinaciones de NIT/razón social que el cliente seleccionado ya usó en
-  // facturas anteriores (para autocompletar/sugerir en el modal de Factura).
-  // "enabled" evita pedirlo para "Sin Nombre / Público General" (no tiene
-  // historial propio) y se re-dispara solo cuando cambia el cliente porque
-  // idClienteSeleccionado forma parte de la queryKey.
-  const { data: datosFacturacionCliente = [] } = useQuery({
-    queryKey: ["datosFacturacionCliente", idClienteSeleccionado],
-    queryFn: () => GetDatosFacturacionClienteApi(idClienteSeleccionado),
-    enabled: idClienteSeleccionado !== ID_CLIENTE_PUBLICO_GENERAL,
   });
 
   const { data: sucursales = [] } = useQuery({
@@ -375,7 +363,7 @@ export default function NewVenta() {
 
   // ── Mutación: registra la venta completa ────────────────────────────────
   // Tu backend separa esto en 3 endpoints (AddVenta crea en 'pendiente',
-  // ChangeEstadoVenta la pasa a 'completado', EmitirFactura es opcional),
+  // ChangeEstadoVenta la pasa a 'completado', EmitirRecibo es opcional),
   // así que aquí encadenamos las 3 llamadas como una sola operación desde
   // la perspectiva del usuario: "Confirmar Transacción" = pagar y cerrar.
   const registrarVentaMutation = useMutation({
@@ -390,7 +378,6 @@ export default function NewVenta() {
         tipoPago: datosCobro.tipoPago,
         subtotal: subtotalBruto,
         descuentoTotal: descuentosAplicados,
-        impuestos,
         total,
         observaciones: datosCobro.observaciones,
         permitirDesvioFEFO: desvioFEFO?.permitir === true ? true : undefined,
@@ -410,9 +397,9 @@ export default function NewVenta() {
       // 2) Como ya se cobró en el modal, la pasamos a 'completado'
       await ChangeEstadoVentaApi(idVenta, "completado");
 
-      // 3) Emitir la factura solo si el usuario eligió "Con Factura"
-      if (datosCobro.emitirFactura) {
-        await EmitirFacturaApi(idVenta, datosCobro.facturaInput);
+      // 3) Emitir el recibo solo si el usuario eligió "Con Recibo"
+      if (datosCobro.emitirRecibo) {
+        await EmitirReciboApi(idVenta);
       }
 
       return idVenta;
@@ -426,7 +413,7 @@ export default function NewVenta() {
       queryClient.invalidateQueries({ queryKey: ["lotesDisponibles"] });
       limpiarVenta();
       setDesvioFEFO(null);
-      setModalFacturaAbierto(false);
+      setModalReciboAbierto(false);
       setModalDesvioAbierto(false);
     },
     onError: (error: any) => {
@@ -475,7 +462,7 @@ export default function NewVenta() {
               </span>
             </div>
             <p className="mt-1 text-xs text-white/80">
-              Panel Integral para Gestión de Medicamentos y Facturación
+              Panel Integral para Gestión de Medicamentos y Ventas
             </p>
           </div>
         </div>
@@ -842,7 +829,7 @@ export default function NewVenta() {
               </button>
               <button
                 type="button"
-                onClick={() => setModalFacturaAbierto(true)}
+                onClick={() => setModalReciboAbierto(true)}
                 disabled={carrito.length === 0}
                 className={`flex-1 rounded-xl py-2 text-sm font-semibold text-white ${COLORS.primario} disabled:bg-gray-300`}
               >
@@ -853,13 +840,12 @@ export default function NewVenta() {
         </section>
       </div>
 
-      {/* ═══════════════ MODAL DE COBRO Y FACTURACIÓN ═══════════════ */}
-      <Factura
-        isOpen={modalFacturaAbierto}
+      {/* ═══════════════ MODAL DE COBRO Y RECIBO ═══════════════ */}
+      <Recibo
+        isOpen={modalReciboAbierto}
         total={total}
         isLoading={registrarVentaMutation.isPending}
-        datosFacturacionPrevios={datosFacturacionCliente}
-        onClose={() => setModalFacturaAbierto(false)}
+        onClose={() => setModalReciboAbierto(false)}
         onConfirm={(datos) => registrarVentaMutation.mutate(datos)}
       />
 

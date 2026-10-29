@@ -53,11 +53,11 @@ const DataVenta = {
         const queryFinal = `
             SELECT 
                 v.idVenta, v.fechaCreacion, v.subtotal, v.descuentoTotal,
-                v.impuestos, v.total, v.estado, v.tipoPago,
+                v.total, v.estado, v.tipoPago,
                 cl.nombre AS cliente, cl.ci AS clienteNit,
                 u.nombre  AS usuario,
                 s.nombre  AS sucursal,
-                (SELECT idFactura FROM factura f WHERE f.idVenta = v.idVenta LIMIT 1) AS idFactura,
+                (SELECT r.idRecibo FROM recibo r WHERE r.idVenta = v.idVenta LIMIT 1) AS idRecibo,
                 (SELECT COUNT(*) FROM detalleventa dv WHERE dv.idVenta = v.idVenta) AS totalItems
             ${queryBase}
             ORDER BY v.fechaCreacion DESC
@@ -80,7 +80,7 @@ const DataVenta = {
         const ventas = await conection.query(`
             SELECT 
                 v.idVenta, v.fechaCreacion, v.fechaModificacion, v.subtotal, v.descuentoTotal,
-                v.impuestos, v.total, v.estado, v.tipoPago, v.observaciones,
+                v.total, v.estado, v.tipoPago, v.observaciones,
                 v.idCliente, v.idUsuario, v.idSucursal,
                 cl.nombre AS cliente, cl.ci AS clienteNit, cl.telefono AS clienteTelefono,
                 CONCAT(u.nombre, ' ', u.apellido) AS usuario, t.nameRol AS usuarioRol,
@@ -108,16 +108,15 @@ const DataVenta = {
                 lab.nombre AS nombreLaboratorio
             FROM detalleventa dv
             INNER JOIN lote        l   ON l.idLote        = dv.idLote
-            INNER JOIN producto    pr  ON pr.idProducto   = dv.idProducto
+            INNER JOIN producto    pr  ON pr.idProducto   = l.idProducto
             INNER JOIN laboratorio lab ON lab.idLaboratorio = pr.idLaboratorio
             WHERE dv.idVenta = ?
-            ORDER BY dv.idProducto ASC;
+            ORDER BY l.idProducto ASC;
         `, [idVenta]);
-        // 3. Factura asociada (si ya fue emitida)
-        const facturas = await conection.query(`
-            SELECT idFactura, numeroFactura, fechaEmision, tipoFactura, 
-                   nitCliente, razonSocial, estado, fechaAnulacion, motivoAnulacion
-            FROM factura WHERE idVenta = ?
+        // 3. Recibo asociado (si ya fue emitido)
+        const recibos = await conection.query(`
+            SELECT idRecibo, numeroRecibo, fechaEmision, estado
+            FROM recibo WHERE idVenta = ?
         `, [idVenta]);
         conection.release();
         // diasParaVencer llega como BigInt en algunos drivers de MySQL2 al usar
@@ -129,7 +128,7 @@ const DataVenta = {
         return {
             ...venta,
             detalles: detallesNormalizados,
-            factura: facturas[0] || null,
+            recibo: recibos[0] || null,
         };
     },
     // ── ADD: Crear una nueva venta (Transacción Completa) ─────────────────────
@@ -141,13 +140,12 @@ const DataVenta = {
             // 1. Insertar Cabecera (Venta)
             const insertVenta = await conection.query(`
                 INSERT INTO venta (
-                    subtotal, descuentoTotal, impuestos, total, estado,
+                    subtotal, descuentoTotal, total, estado,
                     tipoPago, observaciones, idCliente, idUsuario, idSucursal
-                ) VALUES (?, ?, ?, ?, 'pendiente', ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, 'pendiente', ?, ?, ?, ?, ?)
             `, [
                 datos.subtotal,
                 datos.descuentoTotal,
-                datos.impuestos,
                 datos.total,
                 datos.tipoPago || null,
                 datos.observaciones || null,
@@ -263,14 +261,10 @@ const DataVenta = {
                     idUsuarioCancelacion = ?
                 WHERE idVenta = ?
             `, [motivo || 'Venta anulada', idUsuario ?? null, idVenta]);
-            // 4. Si tiene factura emitida, anularla también
+            // 4. Si tiene recibo emitido, anularlo también
             await conection.query(`
-                UPDATE factura SET 
-                    estado = 'anulada', 
-                    fechaAnulacion = NOW(), 
-                    motivoAnulacion = ?
-                WHERE idVenta = ?
-            `, [motivo || 'Venta anulada', idVenta]);
+                UPDATE recibo SET estado = 'anulado' WHERE idVenta = ?
+            `, [idVenta]);
             await conection.commit();
             return true;
         }
@@ -302,7 +296,6 @@ const DataVenta = {
                 UPDATE venta SET
                     subtotal = ?,
                     descuentoTotal = ?,
-                    impuestos = ?,
                     total = ?,
                     tipoPago = ?,
                     observaciones = ?,
@@ -312,7 +305,6 @@ const DataVenta = {
             `, [
                 datos.subtotal,
                 datos.descuentoTotal,
-                datos.impuestos,
                 datos.total,
                 datos.tipoPago || null,
                 datos.observaciones || null,
@@ -371,90 +363,45 @@ const DataVenta = {
             conection.release();
         }
     },
-    // ── ADD: Emitir factura para una venta ya completada ──────────────────────
-    async emitirFactura(idVenta, datosFactura) {
+    // ── ADD: Emitir recibo para una venta ya completada ───────────────────────
+    async emitirRecibo(idVenta) {
         const conection = await db_1.default.getConnection();
         await conection.beginTransaction();
         try {
-            // 1. Verificar que la venta exista y esté completada
             const check = await conection.query(`
-                SELECT subtotal, descuentoTotal, impuestos, total, estado FROM venta WHERE idVenta = ?
+                SELECT estado FROM venta WHERE idVenta = ?
             `, [idVenta]);
             if (check.length === 0) {
                 throw new Error('La venta no existe.');
             }
             if (check[0].estado !== 'completado') {
-                throw new Error('Solo se puede facturar una venta completada.');
+                throw new Error('Solo se puede emitir un recibo de una venta completada.');
             }
-            // 2. Verificar que no tenga ya una factura vigente
-            const facturaExistente = await conection.query(`
-                SELECT idFactura FROM factura WHERE idVenta = ? AND estado != 'anulada'
+            const reciboExistente = await conection.query(`
+                SELECT idRecibo FROM recibo WHERE idVenta = ?
             `, [idVenta]);
-            if (facturaExistente.length > 0) {
-                throw new Error('Esta venta ya tiene una factura emitida.');
+            if (reciboExistente.length > 0) {
+                throw new Error('Esta venta ya tiene un recibo emitido.');
             }
-            // 3. Generar el número de factura correlativo con formato FAC-<año><consecutivo>
-            //    (ej. FAC-20260041). Se calcula el máximo consecutivo del año vigente,
-            //    extrayendo sólo los dígitos del patrón (ignora filas corruptas como '0000NaN').
-            const anio = new Date().getFullYear();
             const consecutivoFilas = await conection.query(`
-                SELECT MAX(CAST(SUBSTRING(numeroFactura, 9) AS UNSIGNED)) AS maxNumero
-                FROM factura
-                WHERE numeroFactura REGEXP CONCAT('^FAC-', ?, '[0-9]+$')
-            `, [anio]);
+                SELECT MAX(CAST(SUBSTRING(numeroRecibo, 3) AS UNSIGNED)) AS maxNumero
+                FROM recibo
+                WHERE numeroRecibo REGEXP '^R-[0-9]+$'
+            `);
             const siguienteNumero = Number(consecutivoFilas[0]?.maxNumero ?? 0) + 1;
-            const numeroFactura = `FAC-${anio}${String(siguienteNumero).padStart(5, '0')}`;
-            // 4. Insertar la factura replicando el desglose de montos de la venta
-            const subtotal = Number(check[0].subtotal);
-            const descuento = Number(check[0].descuentoTotal);
-            const impuesto = Number(check[0].impuestos);
-            const total = Number(check[0].total);
-            const insertFactura = await conection.query(`
-                INSERT INTO factura (
-                    numeroFactura, tipoFactura, nitCliente, razonSocial,
-                    subtotal, descuento, impuesto, total, estado, idVenta
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'emitida', ?)
-            `, [
-                numeroFactura,
-                datosFactura.tipoFactura,
-                datosFactura.nitCliente || null,
-                datosFactura.razonSocial || null,
-                subtotal,
-                descuento,
-                impuesto,
-                total,
-                idVenta
-            ]);
+            const numeroRecibo = `R-${String(siguienteNumero).padStart(6, '0')}`;
+            const insertRecibo = await conection.query(`
+                INSERT INTO recibo (numeroRecibo, idVenta) VALUES (?, ?)
+            `, [numeroRecibo, idVenta]);
             await conection.commit();
-            return Number(insertFactura.insertId);
+            return {
+                idRecibo: Number(insertRecibo.insertId),
+                numeroRecibo,
+            };
         }
         catch (error) {
             await conection.rollback();
             throw error;
-        }
-        finally {
-            conection.release();
-        }
-    },
-    // ── GET: Datos de facturación (NIT / Razón Social) usados antes por un cliente ──
-    // Un cliente puede haber facturado antes con distintos NIT/razón social
-    // (ej. a veces con su CI personal, a veces con el NIT de su empresa).
-    // Buscamos en el histórico de facturas de SUS ventas, agrupando
-    // combinaciones repetidas y trayendo la más reciente primero.
-    async obtenerDatosFacturacionPorCliente(idCliente) {
-        const conection = await db_1.default.getConnection();
-        try {
-            const results = await conection.query(`
-                SELECT f.nitCliente, f.razonSocial, MAX(f.fechaEmision) AS ultimaVez
-                FROM factura f
-                INNER JOIN venta v ON v.idVenta = f.idVenta
-                WHERE v.idCliente = ?
-                  AND f.estado != 'anulada'
-                  AND (f.nitCliente IS NOT NULL OR f.razonSocial IS NOT NULL)
-                GROUP BY f.nitCliente, f.razonSocial
-                ORDER BY ultimaVez DESC
-            `, [idCliente]);
-            return results;
         }
         finally {
             conection.release();
@@ -490,9 +437,10 @@ const DataVenta = {
                     SELECT ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, SUM(dv.cantidad) AS unidadesVendidas, SUM(dv.subtotal) AS monto
                     FROM detalleventa dv
                     INNER JOIN venta v ON v.idVenta = dv.idVenta
-                    INNER JOIN producto pr ON pr.idProducto = dv.idProducto
+                    INNER JOIN lote l ON l.idLote = dv.idLote
+                    INNER JOIN producto pr ON pr.idProducto = l.idProducto
                     WHERE v.estado = 'completado'
-                    GROUP BY dv.idProducto
+                    GROUP BY l.idProducto
                     ORDER BY unidadesVendidas DESC LIMIT 5
                 `)
             ]);

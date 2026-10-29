@@ -20,16 +20,10 @@ export interface IVentaInput {
     idSucursal: number;
     tipoPago?: string;
     descuentoTotal: number;
-    impuestos: number;
     subtotal: number;
     total: number;
     observaciones?: string;
     detalles: IDetalleVentaInput[];
-}
-export interface IFacturaInput {
-    tipoFactura: string;
-    nitCliente?: string;
-    razonSocial?: string;
 }
 declare const DataVenta: {
     listar(filtros: IVentaFiltros): Promise<{
@@ -42,8 +36,10 @@ declare const DataVenta: {
     cambiarAPendiente(idVenta: number): Promise<boolean>;
     anular(idVenta: number, motivo?: string, idUsuario?: number): Promise<boolean>;
     actualizar(idVenta: number, datos: IVentaInput): Promise<boolean>;
-    emitirFactura(idVenta: number, datosFactura: IFacturaInput): Promise<number>;
-    obtenerDatosFacturacionPorCliente(idCliente: number): Promise<any>;
+    emitirRecibo(idVenta: number): Promise<{
+        idRecibo: number;
+        numeroRecibo: string;
+    }>;
     estadisticas(): Promise<{
         porEstado: {
             estado: any;

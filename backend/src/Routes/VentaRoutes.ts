@@ -26,11 +26,6 @@ router.get('/GetAlertaFEFO/:idProducto/:idLote',
     VentaControllers.GetAlertaFEFOC
 );
 
-//  GET: datos de facturación (NIT/razón social) usados antes por un cliente 
-router.get('/GetDatosFacturacionCliente/:idCliente',
-    VentaControllers.GetDatosFacturacionClienteC
-);
-
 //  GET: lista todas las ventas (soporta filtros y paginación por query) ──
 router.get('/GetVentas',
     VentaControllers.GetVentasC
@@ -56,9 +51,9 @@ router.patch('/ChangeEstadoVenta/:idVenta',
     VentaControllers.ChangeEstadoVentaC
 );
 
-//  POST: emitir la factura de una venta ya completada 
-router.post('/EmitirFactura/:idVenta',
-    VentaControllers.EmitirFacturaC
+//  POST: emitir el recibo de una venta ya completada 
+router.post('/EmitirRecibo/:idVenta',
+    VentaControllers.EmitirReciboC
 );
 
 export default router;

@@ -22,13 +22,10 @@ const DataReporteFacturacion = {
     async getParametros() {
         const conection = await conectar.getConnection();
         try {
-            const [estados, tipos] = await Promise.all([
-                conection.query(`SELECT DISTINCT estado FROM factura ORDER BY estado ASC`),
-                conection.query(`SELECT DISTINCT tipoFactura FROM factura ORDER BY tipoFactura ASC`),
-            ]);
+            const estados = await conection.query(`SELECT DISTINCT estado FROM recibo ORDER BY estado ASC`);
             return {
                 estados: (estados as any[]).map((e) => ({ value: e.estado, label: e.estado })),
-                tiposFactura: (tipos as any[]).map((t) => ({ value: t.tipoFactura, label: t.tipoFactura })),
+                tiposFactura: [],
             };
         } finally { conection.release(); }
     },
@@ -38,83 +35,78 @@ const DataReporteFacturacion = {
         let where = '';
         const fechaInicio = fechaValida(filtros.fechaInicio);
         const fechaFin = fechaValida(filtros.fechaFin);
-        if (fechaInicio) { where += ` AND DATE(f.fechaEmision) >= ?`; params.push(fechaInicio); }
-        if (fechaFin) { where += ` AND DATE(f.fechaEmision) <= ?`; params.push(fechaFin); }
+        if (fechaInicio) { where += ` AND DATE(r.fechaEmision) >= ?`; params.push(fechaInicio); }
+        if (fechaFin) { where += ` AND DATE(r.fechaEmision) <= ?`; params.push(fechaFin); }
         const estado = textoValido(filtros.estado);
-        if (estado !== '') { where += ` AND f.estado = ?`; params.push(estado); }
+        if (estado !== '') { where += ` AND r.estado = ?`; params.push(estado); }
         const tipoFactura = textoValido(filtros.tipoFactura);
-        if (tipoFactura !== '') { where += ` AND f.tipoFactura = ?`; params.push(tipoFactura); }
         const busqueda = textoValido(filtros.busqueda);
         if (busqueda !== '') {
             const like = `%${busqueda}%`;
-            where += ` AND (f.numeroFactura LIKE ? OR f.nitCliente LIKE ? OR f.razonSocial LIKE ?)`;
-            params.push(like, like, like);
+            where += ` AND (r.numeroRecibo LIKE ? OR c.ci LIKE ? OR c.nombre LIKE ? OR c.apellido LIKE ?)`;
+            params.push(like, like, like, like);
         }
 
         const rows = await conection.query(
             `SELECT
-                f.idFactura,
-                f.numeroFactura,
-                DATE_FORMAT(f.fechaEmision, '%Y-%m-%d %H:%i') AS fechaEmision,
-                f.tipoFactura,
-                f.nitCliente,
-                f.razonSocial,
-                f.subtotal,
-                f.descuento,
-                f.impuesto,
-                f.total,
-                f.estado,
-                DATE_FORMAT(f.fechaAnulacion, '%Y-%m-%d %H:%i') AS fechaAnulacion,
-                f.motivoAnulacion,
-                f.idVenta,
+                r.idRecibo,
+                r.numeroRecibo,
+                DATE_FORMAT(r.fechaEmision, '%Y-%m-%d %H:%i') AS fechaEmision,
+                r.estado,
+                r.idVenta,
+                v.subtotal,
+                v.descuentoTotal,
+                v.total,
+                DATE_FORMAT(v.fechaCancelacion, '%Y-%m-%d %H:%i') AS fechaAnulacion,
+                v.motivoCancelacion,
                 v.idUsuario,
                 TRIM(CONCAT(u.nombre, ' ', u.apellido)) AS usuarioEmisor,
                 v.idUsuarioCancelacion,
                 TRIM(CONCAT(a.nombre, ' ', a.apellido)) AS usuarioAnulacion,
+                c.ci AS nitCliente,
+                TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS razonSocial,
                 c.email AS emailCliente
-            FROM factura f
-            INNER JOIN venta v ON v.idVenta = f.idVenta
+            FROM recibo r
+            INNER JOIN venta v ON v.idVenta = r.idVenta
             LEFT JOIN usuario u ON u.idUsuario = v.idUsuario
             LEFT JOIN usuario a ON a.idUsuario = v.idUsuarioCancelacion
             LEFT JOIN cliente c ON c.idCliente = v.idCliente
             WHERE 1=1 ${where}
-            ORDER BY f.fechaEmision DESC`,
+            ORDER BY r.fechaEmision DESC`,
             params,
         );
         conection.release();
 
-        const detalles = (rows as any[]).map((r) => ({
-            idFactura: num(r.idFactura),
-            numeroFactura: r.numeroFactura ?? '',
-            fechaEmision: r.fechaEmision,
-            tipoFactura: r.tipoFactura ?? '',
-            nitCliente: r.nitCliente ?? '',
-            razonSocial: r.razonSocial ?? '',
-            emailCliente: r.emailCliente ?? null,
-            subtotal: num(r.subtotal),
-            descuento: num(r.descuento),
-            impuesto: num(r.impuesto),
-            total: num(r.total),
-            estado: r.estado ?? '',
-            fechaAnulacion: r.fechaAnulacion ?? null,
-            motivoAnulacion: r.motivoAnulacion ?? null,
-            idVenta: num(r.idVenta),
-            usuarioEmisor: r.usuarioEmisor ?? 'Sin usuario',
-            usuarioAnulacion: r.usuarioAnulacion ?? null,
-        }));
+        const detalles = (rows as any[]).map((r) => {
+            const anulado = r.estado === 'anulado';
+            return {
+                idFactura: num(r.idRecibo),
+                numeroFactura: r.numeroRecibo ?? '',
+                fechaEmision: r.fechaEmision,
+                tipoFactura: '',
+                nitCliente: r.nitCliente ?? '',
+                razonSocial: r.razonSocial ?? '',
+                emailCliente: r.emailCliente ?? null,
+                subtotal: num(r.subtotal),
+                descuento: num(r.descuentoTotal),
+                impuesto: 0,
+                total: num(r.total),
+                estado: r.estado ?? '',
+                fechaAnulacion: anulado ? (r.fechaAnulacion ?? null) : null,
+                motivoAnulacion: anulado ? (r.motivoCancelacion ?? null) : null,
+                idVenta: num(r.idVenta),
+                usuarioEmisor: r.usuarioEmisor ?? 'Sin usuario',
+                usuarioAnulacion: r.usuarioAnulacion ?? null,
+            };
+        });
 
         const totalFacturas = detalles.length;
-        const emitidas = detalles.filter((d) => d.estado.toLowerCase() === 'emitida' || d.estado.toLowerCase() === 'vigente');
-        const anuladas = detalles.filter((d) => d.estado.toLowerCase() === 'anulada');
+        const emitidas = detalles.filter((d) => d.estado === 'emitido');
+        const anuladas = detalles.filter((d) => d.estado === 'anulado');
         const porEstadoMap = new Map<string, { estado: string; facturas: number; total: number }>();
         detalles.forEach((d) => {
             const actual = porEstadoMap.get(d.estado) ?? { estado: d.estado, facturas: 0, total: 0 };
             actual.facturas += 1; actual.total += d.total; porEstadoMap.set(d.estado, actual);
-        });
-        const porTipoMap = new Map<string, { tipo: string; facturas: number; total: number }>();
-        detalles.forEach((d) => {
-            const actual = porTipoMap.get(d.tipoFactura) ?? { tipo: d.tipoFactura, facturas: 0, total: 0 };
-            actual.facturas += 1; actual.total += d.total; porTipoMap.set(d.tipoFactura, actual);
         });
         const motivosMap = new Map<string, { motivo: string; facturas: number }>();
         anuladas.forEach((d) => {
@@ -136,9 +128,9 @@ const DataReporteFacturacion = {
                 montoAnulado: anuladas.reduce((a, d) => a + d.total, 0),
                 subtotalTotal: detalles.reduce((a, d) => a + d.subtotal, 0),
                 descuentoTotal: detalles.reduce((a, d) => a + d.descuento, 0),
-                impuestoTotal: detalles.reduce((a, d) => a + d.impuesto, 0),
+                impuestoTotal: 0,
                 porEstado: [...porEstadoMap.values()].sort((a, b) => b.facturas - a.facturas),
-                porTipo: [...porTipoMap.values()].sort((a, b) => b.facturas - a.facturas),
+                porTipo: [],
                 motivosAnulacion: [...motivosMap.values()].sort((a, b) => b.facturas - a.facturas),
             },
         };

@@ -334,7 +334,7 @@ function FilaDetalle({ d }: { d: DevolucionReporteDetalleType }) {
       </td>
       <td className="px-4 py-3 text-xs text-gray-600">
         <p className="font-semibold text-gray-700">Venta #{d.idVenta}</p>
-        <p>{d.numeroFactura ?? "Sin factura"}</p>
+        <p>{d.numeroFactura ?? "Sin recibo"}</p>
       </td>
       <td className="px-4 py-3 text-xs text-gray-600">
         <p className="font-semibold text-gray-700">{d.cliente}</p>

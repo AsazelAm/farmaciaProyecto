@@ -520,18 +520,18 @@ export async function DescargarReporteRotacionProductosPdfApi(filtros: ReporteRo
 export async function GetParametrosFacturacionApi(): Promise<FacturacionParametrosType> {
   try {
     const { data } = await api.get('/Reporte/GetParametrosFacturacion');
-    return validar(FacturacionParametrosSchema, data, "Error en la validación de los parámetros del reporte de facturación");
+    return validar(FacturacionParametrosSchema, data, "Error en la validaciï¿½n de los parï¿½metros del reporte de facturaciï¿½n");
   } catch (error) {
-    throw mensajeError(error, "Error al obtener los parámetros del reporte de facturación");
+    throw mensajeError(error, "Error al obtener los parï¿½metros del reporte de facturaciï¿½n");
   }
 }
 
 export async function GetReporteFacturacionDatosApi(filtros: ReporteFacturacionFiltrosType): Promise<ReporteFacturacionDatosType> {
   try {
     const { data } = await api.get('/Reporte/GetDatosFacturacion', { params: filtros });
-    return validar(ReporteFacturacionDatosSchema, data, "Error en la validación de los datos del reporte de facturación");
+    return validar(ReporteFacturacionDatosSchema, data, "Error en la validaciï¿½n de los datos del reporte de facturaciï¿½n");
   } catch (error) {
-    throw mensajeError(error, "Error al obtener los datos del reporte de facturación");
+    throw mensajeError(error, "Error al obtener los datos del reporte de facturaciï¿½n");
   }
 }
 
@@ -541,11 +541,11 @@ export async function DescargarReporteFacturacionExcelApi(filtros: ReporteFactur
     const blob = data instanceof Blob ? data : new Blob([data]);
     const url = window.URL.createObjectURL(blob);
     const enlace = document.createElement("a");
-    enlace.href = url; enlace.download = "Reporte_Facturacion.xlsx";
+    enlace.href = url;     enlace.download = "Reporte_Recibos.xlsx";
     document.body.appendChild(enlace); enlace.click(); enlace.remove();
     window.URL.revokeObjectURL(url);
   } catch (error) {
-    throw mensajeError(error, "Error al descargar el reporte de facturación en Excel");
+    throw mensajeError(error, "Error al descargar el reporte de facturaciï¿½n en Excel");
   }
 }
 
@@ -555,10 +555,10 @@ export async function DescargarReporteFacturacionPdfApi(filtros: ReporteFacturac
     const blob = data instanceof Blob ? data : new Blob([data]);
     const url = window.URL.createObjectURL(blob);
     const enlace = document.createElement("a");
-    enlace.href = url; enlace.download = "Reporte_Facturacion.pdf";
+    enlace.href = url;     enlace.download = "Reporte_Recibos.pdf";
     document.body.appendChild(enlace); enlace.click(); enlace.remove();
     window.URL.revokeObjectURL(url);
   } catch (error) {
-    throw mensajeError(error, "Error al descargar el reporte de facturación en PDF");
+    throw mensajeError(error, "Error al descargar el reporte de facturaciï¿½n en PDF");
   }
 }

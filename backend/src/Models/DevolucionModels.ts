@@ -122,7 +122,7 @@ const DataDevolucion = {
             SELECT
                 dv.idDevolucionVenta, dv.fechaCreacion, dv.fechaResolucion, dv.tipo,
                 dv.motivo, dv.estado, dv.montoReembolso, dv.metodoReembolso,
-                dv.numeroNotaCredito, dv.observaciones,
+                dv.observaciones,
                 dv.idVenta,
                 cl.nombre AS cliente,
                 CONCAT(u.nombre, ' ', u.apellido) AS usuario,
@@ -153,7 +153,7 @@ const DataDevolucion = {
             SELECT
                 dv.idDevolucionVenta, dv.fechaCreacion, dv.fechaResolucion, dv.fechaModificacion,
                 dv.tipo, dv.motivo, dv.estado, dv.montoReembolso, dv.metodoReembolso,
-                dv.numeroNotaCredito, dv.motivoRechazo, dv.observaciones,
+                dv.motivoRechazo, dv.observaciones,
                 dv.idVenta, dv.idUsuario, dv.idUsuarioAutoriza,
                 cl.nombre AS cliente, cl.ci AS clienteNit,
                 CONCAT(u.nombre, ' ', u.apellido) AS usuario,
@@ -173,15 +173,15 @@ const DataDevolucion = {
 
         const detalles = await conection.query(`
             SELECT
-                ddv.idLote, ddv.idProducto, ddv.cantidad, ddv.precioUnitario,
+                ddv.idLote, pr.idProducto, ddv.cantidad, ddv.precioUnitario,
                 ddv.subtotal, ddv.destino,
                 l.numeroLote, l.codigo,
                 pr.nombreComercial, ${sqlNombreGenerico('pr')} AS nombreGenerico
             FROM detalledevolucionventa ddv
             INNER JOIN lote     l  ON l.idLote     = ddv.idLote
-            INNER JOIN producto pr ON pr.idProducto = ddv.idProducto
+            INNER JOIN producto pr ON pr.idProducto = l.idProducto
             WHERE ddv.idDevolucionVenta = ?
-            ORDER BY ddv.idProducto ASC
+            ORDER BY l.idProducto ASC
         `, [idDevolucionVenta]);
 
         conection.release();
@@ -302,12 +302,11 @@ const DataDevolucion = {
                     UPDATE devolucionventa SET
                         estado = 'completada',
                         metodoReembolso = COALESCE(?, metodoReembolso),
-                        numeroNotaCredito = COALESCE(?, numeroNotaCredito),
                         fechaResolucion = NOW(),
                         fechaModificacion = NOW(),
                         idUsuarioAutoriza = ?
                     WHERE idDevolucionVenta = ?
-                `, [datos.metodoReembolso || null, datos.numeroNotaCredito || null, idUsuarioAutoriza, idDevolucionVenta]);
+                `, [datos.metodoReembolso || null, idUsuarioAutoriza, idDevolucionVenta]);
 
             } else if (datos.estado === 'rechazada') {
                 await conection.query(`

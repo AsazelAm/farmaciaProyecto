@@ -11,7 +11,7 @@ interface ConfigEntidad {
     estadoCompletado: string;
     campoId: string;         // columna de PK del registro (idVenta / idCompra)
     colDescuento: string;    // nombre de la columna de descuento
-    colImpuesto: string;     // nombre de la columna de impuesto
+    colImpuesto: string | null; // nombre de la columna de impuesto (null si no aplica)
     // columnas comunes
     joinPagador: string;   // join hacia la persona/cliente o proveedor
     campoPagador: string;  // columna de la persona (nombre/cliente o nombre proveedor)
@@ -27,13 +27,13 @@ const CONFIGS: Record<string, ConfigEntidad> = {
         estadoCompletado: 'completado',
         campoId: 'idVenta',
         colDescuento: 'descuentoTotal',
-        colImpuesto: 'impuestos',
+        colImpuesto: null,
         joinPagador: `INNER JOIN cliente cl ON cl.idCliente = v.idCliente`,
         campoPagador: 'cl.nombre',
         aliasPagador: 'cliente',
-        campoNumero: `(SELECT f.numeroFactura FROM factura f
-             WHERE f.idVenta = v.idVenta
-             ORDER BY f.fechaEmision ASC LIMIT 1)`,
+        campoNumero: `(SELECT r.numeroRecibo FROM recibo r
+             WHERE r.idVenta = v.idVenta
+             ORDER BY r.fechaEmision ASC LIMIT 1)`,
         columnaExtra: 'v.tipoPago AS tipoPago',
     },
     compra: {
@@ -136,6 +136,8 @@ async function obtenerDatosEntidad(entidad: string, frecuenciaValue: string, fec
 
     const conection = await conectar.getConnection();
 
+    const exprImpuesto = config.colImpuesto ? `${config.alias}.${config.colImpuesto}` : '0';
+
     try {
         const [rowsPeriodos, rowsDetalle] = await Promise.all([
             conection.query(`
@@ -144,7 +146,7 @@ async function obtenerDatosEntidad(entidad: string, frecuenciaValue: string, fec
                        COUNT(*) AS cantidad,
                        IFNULL(SUM(${config.alias}.subtotal), 0) AS subtotal,
                        IFNULL(SUM(${config.alias}.${config.colDescuento}), 0) AS descuentoTotal,
-                       IFNULL(SUM(${config.alias}.${config.colImpuesto}), 0) AS impuestos,
+                       IFNULL(SUM(${exprImpuesto}), 0) AS impuestos,
                        IFNULL(SUM(${config.alias}.total), 0) AS total
                 FROM ${config.tabla} ${config.alias}
                 WHERE ${config.alias}.estado = '${config.estadoCompletado}'
@@ -159,7 +161,7 @@ async function obtenerDatosEntidad(entidad: string, frecuenciaValue: string, fec
                        ${config.alias}.fechaCreacion,
                        ${config.alias}.subtotal,
                        ${config.alias}.${config.colDescuento} AS descuentoTotal,
-                       ${config.alias}.${config.colImpuesto} AS impuestos,
+                       ${exprImpuesto} AS impuestos,
                        ${config.alias}.total,
                        ${config.alias}.estado,
                        ${config.campoPagador} AS pagador,

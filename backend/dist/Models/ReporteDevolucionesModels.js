@@ -74,15 +74,14 @@ const SELECT_DETALLE = `
         dv.estado,
         dv.montoReembolso,
         dv.metodoReembolso,
-        dv.numeroNotaCredito,
         dv.observaciones,
         dv.idVenta,
         DATE_FORMAT(v.fechaCreacion, '%Y-%m-%d %H:%i') AS fechaVenta,
         v.estado AS estadoVenta,
-        (SELECT f.numeroFactura
-           FROM factura f
-          WHERE f.idVenta = dv.idVenta
-          ORDER BY f.idFactura DESC LIMIT 1) AS numeroFactura,
+        (SELECT r.numeroRecibo
+           FROM recibo r
+          WHERE r.idVenta = dv.idVenta
+          ORDER BY r.idRecibo DESC LIMIT 1) AS numeroFactura,
         cl.idCliente,
         cl.ci AS clienteCi,
         TRIM(CONCAT(cl.nombre, ' ', COALESCE(cl.apellido, ''))) AS cliente,
@@ -94,7 +93,7 @@ const SELECT_DETALLE = `
         l.codigo AS codigoLote,
         l.numeroLote,
         DATE_FORMAT(l.fechaVencimiento, '%Y-%m-%d') AS fechaVencimiento,
-        ddv.idProducto,
+        l.idProducto AS idProducto,
         pr.codigoBarra,
         pr.nombreComercial,
         ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico,
@@ -123,7 +122,7 @@ const SELECT_DETALLE = `
     INNER JOIN usuario  u   ON u.idUsuario  = dv.idUsuario
     LEFT  JOIN usuario  caj ON caj.idUsuario = v.idUsuario
     INNER JOIN lote     l   ON l.idLote    = ddv.idLote
-    INNER JOIN producto pr  ON pr.idProducto = ddv.idProducto
+    INNER JOIN producto pr  ON pr.idProducto = l.idProducto
     INNER JOIN laboratorio lab ON lab.idLaboratorio = pr.idLaboratorio
     INNER JOIN presentacion pres ON pres.idPresentacion = pr.idPresentacion
 `;
@@ -218,7 +217,7 @@ const DataReporteDevoluciones = {
             where += ` AND (
                 CAST(dv.idDevolucionVenta AS CHAR) LIKE ?
                 OR CAST(dv.idVenta AS CHAR) LIKE ?
-                OR (SELECT f2.numeroFactura FROM factura f2 WHERE f2.idVenta = dv.idVenta ORDER BY f2.idFactura DESC LIMIT 1) LIKE ?
+                OR (SELECT r2.numeroRecibo FROM recibo r2 WHERE r2.idVenta = dv.idVenta ORDER BY r2.idRecibo DESC LIMIT 1) LIKE ?
                 OR cl.nombre LIKE ?
                 OR pr.nombreComercial LIKE ?
             )`;
@@ -242,7 +241,7 @@ const DataReporteDevoluciones = {
                 estadoLabel: exports.ESTADOS_DEVOLUCION[r.estado] ?? r.estado,
                 montoReembolso: num(r.montoReembolso),
                 metodoReembolso: r.metodoReembolso ?? null,
-                numeroNotaCredito: r.numeroNotaCredito ?? null,
+                numeroNotaCredito: null,
                 observaciones: r.observaciones ?? null,
                 idVenta: num(r.idVenta),
                 numeroFactura: r.numeroFactura ?? null,

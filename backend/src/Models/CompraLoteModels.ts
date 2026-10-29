@@ -276,6 +276,20 @@ const DataCompra = {
                 )
             `, [idCompra]);
 
+            await conection.query(`
+                UPDATE producto p
+                SET stockTotal = (
+                    SELECT COALESCE(SUM(l.stock),0)
+                    FROM lote l
+                    WHERE l.idProducto = p.idProducto
+                      AND l.estado IN ('activo','pendiente')
+                )
+                WHERE p.idProducto IN (
+                    SELECT l.idProducto FROM lote l
+                    WHERE l.idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
+                )
+            `, [idCompra]);
+
             await conection.commit();
             return true;
         } catch (error) {
@@ -330,6 +344,20 @@ async cambiarAPendiente(idCompra: number) {
             await conection.query(`
                 UPDATE lote SET estado = 'cancelado' 
                 WHERE idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
+            `, [idCompra]);
+
+            await conection.query(`
+                UPDATE producto p
+                SET stockTotal = (
+                    SELECT COALESCE(SUM(l.stock),0)
+                    FROM lote l
+                    WHERE l.idProducto = p.idProducto
+                      AND l.estado IN ('activo','pendiente')
+                )
+                WHERE p.idProducto IN (
+                    SELECT l.idProducto FROM lote l
+                    WHERE l.idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
+                )
             `, [idCompra]);
 
             await conection.commit();

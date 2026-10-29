@@ -525,7 +525,7 @@ export type ILoteFiltros = z.infer<typeof LoteFiltrosSchema>;
 
 
 // ========================================================================
-// TYPES: VENTA, DETALLE VENTA Y FACTURA (MÓDULO DE VENTAS)
+// TYPES: VENTA, DETALLE VENTA Y RECIBO (MÓDULO DE VENTAS)
 // ========================================================================
 
 // 1. Schema para DetalleVenta (Lo que devuelve el backend al consultar una venta)
@@ -551,20 +551,15 @@ export const DetalleVentaSchema = z.object({
 
 export type DetalleVentaType = z.infer<typeof DetalleVentaSchema>;
 
-// 2. Schema para la Factura asociada a una venta
-export const FacturaSchema = z.object({
-  idFactura: z.number(),
-  numeroFactura: z.string(),
+// 2. Schema para el Recibo asociado a una venta
+export const ReciboSchema = z.object({
+  idRecibo: z.number(),
+  numeroRecibo: z.string(),
   fechaEmision: z.string(),
-  tipoFactura: z.string(),
-  nitCliente: z.string().nullable().optional(),
-  razonSocial: z.string().nullable().optional(),
-  estado: z.enum(['emitida', 'anulada']),
-  fechaAnulacion: z.string().nullable().optional(),
-  motivoAnulacion: z.string().nullable().optional(),
+  estado: z.enum(['emitido', 'anulado']),
 });
 
-export type FacturaType = z.infer<typeof FacturaSchema>;
+export type ReciboType = z.infer<typeof ReciboSchema>;
 
 // 3. Schema para la Venta (Lectura)
 export const VentaSchema = z.object({
@@ -573,7 +568,6 @@ export const VentaSchema = z.object({
   fechaModificacion: z.string().optional(), // OJO: coincide con el typo de la tabla/model
   subtotal: z.union([z.number(), z.string()]).transform(Number),
   descuentoTotal: z.union([z.number(), z.string()]).transform(Number),
-  impuestos: z.union([z.number(), z.string()]).transform(Number),
   total: z.union([z.number(), z.string()]).transform(Number),
   estado: z.enum(['pendiente', 'completado', 'cancelado', 'devuelto_parcial', 'devuelto_total']),
   tipoPago: z.string().nullable().optional(),
@@ -588,10 +582,10 @@ export const VentaSchema = z.object({
   sucursalDireccion: z.string().nullable().optional(),
   // Campos calculados en listar()
   totalItems: z.number().optional(),
-  idFactura: z.number().nullable().optional(),
-  // Detalles y factura (solo vienen cuando pedimos por ID)
+  idRecibo: z.number().nullable().optional(),
+  // Detalles y recibo (solo vienen cuando pedimos por ID)
   detalles: z.array(DetalleVentaSchema).optional(),
-  factura: FacturaSchema.nullable().optional(),
+  recibo: ReciboSchema.nullable().optional(),
 });
 
 export const VentaListSchema = z.array(VentaSchema);
@@ -611,7 +605,6 @@ export const CreateVentaSchema = z.object({
   idSucursal: z.number(),
   tipoPago: z.string().optional(),
   descuentoTotal: z.number(),
-  impuestos: z.number(),
   subtotal: z.number(),
   total: z.number(),
   observaciones: z.string().optional(),
@@ -633,29 +626,7 @@ export const ChangeEstadoVentaSchema = z.object({
 
 export type ChangeEstadoVentaType = z.infer<typeof ChangeEstadoVentaSchema>;
 
-// 6. Schema para emitir factura
-export const FacturaInputSchema = z.object({
-  tipoFactura: z.string().min(1, 'Debe especificar el tipo de factura'),
-  nitCliente: z.string().optional(),
-  razonSocial: z.string().optional(),
-});
-
-export type IFacturaInput = z.infer<typeof FacturaInputSchema>;
-
-// 6.1 Schema para datos de facturación previos de un cliente (histórico)
-export const DatosFacturacionClienteSchema = z.array(
-  z.object({
-    nitCliente: z.string().nullable(),
-    razonSocial: z.string().nullable(),
-    ultimaVez: z.string(),
-  })
-);
-
-export type DatosFacturacionClienteType = z.infer<
-  typeof DatosFacturacionClienteSchema
->[number];
-
-// 7. Schema para Filtros de Búsqueda
+// 6. Schema para Filtros de Búsqueda
 export const VentaFiltrosSchema = z.object({
   estado: z.enum(['pendiente', 'completado', 'cancelado', 'devuelto_parcial', 'devuelto_total']).optional(),
   idCliente: z.number().optional(),
@@ -1443,7 +1414,7 @@ export const InventarioParametrosCatalogoSchema = z.object({
 export type InventarioParametrosCatalogoType = z.infer<typeof InventarioParametrosCatalogoSchema>;
 
 // ========================================================================
-// TYPES: REPORTE DE DEVOLUCIONES DE CLIENTES Y AN�LISIS DE CAUSAS
+// TYPES: REPORTE DE DEVOLUCIONES DE CLIENTES Y AN�LISIS DE CAUSAS
 // ========================================================================
 
 export const DevolucionReporteMotivoSchema = z.object({

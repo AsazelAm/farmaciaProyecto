@@ -158,7 +158,8 @@ const DataDashboard = {
                        SUM(dv.subtotal) AS monto
                 FROM detalleventa dv
                 INNER JOIN venta v     ON v.idVenta = dv.idVenta
-                INNER JOIN producto pr ON pr.idProducto = dv.idProducto
+                INNER JOIN lote l      ON l.idLote = dv.idLote
+                INNER JOIN producto pr ON pr.idProducto = l.idProducto
                 WHERE v.estado = 'completado'
                 GROUP BY pr.idProducto, pr.codigoBarra, pr.nombreComercial
                 ORDER BY unidades DESC
@@ -327,7 +328,7 @@ const DataDashboard = {
         try {
             const rows = await conection.query(`
                 SELECT v.idVenta, v.fechaCreacion, v.subtotal, v.descuentoTotal,
-                       v.impuestos, v.total, v.estado, v.tipoPago,
+                       v.total, v.estado, v.tipoPago,
                        cl.nombre AS cliente,
                        CONCAT(u.nombre, ' ', u.apellido) AS usuario,
                        s.nombre AS sucursal
@@ -344,7 +345,7 @@ const DataDashboard = {
                 fechaCreacion: v.fechaCreacion,
                 subtotal: num(v.subtotal),
                 descuentoTotal: num(v.descuentoTotal),
-                impuestos: num(v.impuestos),
+                impuestos: 0,
                 total: num(v.total),
                 estado: v.estado,
                 tipoPago: v.tipoPago,

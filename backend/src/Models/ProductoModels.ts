@@ -11,6 +11,7 @@ interface IProducto {
     contraindicaciones: string | null;
     viaAdministracion:  string | null;
     stockMinimo:        number;
+    stockTotal?:        number;
     idLaboratorio:      number;
     idPresentacion:     number;
 }
@@ -36,6 +37,7 @@ const DataProducto = {
                         p.contraindicaciones,
                         p.viaAdministracion,
                         p.stockMinimo,
+                        p.stockTotal,
                         p.estado,
                         p.idLaboratorio,
                         p.idPresentacion,

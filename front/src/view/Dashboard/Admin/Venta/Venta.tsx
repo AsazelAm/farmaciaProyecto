@@ -229,7 +229,7 @@ export default function Venta() {
             </span>
           </h1>
           <p className="text-sm mt-1 text-gray-500 ml-5">
-            Módulo de Registro de Ventas y Facturación
+            Módulo de Registro de Ventas y Recibos
           </p>
         </div>
       </div>
@@ -245,7 +245,7 @@ export default function Venta() {
         />
         <StatCard
           accentColor="#059669"
-          titulo="Ingresos Facturados"
+          titulo="Ingresos por Ventas"
           valor={formatBOB(dashboardStats.ingresosFacturados)}
           sub="Excluye anulados"
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}

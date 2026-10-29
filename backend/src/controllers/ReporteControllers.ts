@@ -2144,16 +2144,14 @@ async function generarPdfRotacionProductos(datos: any): Promise<Buffer> {
 
 async function generarExcelFacturacion(datos: any): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
-    const hoja = workbook.addWorksheet('Facturacion');
+    const hoja = workbook.addWorksheet('Recibos');
     hoja.columns = [
-        { header: 'Nro factura', key: 'numeroFactura', width: 14 },
+        { header: 'Nro recibo', key: 'numeroFactura', width: 14 },
         { header: 'Fecha emision', key: 'fechaEmision', width: 18 },
-        { header: 'Tipo', key: 'tipoFactura', width: 14 },
-        { header: 'NIT cliente', key: 'nitCliente', width: 14 },
-        { header: 'Razon social', key: 'razonSocial', width: 24 },
+        { header: 'CI cliente', key: 'nitCliente', width: 14 },
+        { header: 'Cliente', key: 'razonSocial', width: 24 },
         { header: 'Subtotal', key: 'subtotal', width: 12 },
         { header: 'Descuento', key: 'descuento', width: 12 },
-        { header: 'Impuesto', key: 'impuesto', width: 12 },
         { header: 'Total', key: 'total', width: 12 },
         { header: 'Estado', key: 'estado', width: 12 },
         { header: 'Fecha anulacion', key: 'fechaAnulacion', width: 18 },
@@ -2170,12 +2168,10 @@ function generarHtmlFacturacion(datos: any): string {
     const filas = datos.detalles.map((d: any) => `<tr>
         <td>${escapeHtml(d.numeroFactura)}</td>
         <td>${escapeHtml(d.fechaEmision)}</td>
-        <td>${escapeHtml(d.tipoFactura)}</td>
         <td>${escapeHtml(d.nitCliente)}</td>
         <td>${escapeHtml(d.razonSocial)}</td>
         <td class="num">${formatoMoneda(d.subtotal)}</td>
         <td class="num">${formatoMoneda(d.descuento)}</td>
-        <td class="num">${formatoMoneda(d.impuesto)}</td>
         <td class="num">${formatoMoneda(d.total)}</td>
         <td>${escapeHtml(d.estado)}</td>
         <td>${escapeHtml(d.fechaAnulacion ?? '—')}</td>
@@ -2188,9 +2184,9 @@ function generarHtmlFacturacion(datos: any): string {
     td { padding:4px 7px; border-bottom:1px solid #e5e7eb; }
     .num { text-align:right; }
     </style></head><body>
-    <h1>Reporte de Facturacion y Anulaciones</h1>
+    <h1>Reporte de Recibos y Anulaciones</h1>
     <p>Generado: ${fechaHoy()}</p>
-    <table><thead><tr><th>Nro</th><th>Fecha</th><th>Tipo</th><th>NIT</th><th>Razon social</th><th>Subtotal</th><th>Desc.</th><th>Impuesto</th><th>Total</th><th>Estado</th><th>F. Anulacion</th><th>Motivo</th></tr></thead><tbody>${filas}</tbody></table>
+    <table><thead><tr><th>Nro</th><th>Fecha</th><th>CI</th><th>Cliente</th><th>Subtotal</th><th>Desc.</th><th>Total</th><th>Estado</th><th>F. Anulacion</th><th>Motivo</th></tr></thead><tbody>${filas}</tbody></table>
     </body></html>`;
 }
 

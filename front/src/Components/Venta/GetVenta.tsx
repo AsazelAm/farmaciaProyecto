@@ -252,7 +252,6 @@ export default function GetVenta({ isOpen, setIsOpen, idVenta }: Props) {
                 >
                   <SummaryRow label="Subtotal Acumulado:" value={formatBOB(venta.subtotal)} />
                   <SummaryRow label="Descuento Aplicado:" value={(venta.descuentoTotal ?? 0) > 0 ? `- ${formatBOB(venta.descuentoTotal)}` : formatBOB(0)} color="#F87171" />
-                  <SummaryRow label="Impuestos (Ley 843):" value={`+ ${formatBOB(venta.impuestos)}`} color="#FCD34D" />
                   <div className="h-px my-1" style={{ backgroundColor: "rgba(255,255,255,0.15)" }} />
                   <SummaryRow label="TOTAL A PAGAR" value={formatBOB(venta.total)} color="#34D399" strong />
                   <div className="h-px my-1" style={{ backgroundColor: "rgba(255,255,255,0.15)" }} />
@@ -274,7 +273,7 @@ export default function GetVenta({ isOpen, setIsOpen, idVenta }: Props) {
                 style={{ color: COLORS.textSecondary, borderColor: COLORS.border }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-8 4h4a1 1 0 001-1v-4H9v4a1 1 0 001 1z" /></svg>
-                Imprimir Recibo / Factura
+                Imprimir Recibo
               </button>
               <button
                 type="button"

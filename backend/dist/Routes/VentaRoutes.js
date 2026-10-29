@@ -15,8 +15,6 @@ router.get('/GetLotesDisponibles/:idProducto', VentaControllers_1.VentaControlle
 //  GET: alerta FEFO de un lote elegido en el POS (compara con el lote que
 //       vence primero). También debe ir ANTES de las rutas con /:idVenta.
 router.get('/GetAlertaFEFO/:idProducto/:idLote', VentaControllers_1.VentaControllers.GetAlertaFEFOC);
-//  GET: datos de facturación (NIT/razón social) usados antes por un cliente 
-router.get('/GetDatosFacturacionCliente/:idCliente', VentaControllers_1.VentaControllers.GetDatosFacturacionClienteC);
 //  GET: lista todas las ventas (soporta filtros y paginación por query) ──
 router.get('/GetVentas', VentaControllers_1.VentaControllers.GetVentasC);
 //  GET: detalle de una venta específica con sus productos/lotes 
@@ -27,7 +25,7 @@ router.post('/AddVenta', VentaControllers_1.VentaControllers.AddVentaC);
 router.put('/UpdateVenta/:idVenta', VentaControllers_1.VentaControllers.UpdateVentaC);
 //  PATCH: cambiar el estado de la venta (completado, cancelado o pendiente)
 router.patch('/ChangeEstadoVenta/:idVenta', VentaControllers_1.VentaControllers.ChangeEstadoVentaC);
-//  POST: emitir la factura de una venta ya completada 
-router.post('/EmitirFactura/:idVenta', VentaControllers_1.VentaControllers.EmitirFacturaC);
+//  POST: emitir el recibo de una venta ya completada 
+router.post('/EmitirRecibo/:idVenta', VentaControllers_1.VentaControllers.EmitirReciboC);
 exports.default = router;
 //# sourceMappingURL=VentaRoutes.js.map

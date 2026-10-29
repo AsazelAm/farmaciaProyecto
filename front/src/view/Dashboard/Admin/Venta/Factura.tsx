@@ -1,94 +1,53 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
-import type { IFacturaInput, DatosFacturacionClienteType } from "../../../../types";
-import { tecladoSoloLetras, tecladoSoloDigitos } from "../../../../lib/validators";
-
 
 export interface IDatosCobro {
   tipoPago: "Efectivo" | "Tarjeta de Crédito" | "QR Directo";
-  facturaInput: IFacturaInput;
   observaciones?: string;
-  emitirFactura: boolean;
+  emitirRecibo: boolean;
 }
 
-interface FacturaProps {
+interface ReciboProps {
   isOpen: boolean;
   total: number;
   isLoading?: boolean;
-
-  datosFacturacionPrevios?: DatosFacturacionClienteType[];
   onClose: () => void;
   onConfirm: (datos: IDatosCobro) => void;
 }
 
-
-const TIPOS_FACTURA = ["Electrónica Digital", "Manual", "Factura Exenta"];
-
-export default function Factura({
+export default function Recibo({
   isOpen,
   total,
   isLoading = false,
-  datosFacturacionPrevios = [],
   onClose,
   onConfirm,
-}: FacturaProps) {
-  // ── Estado local del formulario de cobro ──────────────────────────────
+}: ReciboProps) {
   const [tipoPago, setTipoPago] = useState<IDatosCobro["tipoPago"]>("Efectivo");
-  const [nitCliente, setNitCliente] = useState("");
-  const [razonSocial, setRazonSocial] = useState("");
-  const [tipoFactura, setTipoFactura] = useState(TIPOS_FACTURA[0]);
   const [observaciones, setObservaciones] = useState("");
-  const [emitirFactura, setEmitirFactura] = useState(true);
+  const [emitirRecibo, setEmitirRecibo] = useState(true);
 
-  
-  useEffect(() => {
-    if (isOpen && datosFacturacionPrevios.length > 0) {
-      setNitCliente(datosFacturacionPrevios[0].nitCliente ?? "");
-      setRazonSocial(datosFacturacionPrevios[0].razonSocial ?? "");
-    }
-  }, [isOpen, datosFacturacionPrevios]);
-
-  // Modal controlado: si el padre dice que no está abierto, no renderizamos nada.
-  // Así NewVenta.tsx decide cuándo aparece, y este componente no necesita
-  // saber nada del carrito ni de la lógica de venta.
   if (!isOpen) return null;
 
   function handleConfirmar() {
-    // Empaquetamos exactamente lo que el padre necesita para llamar
-    // AddVentaApi / ChangeEstadoVentaApi / EmitirFacturaApi. La factura
-    // siempre se envía (ya no depende de un checkbox).
     onConfirm({
       tipoPago,
-      facturaInput: {
-        tipoFactura,
-        nitCliente: nitCliente.trim() || undefined,
-        razonSocial: razonSocial.trim() || undefined,
-      },
       observaciones: observaciones.trim() || undefined,
-      emitirFactura,
+      emitirRecibo,
     });
   }
 
   function handleClose() {
-    // Reseteamos el formulario para que la próxima venta no arrastre datos
-    // de la anterior (NIT, razón social, observaciones, etc).
     setTipoPago("Efectivo");
-    setNitCliente("");
-    setRazonSocial("");
-    setTipoFactura(TIPOS_FACTURA[0]);
     setObservaciones("");
-    setEmitirFactura(true);
+    setEmitirRecibo(true);
     onClose();
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
-        {/* ── Encabezado del modal ── */}
         <div className="flex items-center justify-between bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-4 text-white">
-          <h2 className="text-sm font-bold tracking-wide">
-            COBRO Y DATOS TRIBUTARIOS DE FACTURACIÓN
-          </h2>
+          <h2 className="text-sm font-bold tracking-wide">COBRO Y EMISIÓN DE RECIBO</h2>
           <button
             type="button"
             onClick={handleClose}
@@ -100,7 +59,6 @@ export default function Factura({
         </div>
 
         <div className="max-h-[80vh] space-y-4 overflow-y-auto p-5">
-          {/* ── Tipo de pago (columna 'tipoPago' de la tabla venta) ── */}
           <div>
             <label className="mb-2 block text-xs font-bold text-gray-500">
               TIPO DE PAGO (&apos;tipoPago&apos; en Venta)
@@ -125,154 +83,54 @@ export default function Factura({
             </div>
           </div>
 
-          {/* ── ¿Generar factura? (toggle pequeño) ── */}
           <div>
             <label className="mb-2 block text-xs font-bold text-gray-500">
-              ¿GENERAR FACTURA?
+              ¿GENERAR RECIBO?
             </label>
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setEmitirFactura(true)}
+                onClick={() => setEmitirRecibo(true)}
                 className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition-colors ${
-                  emitirFactura
+                  emitirRecibo
                     ? "border-violet-600 bg-violet-600 text-white"
                     : "border-violet-200 text-gray-500 hover:bg-violet-50"
                 }`}
               >
-                Con Factura
+                Con Recibo
               </button>
               <button
                 type="button"
-                onClick={() => setEmitirFactura(false)}
+                onClick={() => setEmitirRecibo(false)}
                 className={`flex-1 rounded-xl border py-2 text-xs font-semibold transition-colors ${
-                  !emitirFactura
+                  !emitirRecibo
                     ? "border-violet-600 bg-violet-600 text-white"
                     : "border-violet-200 text-gray-500 hover:bg-violet-50"
                 }`}
               >
-                Sin Factura
+                Sin Recibo
               </button>
             </div>
           </div>
 
-          {/* ── Atributos de factura: solo si se elige generar factura ── */}
-          {emitirFactura && (
-          <div className="space-y-3 rounded-xl border border-violet-100 p-3">
-            <p className="text-xs font-bold text-gray-500">
-              ATRIBUTOS DE FACTURA RELACIONADA
-            </p>
-
-            {/* Chips con las combinaciones de NIT/razón social que este
-                cliente ya usó antes. Si hay más de una, el cajero elige;
-                "+ Nuevo" limpia los campos para cargar una combinación
-                distinta a mano. */}
-            {datosFacturacionPrevios.length > 0 && (
-              <div>
-                <p className="mb-1 text-[11px] text-gray-400">
-                  Datos usados antes por este cliente
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {datosFacturacionPrevios.map((d, i) => {
-                    const activo =
-                      nitCliente === (d.nitCliente ?? "") &&
-                      razonSocial === (d.razonSocial ?? "");
-                    return (
-                      <button
-                        key={`${d.nitCliente ?? "sn"}-${d.razonSocial ?? "sr"}-${i}`}
-                        type="button"
-                        onClick={() => {
-                          setNitCliente(d.nitCliente ?? "");
-                          setRazonSocial(d.razonSocial ?? "");
-                        }}
-                        className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                          activo
-                            ? "border-violet-600 bg-violet-600 text-white"
-                            : "border-violet-200 text-gray-500 hover:bg-violet-50"
-                        }`}
-                      >
-                        {d.razonSocial || d.nitCliente || "Sin datos"}
-                      </button>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNitCliente("");
-                      setRazonSocial("");
-                    }}
-                    className="rounded-full border border-dashed border-violet-300 px-3 py-1 text-xs text-violet-500 hover:bg-violet-50"
-                  >
-                    + Nuevo
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] text-gray-400">
-                  NIT / CI Facturado
-                </label>
-                <input
-                  value={nitCliente}
-                  onChange={(e) => setNitCliente(e.target.value.replace(/\D/g, ""))}
-                  {...tecladoSoloDigitos}
-                  maxLength={15}
-                  className="mt-1 w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] text-gray-400">Razón Social</label>
-                <input
-                  value={razonSocial}
-                  onChange={(e) => setRazonSocial(e.target.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s.'-]/g, ""))}
-                  {...tecladoSoloLetras}
-                  maxLength={150}
-                  className="mt-1 w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] text-gray-400">
-                Modalidad de Facturación (&apos;tipoFactura&apos;)
-              </label>
-              <select
-                value={tipoFactura}
-                onChange={(e) => setTipoFactura(e.target.value)}
-                className="w-full rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-              >
-                {TIPOS_FACTURA.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          )}
-
-          {/* ── Observaciones de venta ── */}
           <div>
             <label className="text-[11px] text-gray-400">
               OBSERVACIONES DE VENTA (&apos;observaciones&apos;)
             </label>
-              <textarea
-                value={observaciones}
-                onChange={(e) => setObservaciones(e.target.value)}
-                maxLength={500}
-                rows={2}
-                className="mt-1 w-full resize-none rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
+            <textarea
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              maxLength={500}
+              rows={2}
+              className="mt-1 w-full resize-none rounded-lg border border-violet-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            />
           </div>
 
-          {/* ── Monto total ── */}
           <div className="text-center">
             <p className="text-xs text-gray-400">MONTO TOTAL</p>
             <p className="text-2xl font-bold text-violet-700">Bs{total.toFixed(2)}</p>
           </div>
 
-          {/* ── Acciones ── */}
           <div className="flex gap-2 pt-1">
             <button
               type="button"

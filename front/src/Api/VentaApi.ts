@@ -5,12 +5,10 @@ import {
   VentaSchema,
   VentaEstadisticasSchema,
   LotesDisponiblesSchema,
-  DatosFacturacionClienteSchema,
   AlertaFEFOSchema,
   type CreateVentaType,
   type UpdateVentaType,
   type IVentaFiltros,
-  type IFacturaInput,
 } from "../types"; // Asumiendo que tu index.ts está en ../types/index.ts
 
 // ── GET: Obtener Estadísticas ────────────────────────────────────────────────
@@ -115,14 +113,14 @@ export async function ChangeEstadoVentaApi(
   }
 }
 
-// ── POST: Emitir Factura de una Venta Completada ──────────────────────────────
-export async function EmitirFacturaApi(idVenta: number, formData: IFacturaInput) {
+// ── POST: Emitir Recibo de una Venta Completada ───────────────────────────────
+export async function EmitirReciboApi(idVenta: number) {
   try {
-    const { data } = await api.post(`/Venta/EmitirFactura/${idVenta}`, formData);
-    return data; // { message, idFactura }
+    const { data } = await api.post(`/Venta/EmitirRecibo/${idVenta}`);
+    return data; // { message, idRecibo, numeroRecibo }
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || 'Error al emitir la factura');
+      throw new Error(error.response.data.error || 'Error al emitir el recibo');
     }
     throw error;
   }
@@ -140,23 +138,6 @@ export async function GetLotesDisponiblesApi(idProducto: number) {
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error || 'Error al obtener los lotes disponibles');
-    }
-    throw error;
-  }
-}
-
-// ── GET: Datos de facturación (NIT/razón social) usados antes por un cliente ──
-export async function GetDatosFacturacionClienteApi(idCliente: number) {
-  try {
-    const { data } = await api.get(`/Venta/GetDatosFacturacionCliente/${idCliente}`);
-    const response = DatosFacturacionClienteSchema.safeParse(data);
-    if (response.success) {
-      return response.data;
-    }
-    throw new Error("Error en la validación de los datos de facturación del cliente");
-  } catch (error) {
-    if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || 'Error al obtener los datos de facturación del cliente');
     }
     throw error;
   }

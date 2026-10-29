@@ -165,28 +165,22 @@ export class VentaControllers {
         }
     };
 
-    // ── POST: Emitir factura para una venta completada ────────────────────────
-    static readonly EmitirFacturaC = async (req: Request, res: Response): Promise<any> => {
+    // ── POST: Emitir recibo para una venta completada ─────────────────────────
+    static readonly EmitirReciboC = async (req: Request, res: Response): Promise<any> => {
         try {
             const idVenta = Number(req.params.idVenta);
-            const datosFactura = req.body;
-
-            if (!datosFactura.tipoFactura) {
-                return res.status(400).json({ error: 'Debe especificar el tipo de factura' });
-            }
-
-            const idFactura = await DataVenta.emitirFactura(idVenta, datosFactura);
+            const recibo = await DataVenta.emitirRecibo(idVenta);
 
             res.status(201).json({
-                message: 'Factura emitida exitosamente',
-                idFactura,
+                message: 'Recibo emitido exitosamente',
+                ...recibo,
             });
         } catch (error: any) {
-            console.error('Error al emitir factura:', error);
+            console.error('Error al emitir recibo:', error);
             if (error.message && (error.message.includes('completada') || error.message.includes('ya tiene') || error.message.includes('no existe'))) {
                 return res.status(400).json({ error: error.message });
             }
-            res.status(500).json({ error: 'Error al emitir la factura de la venta' });
+            res.status(500).json({ error: 'Error al emitir el recibo de la venta' });
         }
     };
 
@@ -214,18 +208,6 @@ export class VentaControllers {
         } catch (error) {
             console.error('Error al obtener la alerta FEFO del lote:', error);
             res.status(500).json({ error: 'Error al obtener la alerta FEFO del lote' });
-        }
-    };
-
-    // ── GET: Datos de facturación (NIT/razón social) previos de un cliente ────
-    static readonly GetDatosFacturacionClienteC = async (req: Request, res: Response): Promise<any> => {
-        try {
-            const idCliente = Number(req.params.idCliente);
-            const data = await DataVenta.obtenerDatosFacturacionPorCliente(idCliente);
-            res.status(200).json(data);
-        } catch (error) {
-            console.error('Error al obtener los datos de facturación del cliente:', error);
-            res.status(500).json({ error: 'Error al obtener los datos de facturación del cliente' });
         }
     };
 

@@ -42,8 +42,8 @@ export default function ReporteFacturacion() {
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-[#4A1A6E]"><FileText className="w-6 h-6 text-white" /></div>
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Facturación, Emisiones y Anulaciones</h1>
-          <p className="text-sm text-gray-500">Cumplimiento fiscal y auditoría</p>
+          <h1 className="text-xl font-bold text-gray-800">Recibos, Emisiones y Anulacionesón, Emisiones y Anulaciones</h1>
+          <p className="text-sm text-gray-500">Gestion de recibos y auditoriaía</p>
         </div>
       </div>
 
@@ -55,12 +55,6 @@ export default function ReporteFacturacion() {
             <select value={filtrosEdit.estado ?? ""} onChange={(e) => setFiltrosEdit((p) => ({ ...p, estado: e.target.value || undefined }))} className="w-full px-3 py-2 rounded-xl border border-purple-200 text-sm">
               <option value="">Todos</option>
               {(parametros?.estados ?? []).map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
-            </select>
-          </div>
-          <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Tipo factura</label>
-            <select value={filtrosEdit.tipoFactura ?? ""} onChange={(e) => setFiltrosEdit((p) => ({ ...p, tipoFactura: e.target.value || undefined }))} className="w-full px-3 py-2 rounded-xl border border-purple-200 text-sm">
-              <option value="">Todos</option>
-              {(parametros?.tiposFactura ?? []).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
           <div className="sm:col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1.5">Búsqueda</label><input type="text" value={busquedaInput} onChange={(e) => setBusquedaInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") consultar(); }} placeholder="Número, NIT o razón social..." className="w-full px-3 py-2 rounded-xl border border-purple-200 text-sm" /></div>
@@ -78,13 +72,13 @@ export default function ReporteFacturacion() {
 
       {resumen && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Facturas</p><p className="text-xl font-extrabold">{resumen.totalFacturas}</p></div>
-          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Emitidas</p><p className="text-xl font-extrabold">{resumen.facturasEmitidas}</p></div>
-          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Anuladas</p><p className="text-xl font-extrabold">{resumen.facturasAnuladas} ({resumen.porcentajeAnuladas.toFixed(1)}%)</p></div>
+          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Recibos</p><p className="text-xl font-extrabold">{resumen.totalFacturas}</p></div>
+          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Emitidos</p><p className="text-xl font-extrabold">{resumen.facturasEmitidas}</p></div>
+          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Anulados</p><p className="text-xl font-extrabold">{resumen.facturasAnuladas} ({resumen.porcentajeAnuladas.toFixed(1)}%)</p></div>
           <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Monto total</p><p className="text-xl font-extrabold">{formatoMoneda(resumen.montoTotal)}</p></div>
           <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Monto emitido</p><p className="text-xl font-extrabold">{formatoMoneda(resumen.montoEmitido)}</p></div>
           <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Monto anulado</p><p className="text-xl font-extrabold">{formatoMoneda(resumen.montoAnulado)}</p></div>
-          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">IVA / Impuesto</p><p className="text-xl font-extrabold">{formatoMoneda(resumen.impuestoTotal)}</p></div>
+          <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Ventas / Total</p><p className="text-xl font-extrabold">{formatoMoneda(resumen.impuestoTotal)}</p></div>
           <div className="rounded-2xl bg-white border border-purple-100 shadow-sm p-5"><p className="text-xs text-gray-500">Descuentos</p><p className="text-xl font-extrabold">{formatoMoneda(resumen.descuentoTotal)}</p></div>
         </div>
       )}
@@ -165,7 +159,6 @@ export default function ReporteFacturacion() {
             <thead><tr className="border-b border-purple-100">
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">NRO</th>
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">FECHA</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">TIPO</th>
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">NIT/DOC</th>
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">RAZÓN SOCIAL</th>
               <th className="px-4 py-3 text-right text-xs font-bold text-gray-500">SUBTOTAL</th>
@@ -178,18 +171,17 @@ export default function ReporteFacturacion() {
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">USUARIO</th>
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
-              {detalles.length === 0 ? <tr><td colSpan={13}><EmptyBox mensaje="Sin datos" /></td></tr> : detalles.map((d: FacturacionDetalleType) => (
+              {detalles.length === 0 ? <tr><td colSpan={12}><EmptyBox mensaje="Sin datos" /></td></tr> : detalles.map((d: FacturacionDetalleType) => (
                 <tr key={d.idFactura} className="hover:bg-gray-50/70">
                   <td className="px-4 py-3 font-bold text-gray-800">{d.numeroFactura}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{d.fechaEmision}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600">{d.tipoFactura}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{d.nitCliente}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{d.razonSocial}</td>
                   <td className="px-4 py-3 text-right">{formatoMoneda(d.subtotal)}</td>
                   <td className="px-4 py-3 text-right">{formatoMoneda(d.descuento)}</td>
                   <td className="px-4 py-3 text-right">{formatoMoneda(d.impuesto)}</td>
                   <td className="px-4 py-3 text-right font-extrabold">{formatoMoneda(d.total)}</td>
-                  <td className="px-4 py-3 text-xs font-bold">{d.estado}</td>
+                  <td className="px-4 py-3 text-xs font-bold">{d.estado.toUpperCase()}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{d.fechaAnulacion ?? "—"}</td>
                   <td className="px-4 py-3 text-xs text-gray-600 max-w-[200px]">{d.motivoAnulacion ?? ""}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{d.usuarioEmisor}{d.usuarioAnulacion ? ` / Anuló: ${d.usuarioAnulacion}` : ""}</td>

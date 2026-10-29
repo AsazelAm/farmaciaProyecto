@@ -92,10 +92,12 @@ const DataReporteRotacionProductos = {
             INNER JOIN laboratorio lab ON lab.idLaboratorio = pr.idLaboratorio
             INNER JOIN presentacion pres ON pres.idPresentacion = pr.idPresentacion
             LEFT JOIN (
-                SELECT dv.idProducto, SUM(dv.cantidad) AS unidades, COUNT(DISTINCT dv.idVenta) AS frecuencia, SUM(dv.subtotal) AS monto
-                FROM detalleventa dv INNER JOIN venta v ON v.idVenta = dv.idVenta
+                SELECT l.idProducto, SUM(dv.cantidad) AS unidades, COUNT(DISTINCT dv.idVenta) AS frecuencia, SUM(dv.subtotal) AS monto
+                FROM detalleventa dv
+                INNER JOIN venta v ON v.idVenta = dv.idVenta
+                INNER JOIN lote l ON l.idLote = dv.idLote
                 WHERE ${subWhere}
-                GROUP BY dv.idProducto
+                GROUP BY l.idProducto
             ) ventas ON ventas.idProducto = pr.idProducto
             LEFT JOIN (
                 SELECT l.idProducto, SUM(l.stock) AS stockActual, SUM(l.stock * l.precioCompra) AS valorStock, MIN(CASE WHEN l.stock > 0 THEN l.fechaVencimiento END) AS proximoVencimiento

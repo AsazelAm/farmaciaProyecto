@@ -11,10 +11,7 @@ declare const DataReporteFacturacion: {
             value: any;
             label: any;
         }[];
-        tiposFactura: {
-            value: any;
-            label: any;
-        }[];
+        tiposFactura: any[];
     }>;
     getDatos(filtros: IFiltrosFacturacion): Promise<{
         parametros: {
@@ -28,7 +25,7 @@ declare const DataReporteFacturacion: {
             idFactura: number;
             numeroFactura: any;
             fechaEmision: any;
-            tipoFactura: any;
+            tipoFactura: string;
             nitCliente: any;
             razonSocial: any;
             emailCliente: any;
@@ -59,11 +56,7 @@ declare const DataReporteFacturacion: {
                 facturas: number;
                 total: number;
             }[];
-            porTipo: {
-                tipo: string;
-                facturas: number;
-                total: number;
-            }[];
+            porTipo: any[];
             motivosAnulacion: {
                 motivo: string;
                 facturas: number;

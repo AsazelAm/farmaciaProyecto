@@ -227,7 +227,7 @@ function TablaDetalle({ ventas }: { ventas: ReporteVentasDetalleType }) {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-              {["N° FACTURA", "N° VENTA", "FECHA", "CLIENTE", "SUCURSAL", "TIPO PAGO", "ESTADO", "TOTAL"].map(
+              {["N° RECIBO", "N° VENTA", "FECHA", "CLIENTE", "SUCURSAL", "TIPO PAGO", "ESTADO", "TOTAL"].map(
                 (c) => (
                   <th key={c} className="px-4 py-3 text-left text-xs font-bold tracking-wider text-gray-500">
                     {c}
@@ -575,7 +575,7 @@ export default function Reporte() {
             valorDos={`sesión ${MESES[data.frecuencia].toLowerCase()}`}
           />
           <CardMetrica
-            titulo="Total facturado"
+            titulo="Total vendido"
             icono={<Wallet className="w-5 h-5" />}
             valor={formatBOB(data.totales.total)}
             valorDos="ventas completadas"
@@ -584,7 +584,7 @@ export default function Reporte() {
             titulo="Subtotal"
             icono={<Download className="w-5 h-5" />}
             valor={formatBOB(data.totales.subtotal)}
-            valorDos={`impuestos ${formatBOB(data.totales.impuestos)}`}
+            valorDos={`neto ${formatBOB(data.totales.subtotal)}`}
           />
           <CardMetrica
             titulo="Descuentos"
