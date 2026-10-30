@@ -31,7 +31,7 @@ const DataVenta = {
 
     async obtenerPorId(idVenta: number) {
         const conection = await conectar.getConnection();
-        const ventas = await conection.query(`SELECT v.*, cl.nombre AS cliente, cl.ci AS clienteNit, cl.direccion, cl.telefono, u.nombre AS usuario, s.nombre AS sucursal FROM venta v INNER JOIN cliente cl ON cl.idCliente=v.idCliente INNER JOIN usuario u ON u.idUsuario=v.idUsuario INNER JOIN sucursal s ON s.idSucursal=v.idSucursal WHERE v.idVenta = ?`, [idVenta]);
+        const ventas = await conection.query(`SELECT v.*, CONCAT_WS(' ', cl.nombre, cl.apellido) AS cliente, cl.ci AS clienteNit, cl.telefono AS clienteTelefono, u.nombre AS usuario, s.nombre AS sucursal, s.direccion AS sucursalDireccion FROM venta v INNER JOIN cliente cl ON cl.idCliente=v.idCliente INNER JOIN usuario u ON u.idUsuario=v.idUsuario INNER JOIN sucursal s ON s.idSucursal=v.idSucursal WHERE v.idVenta = ?`, [idVenta]);
         if ((ventas as any[]).length === 0) { conection.release(); return null; }
         const venta = (ventas as any[])[0];
         const detalles = await conection.query(`SELECT dv.cantidad, dv.precioUnitario, dv.descuento, dv.subtotal, dv.idLote, l.numeroLote, l.codigo, l.fechaVencimiento, DATEDIFF(l.fechaVencimiento, NOW()) AS diasParaVencer, l.idProducto, pr.codigoBarra, ${sqlNombreGenerico('pr')} AS nombreGenerico, pr.nombreComercial, ${sqlConcentracion('pr')} AS concentracion, pr.requiereReceta, lab.nombre AS nombreLaboratorio FROM detalleventa dv INNER JOIN lote l ON l.idLote=dv.idLote INNER JOIN producto pr ON pr.idProducto=l.idProducto INNER JOIN laboratorio lab ON lab.idLaboratorio=pr.idLaboratorio WHERE dv.idVenta = ? ORDER BY l.idProducto ASC`, [idVenta]);
@@ -285,11 +285,30 @@ const DataVenta = {
     async estadisticas() {
         const conection = await conectar.getConnection();
         try {
-            const hoy = await conection.query(`SELECT COALESCE(SUM(total),0) as total, COUNT(*) as cantidad FROM venta WHERE DATE(fechaCreacion)=CURDATE() AND estado='completado'`);
-            const mes = await conection.query(`SELECT COALESCE(SUM(total),0) as total, COUNT(*) as cantidad FROM venta WHERE MONTH(fechaCreacion)=MONTH(CURDATE()) AND YEAR(fechaCreacion)=YEAR(CURDATE()) AND estado='completado'`);
-            const ventasRecientes = await conection.query(`SELECT v.idVenta, v.total, v.fechaCreacion, c.nombre as cliente FROM venta v INNER JOIN cliente c ON c.idCliente=v.idCliente ORDER BY v.fechaCreacion DESC LIMIT 5`);
-            const productosMasVendidos = await conection.query(`SELECT pr.idProducto, pr.nombreComercial, SUM(dv.cantidad) as totalVendido FROM detalleventa dv INNER JOIN lote l ON l.idLote=dv.idLote INNER JOIN producto pr ON pr.idProducto=l.idProducto INNER JOIN venta v ON v.idVenta=dv.idVenta WHERE v.estado='completado' GROUP BY pr.idProducto, pr.nombreComercial ORDER BY totalVendido DESC LIMIT 5`);
-            return { hoy: (hoy as any)[0], mes: (mes as any)[0], ventasRecientes, productosMasVendidos };
+            const porEstado = await conection.query(`SELECT estado, COUNT(*) as cantidad, COALESCE(SUM(total),0) as monto FROM venta GROUP BY estado`);
+            const totalMes = await conection.query(`SELECT COALESCE(SUM(total),0) as total FROM venta WHERE MONTH(fechaCreacion)=MONTH(CURDATE()) AND YEAR(fechaCreacion)=YEAR(CURDATE()) AND estado='completado'`);
+            const totalMesAnterior = await conection.query(`SELECT COALESCE(SUM(total),0) as total FROM venta WHERE MONTH(fechaCreacion)=MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(fechaCreacion)=YEAR(CURDATE() - INTERVAL 1 MONTH) AND estado='completado'`);
+            const porSucursal = await conection.query(`SELECT s.nombre, COUNT(*) as cantidad, COALESCE(SUM(v.total),0) as monto FROM venta v INNER JOIN sucursal s ON s.idSucursal=v.idSucursal WHERE v.estado <> 'cancelado' GROUP BY s.idSucursal, s.nombre ORDER BY monto DESC`);
+            const masVendidos = await conection.query(`SELECT pr.nombreComercial AS nombreGenerico, SUM(dv.cantidad) as unidadesVendidas, COALESCE(SUM(dv.subtotal),0) as monto FROM detalleventa dv INNER JOIN lote l ON l.idLote=dv.idLote INNER JOIN producto pr ON pr.idProducto=l.idProducto INNER JOIN venta v ON v.idVenta=dv.idVenta WHERE v.estado='completado' GROUP BY pr.idProducto, pr.nombreComercial ORDER BY unidadesVendidas DESC LIMIT 5`);
+            return {
+                porEstado: (porEstado as any[]).map((e: any) => ({
+                    estado: e.estado,
+                    cantidad: Number(e.cantidad ?? 0),
+                    monto: Number(e.monto ?? 0),
+                })),
+                totalMes: Number((totalMes as any[])[0]?.total ?? 0),
+                totalMesAnterior: Number((totalMesAnterior as any[])[0]?.total ?? 0),
+                porSucursal: (porSucursal as any[]).map((s: any) => ({
+                    nombre: s.nombre,
+                    cantidad: Number(s.cantidad ?? 0),
+                    monto: Number(s.monto ?? 0),
+                })),
+                masVendidos: (masVendidos as any[]).map((p: any) => ({
+                    nombreGenerico: p.nombreGenerico,
+                    unidadesVendidas: Number(p.unidadesVendidas ?? 0),
+                    monto: Number(p.monto ?? 0),
+                })),
+            };
         } finally {
             conection.release();
         }

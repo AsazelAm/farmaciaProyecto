@@ -46,6 +46,13 @@ const formatFechaHora = (isoStr?: string) => {
 
 const formatNumeroVenta = (idVenta: number) => `#${String(idVenta).padStart(5, "0")}`;
 
+const formatFecha = (fechaStr?: string) => {
+  if (!fechaStr) return "—";
+  const [anio, mes, dia] = fechaStr.slice(0, 10).split("-");
+  if (!anio || !mes || !dia) return fechaStr;
+  return `${dia}/${mes}/${anio}`;
+};
+
 // Une partes opcionales con " · ", descartando las vacías (evita separadores "colgados")
 const joinInfo = (...partes: (string | null | undefined | false)[]) => partes.filter(Boolean).join(" · ");
 
@@ -220,7 +227,7 @@ export default function GetVenta({ isOpen, setIsOpen, idVenta }: Props) {
                         </td>
                         <td className="px-4 py-3">
                           <p className="font-semibold" style={{ color: COLORS.textPrimary }}>{d.codigo}</p>
-                          <p style={{ color: COLORS.textMuted }}>Vence: {d.fechaVencimiento}</p>
+                          <p style={{ color: COLORS.textMuted }}>Vence: {formatFecha(d.fechaVencimiento)}</p>
                         </td>
                         <td className="px-4 py-3 text-center font-bold" style={{ color: COLORS.textPrimary }}>{d.cantidad}</td>
                         <td className="px-4 py-3 text-right" style={{ color: COLORS.textPrimary }}>{formatBOB(d.precioUnitario)}</td>
