@@ -61,7 +61,7 @@ export default function Recibo({
         <div className="max-h-[80vh] space-y-4 overflow-y-auto p-5">
           <div>
             <label className="mb-2 block text-xs font-bold text-gray-500">
-              TIPO DE PAGO (&apos;tipoPago&apos; en Venta)
+              TIPO DE PAGO
             </label>
             <div className="flex gap-2">
               {(["Efectivo", "Tarjeta de Crédito", "QR Directo"] as const).map(

@@ -11,9 +11,7 @@ const GenerarCodigoLogin = (): string => String(randomInt(100000, 1000000));
 
 export class AuthControllers {
 
-    // ── POST /login: valida credenciales y envia codigo OTP por correo ──────
-    // Ya NO devuelve el JWT directamente: primero debe verificar el codigo
-    // en POST /verificar-codigo.
+    
     static readonly Login = async (req: Request, res: Response): Promise<any> => {
     try {
         const { email, passwd } = req.body;
@@ -25,7 +23,7 @@ export class AuthControllers {
         const VerPass = Pass[0].passwd;
         const Correct = await CheckPassword(passwd, VerPass);
         if (!Correct) {
-            return res.status(401).json({ error: 'El password es incorrecto' });
+            return res.status(401).json({ error: 'El password o el correo son incorrectos' });
         }
 
         const codigo = GenerarCodigoLogin();
