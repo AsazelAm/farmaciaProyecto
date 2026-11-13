@@ -20,7 +20,6 @@ import {
   AddVentaApi,
   ChangeEstadoVentaApi,
   EmitirReciboApi,
-  GetAlertaFEFOApi,
   GetLotesDisponiblesApi,
 } from "../../../../Api/VentaApi";
 // TODO: estos dos archivos API no venían en lo que compartiste. Los asumo
@@ -37,7 +36,6 @@ import {
   ClienteArray,
   ProductoArray,
   sucursalArray,
-  type AlertaFEFOType,
   type CreateVentaType,
   type LoteDisponibleType,
 } from "../../../../types";
@@ -63,8 +61,31 @@ interface ICarritoItem {
   precioUnitario: number;
   cantidad: number;
   descuento: number; // monto en $, no porcentaje
+}
+
+// ── Reparto FEFO de una cantidad entre los lotes de un producto ─────────────
+// `lotes` llega ordenado por fechaVencimiento ASC (lo hace el backend), así
+// que recorremos de principio a fin: primero se agota el lote que vence antes
+// y, si la cantidad lo supera, el resto pasa automáticamente al siguiente.
+// Esto replica EXACTAMENTE lo que hace DataVenta.crear en el backend.
+interface IRepartoLote {
   idLote: number;
-  lotesDisponibles: LoteDisponibleType[];
+  numeroLote: string;
+  unidades: number;
+}
+
+function repartirFEFO(lotes: LoteDisponibleType[], cantidad: number): IRepartoLote[] {
+  const reparto: IRepartoLote[] = [];
+  let restante = cantidad;
+  for (const lote of lotes) {
+    if (restante <= 0) break;
+    const unidades = Math.min(lote.stock, restante);
+    if (unidades > 0) {
+      reparto.push({ idLote: lote.idLote, numeroLote: lote.numeroLote, unidades });
+      restante -= unidades;
+    }
+  }
+  return reparto;
 }
 
 // ─── Paleta (la misma del formulario de producto) ────────────────────────────
@@ -105,11 +126,6 @@ export default function NewVenta() {
   );
   const [idSucursalSeleccionada, setIdSucursalSeleccionada] = useState<number | null>(null);
   const [modalReciboAbierto, setModalReciboAbierto] = useState(false);
-  const [alertaFEFO, setAlertaFEFO] = useState<AlertaFEFOType | null>(null);
-  const [motivoDesvio, setMotivoDesvio] = useState("");
-  const [modalDesvioAbierto, setModalDesvioAbierto] = useState(false);
-  const datosCobroRef = useRef<IDatosCobro | null>(null);
-  const [desvioFEFO, setDesvioFEFO] = useState<{ permitir: boolean; motivo: string } | null>(null);
 
   // ── Buscador de cliente (reemplaza el <select> por un autocompletado) ──
   // Texto que el cajero está escribiendo mientras busca un cliente.
@@ -243,28 +259,29 @@ export default function NewVenta() {
 
   // ── Acciones sobre el carrito ───────────────────────────────────────────
 
-  // "Despachar": agrega el producto usando el lote FEFO (First-Expired,
-  // First-Out). El backend YA nos devuelve LotesDisponiblesPorProducto
-  // ordenado por fechaVencimiento ASC, así que lotes[0] siempre es el
-  // lote que vence primero — no necesitamos ordenar de nuevo aquí.
+  // Stock total de un producto = suma del stock de TODOS sus lotes activos.
+  // Es el límite real de unidades que se pueden vender de ese producto.
+  function stockTotalDe(idProducto: number) {
+    return (lotesPorProducto[idProducto] ?? []).reduce((acc, l) => acc + l.stock, 0);
+  }
+
+  // "Despachar": agrega el producto al carrito con 1 unidad. Hay UNA sola
+  // línea por producto: el reparto entre lotes se calcula solo (FEFO).
   function despacharProducto(producto: ProductoType) {
-    const lotes = lotesPorProducto[producto.idProducto] ?? [];
-    if (lotes.length === 0) {
+    const stockTotal = stockTotalDe(producto.idProducto);
+    if (stockTotal <= 0) {
       toast.error(`No hay stock disponible de ${producto.nombreGenerico}`);
       return;
     }
 
     setCarrito((prev) => {
-      const loteFEFO = lotes[0];
-      const existente = prev.find(
-        (item) => item.idProducto === producto.idProducto && item.idLote === loteFEFO.idLote
-      );
+      const existente = prev.find((item) => item.idProducto === producto.idProducto);
 
-      // Si ya hay una línea con ese mismo producto+lote, solo sumamos 1
-      // unidad (respetando el stock del lote) en vez de duplicar la línea.
+      // Si el producto ya está en el carrito sumamos 1 unidad, respetando el
+      // stock TOTAL (todos los lotes), no el de un lote individual.
       if (existente) {
-        if (existente.cantidad >= loteFEFO.stock) {
-          toast.warning("No hay más stock disponible en ese lote");
+        if (existente.cantidad >= stockTotal) {
+          toast.warning("No hay más stock disponible de este producto");
           return prev;
         }
         return prev.map((item) =>
@@ -282,69 +299,29 @@ export default function NewVenta() {
         precioUnitario: producto.precio,
         cantidad: 1,
         descuento: 0,
-        idLote: loteFEFO.idLote,
-        lotesDisponibles: lotes,
       };
       return [...prev, nuevoItem];
     });
   }
 
-  // +/- de unidades: nunca deja bajar de 1 ni subir del stock del lote
-  // actualmente asignado a esa línea.
-  function cambiarCantidad(idProducto: number, idLote: number, delta: number) {
+  // +/- de unidades: nunca baja de 1 ni sube del stock TOTAL del producto.
+  function cambiarCantidad(idProducto: number, delta: number) {
+    const stockMax = stockTotalDe(idProducto);
     setCarrito((prev) =>
       prev.map((item) => {
-        if (item.idProducto !== idProducto || item.idLote !== idLote) return item;
-        const lote = item.lotesDisponibles.find((l) => l.idLote === idLote);
-        const stockMax = lote?.stock ?? item.cantidad;
+        if (item.idProducto !== idProducto) return item;
         const nuevaCantidad = Math.min(Math.max(item.cantidad + delta, 1), stockMax);
         return { ...item, cantidad: nuevaCantidad };
       })
     );
   }
 
-  // Cambiar el lote asignado a una línea (el <select> "Lote asignado" del
-  // carrito). Si el nuevo lote tiene menos stock que la cantidad actual,
-  // la recortamos para no vender más de lo disponible.
-  function cambiarLote(idProducto: number, idLoteAnterior: number, idLoteNuevo: number) {
-    const itemActual = carrito.find((i) => i.idProducto === idProducto && i.idLote === idLoteAnterior);
-    const loteNuevo = itemActual?.lotesDisponibles.find((l) => l.idLote === idLoteNuevo);
-
-    setCarrito((prev) =>
-      prev.map((item) => {
-        if (item.idProducto !== idProducto || item.idLote !== idLoteAnterior) return item;
-        const lote = item.lotesDisponibles.find((l) => l.idLote === idLoteNuevo);
-        if (!lote) return item;
-        return {
-          ...item,
-          idLote: lote.idLote,
-          cantidad: Math.min(item.cantidad, lote.stock),
-        };
-      })
-    );
-
-    // Al cambiar de lote consultamos la alerta FEFO contra el backend para
-    // avisar en pantalla si se esta desviando la regla First-Expired First-Out.
-    if (loteNuevo) {
-      GetAlertaFEFOApi(idProducto, loteNuevo.idLote)
-        .then((data) => {
-          if (!data.cumpleFEFO) {
-            setAlertaFEFO(data);
-            setModalDesvioAbierto(true);
-          }
-        })
-        .catch(() => {
-          // Si falla la consulta no bloquear el despacho; el backend valida al registrar.
-        });
-    }
-  }
-
   // El descuento nunca puede ser negativo ni superar el total bruto de esa
   // línea (cantidad * precioUnitario), para que el subtotal no quede negativo.
-  function cambiarDescuento(idProducto: number, idLote: number, valor: number) {
+  function cambiarDescuento(idProducto: number, valor: number) {
     setCarrito((prev) =>
       prev.map((item) => {
-        if (item.idProducto !== idProducto || item.idLote !== idLote) return item;
+        if (item.idProducto !== idProducto) return item;
         const maximoDescuento = item.cantidad * item.precioUnitario;
         const descuento = Math.min(Math.max(valor, 0), maximoDescuento);
         return { ...item, descuento };
@@ -364,10 +341,8 @@ export default function NewVenta() {
     setMostrarSugerencias(false);
   }
 
-  function quitarDelCarrito(idProducto: number, idLote: number) {
-    setCarrito((prev) =>
-      prev.filter((item) => !(item.idProducto === idProducto && item.idLote === idLote))
-    );
+  function quitarDelCarrito(idProducto: number) {
+    setCarrito((prev) => prev.filter((item) => item.idProducto !== idProducto));
   }
 
   function limpiarVenta() {
@@ -384,6 +359,11 @@ export default function NewVenta() {
       if (!idSucursalSeleccionada) {
         throw new Error("Selecciona un punto de venta antes de continuar");
       }
+      // Seguridad: cada producto del carrito debe tener al menos un lote con stock.
+      const sinLotes = carrito.find((i) => (lotesPorProducto[i.idProducto] ?? []).length === 0);
+      if (sinLotes) {
+        throw new Error(`No hay stock disponible de ${sinLotes.nombreGenerico}`);
+      }
 
       const payload: CreateVentaType = {
         idCliente: idClienteSeleccionado,
@@ -393,11 +373,11 @@ export default function NewVenta() {
         descuentoTotal: descuentosAplicados,
         total,
         observaciones: datosCobro.observaciones,
-        permitirDesvioFEFO: desvioFEFO?.permitir === true ? true : undefined,
-        motivoDesvioFEFO: desvioFEFO?.motivo,
+        // idLote = el lote que vence primero (FEFO). El backend reparte la
+        // cantidad entre este lote y los siguientes si no alcanza.
         detalles: carrito.map((item) => ({
           idProducto: item.idProducto,
-          idLote: item.idLote,
+          idLote: lotesPorProducto[item.idProducto][0].idLote,
           cantidad: item.cantidad,
           precioUnitario: item.precioUnitario,
           descuento: item.descuento,
@@ -425,37 +405,12 @@ export default function NewVenta() {
       queryClient.invalidateQueries({ queryKey: ["ventasEstadisticas"] });
       queryClient.invalidateQueries({ queryKey: ["lotesDisponibles"] });
       limpiarVenta();
-      setDesvioFEFO(null);
       setModalReciboAbierto(false);
-      setModalDesvioAbierto(false);
     },
     onError: (error: any) => {
-      // El backend responde con `alertaFEFO` cuando la regla FEFO se incumple.
-      // Abrimos el modal de desvio con el detalle para que el cajero autorice
-      // o cancele el despacho del lote seleccionado.
-      if (error?.alertaFEFO) {
-        setAlertaFEFO(error.alertaFEFO);
-        setMotivoDesvio("");
-        setModalDesvioAbierto(true);
-        return;
-      }
       toast.error(error?.message || "Error al registrar la venta");
     },
   });
-
-  // Confirma el desvio de FEFO con la justificacion registrada por el cajero.
-  // Reintenta la misma operacion de cobro enviando `permitirDesvioFEFO = true`.
-  function confirmarDesvioFEFO() {
-    const dato = datosCobroRef.current;
-    if (!dato) return;
-    setDesvioFEFO({
-      permitir: true,
-      motivo: motivoDesvio.trim() || "Desvio autorizado por el cajero",
-    });
-    setAlertaFEFO(null);
-    setModalDesvioAbierto(false);
-    registrarVentaMutation.mutate(dato);
-  }
 
   return (
     <div className="min-h-screen p-4 lg:p-6">
@@ -814,13 +769,14 @@ export default function NewVenta() {
                 </div>
               ) : (
                 carrito.map((item) => {
-                  // Solo para la vista: stock máximo del lote asignado (deshabilita +)
-                  const stockMax =
-                    item.lotesDisponibles.find((l) => l.idLote === item.idLote)?.stock ?? item.cantidad;
+                  // Stock TOTAL del producto (todos los lotes): deshabilita el +
+                  const stockMax = stockTotalDe(item.idProducto);
+                  // Cómo se repartirá la cantidad entre lotes (FEFO) — solo vista
+                  const reparto = repartirFEFO(lotesPorProducto[item.idProducto] ?? [], item.cantidad);
 
                   return (
                     <div
-                      key={`${item.idProducto}-${item.idLote}`}
+                      key={item.idProducto}
                       className="rounded-xl border p-3"
                       style={{ borderColor: C.border, background: SURFACE }}
                     >
@@ -836,7 +792,7 @@ export default function NewVenta() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => quitarDelCarrito(item.idProducto, item.idLote)}
+                          onClick={() => quitarDelCarrito(item.idProducto)}
                           className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                           title="Quitar de la venta"
                           aria-label="Quitar de la venta"
@@ -847,21 +803,20 @@ export default function NewVenta() {
 
                       <div className="mb-3 grid grid-cols-2 gap-2.5">
                         <div>
-                          <span className="mb-1 block text-xs text-gray-500">Lote asignado</span>
-                          <select
-                            value={item.idLote}
-                            onChange={(e) =>
-                              cambiarLote(item.idProducto, item.idLote, Number(e.target.value))
-                            }
-                            className={`${inputBase} px-2.5 py-1.5 text-xs`}
+                          <span className="mb-1 block text-xs text-gray-500">
+                            {reparto.length > 1 ? "Lotes asignados" : "Lote asignado"}
+                          </span>
+                          <ul
+                            className="space-y-0.5 rounded-xl border-2 bg-white px-2.5 py-1.5 text-xs"
                             style={{ borderColor: C.border, color: C.text }}
                           >
-                            {item.lotesDisponibles.map((l) => (
-                              <option key={l.idLote} value={l.idLote}>
-                                {l.numeroLote} ({l.stock} u.)
-                              </option>
+                            {reparto.map((r) => (
+                              <li key={r.idLote} className="flex items-center justify-between gap-2">
+                                <span className="truncate font-medium">{r.numeroLote}</span>
+                                <span className="font-bold">{r.unidades} u.</span>
+                              </li>
                             ))}
-                          </select>
+                          </ul>
                         </div>
                         <div>
                           <span className="mb-1 block text-xs text-gray-500">Unidades</span>
@@ -871,7 +826,7 @@ export default function NewVenta() {
                           >
                             <button
                               type="button"
-                              onClick={() => cambiarCantidad(item.idProducto, item.idLote, -1)}
+                              onClick={() => cambiarCantidad(item.idProducto, -1)}
                               disabled={item.cantidad <= 1}
                               aria-label="Restar una unidad"
                               className="px-2.5 py-1.5 transition-colors hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-30"
@@ -887,7 +842,7 @@ export default function NewVenta() {
                             </span>
                             <button
                               type="button"
-                              onClick={() => cambiarCantidad(item.idProducto, item.idLote, 1)}
+                              onClick={() => cambiarCantidad(item.idProducto, 1)}
                               disabled={item.cantidad >= stockMax}
                               aria-label="Sumar una unidad"
                               className="px-2.5 py-1.5 transition-colors hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-30"
@@ -911,7 +866,7 @@ export default function NewVenta() {
                             step="0.01"
                             value={item.descuento}
                             onChange={(e) =>
-                              cambiarDescuento(item.idProducto, item.idLote, Number(e.target.value))
+                              cambiarDescuento(item.idProducto, Number(e.target.value))
                             }
                             className={`${inputBase} w-20 px-2 py-1 text-xs`}
                             style={{ borderColor: C.border, color: C.text }}
@@ -993,99 +948,6 @@ export default function NewVenta() {
         onClose={() => setModalReciboAbierto(false)}
         onConfirm={(datos) => registrarVentaMutation.mutate(datos)}
       />
-
-      {/* Modal de autorizacion de desvio FEFO */}
-      {modalDesvioAbierto && alertaFEFO && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="fefo-title"
-            className="w-full max-w-lg overflow-hidden rounded-2xl border bg-white shadow-2xl"
-            style={{ borderColor: C.border }}
-          >
-            {/* Header del modal */}
-            <div className="flex items-start gap-3 px-5 py-4" style={{ background: GRADIENT }}>
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
-                <ShieldAlert className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 id="fefo-title" className="text-base font-bold text-white">
-                  Alerta FEFO
-                </h3>
-                <p className="mt-0.5 text-xs text-purple-100">{alertaFEFO.mensaje}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 p-5">
-              {/* Comparación de lotes */}
-              {alertaFEFO.idLoteFEFO !== null && alertaFEFO.idLoteFEFO !== undefined ? (
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  <div className="rounded-xl border p-3 text-xs" style={{ borderColor: C.border, background: SURFACE }}>
-                    <p className="text-gray-500">Lote actual</p>
-                    <p className="mt-0.5 text-sm font-bold" style={{ color: C.text }}>
-                      {alertaFEFO.numeroLote}
-                    </p>
-                    <p className="text-gray-500">vence en {alertaFEFO.diasRestantes} días</p>
-                  </div>
-                  <div className="rounded-xl border p-3 text-xs" style={{ borderColor: C.medium, background: C.light }}>
-                    <p style={{ color: C.medium }}>Debería despacharse primero</p>
-                    <p className="mt-0.5 text-sm font-bold" style={{ color: C.dark }}>
-                      {alertaFEFO.numeroLoteFEFO}
-                    </p>
-                    <p style={{ color: C.medium }}>vence en {alertaFEFO.diasRestantesFEFO} días</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-xl border p-3 text-xs" style={{ borderColor: C.border, background: SURFACE }}>
-                  <p className="text-gray-500">Lote actual</p>
-                  <p className="mt-0.5 text-sm font-bold" style={{ color: C.text }}>
-                    {alertaFEFO.numeroLote}
-                  </p>
-                  <p className="text-gray-500">vence en {alertaFEFO.diasRestantes} días</p>
-                </div>
-              )}
-
-              <div>
-                <label className="mb-1.5 block text-sm font-semibold" style={{ color: C.dark }}>
-                  Motivo del desvío
-                </label>
-                <textarea
-                  value={motivoDesvio}
-                  onChange={(e) => setMotivoDesvio(e.target.value)}
-                  rows={3}
-                  placeholder="Ej: se despacha del lote alternativo por disponibilidad..."
-                  className={`${inputBase} resize-none px-4 py-3`}
-                  style={{ borderColor: C.border, color: C.text }}
-                />
-              </div>
-
-              <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAlertaFEFO(null);
-                    setModalDesvioAbierto(false);
-                  }}
-                  className="flex-1 rounded-xl border-2 py-2.5 text-sm font-bold transition-all hover:bg-purple-50 active:scale-95"
-                  style={{ borderColor: C.border, color: C.dark }}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmarDesvioFEFO}
-                  disabled={registrarVentaMutation.isPending}
-                  className="flex-[1.4] rounded-xl py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-                  style={{ background: GRADIENT }}
-                >
-                  Confirmar desvío y cobrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

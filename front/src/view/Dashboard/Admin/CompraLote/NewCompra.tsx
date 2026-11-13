@@ -313,7 +313,7 @@ export default function NewCompra({ onBack }: { onBack?: () => void }) {
                 <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold tracking-tight">
                   Gestión farmacéutica
                   <span className="rounded-lg bg-white/15 px-2.5 py-1 text-xs font-semibold text-purple-100">
-                    Control de inventario
+                    Registro de compra e inventario
                   </span>
                 </h1>
                 <p className="mt-0.5 text-xs text-purple-200">

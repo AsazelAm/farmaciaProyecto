@@ -65,7 +65,7 @@ const DataLote = {
                 pv.nombre AS proveedor,
                 DATEDIFF(l.fechaVencimiento, NOW()) AS diasParaVencer
             ${queryBase}
-            ORDER BY l.fechaVencimiento ASC
+            ORDER BY l.fechaCreacion DESC, l.idLote DESC
             LIMIT ? OFFSET ?
         `;
         queryParams.push(porPagina, offset);

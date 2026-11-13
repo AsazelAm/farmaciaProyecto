@@ -153,7 +153,7 @@ export default function Productos() {
         style={{ borderColor: COLORS.border }}
       >
         <div className="overflow-x-auto">
-          <div className="max-h-[calc(100vh-360px)] overflow-y-auto">
+          <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
             <table className="w-full text-left border-collapse">
 
               {/* ENCABEZADO */}
@@ -239,11 +239,11 @@ export default function Productos() {
                             </div>
                           )}
                           <div>
-                            <div className="font-semibold text-sm" style={{ color: "#2D0A47" }}>
+                            <div className="text-xs text-gray-400 mt-0.5">
                               {row.nombreGenerico}
                             </div>
                             {row.nombreComercial && (
-                              <div className="text-xs text-gray-400 mt-0.5">{row.nombreComercial}</div>
+                              <div  className="font-semibold text-sm" style={{ color: "#2D0A47" }} >{row.nombreComercial}</div>
                             )}
                             {row.concentracion && (
                               <span
