@@ -13,9 +13,8 @@ const COOLDOWN_REENVIO_SEGUNDOS = 60;
 
 const rutasPorRol: Record<string, string> = {
   Admin: "/Dashboard",
-  Farmaceutico: "/Farmaceutico",
-  Asesor: "/Asesor",
-  Bodeguero: "/Bodeguero",
+  VendedorFarmaceutico: "/DashboardVendedorFarmaceutico",
+  EncargadoInventario: "/DashboardEncargadoInventario",
 };
 
 const formatoTiempo = (segundos: number) => {

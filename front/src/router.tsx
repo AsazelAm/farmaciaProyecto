@@ -2,7 +2,13 @@ import {HashRouter, Routes, Route} from "react-router-dom"
 import Logins from "./view/Login"
 import VerificarCodigoVista from "./view/VerificarCodigo"
 import Main from "./layouts/Main"
+//vistas
 import Aside from "./layouts/Aside"
+import AsideF from "./layouts/AsideF";
+import AsideE from "./layouts/AsideE";
+//
+
+//admin
 import Dashboard from "./view/Dashboard/Admin/Dashboard"
 
 import User from "./view/Dashboard/Admin/User/User"
@@ -33,8 +39,19 @@ import ReporteDevoluciones from "./view/Dashboard/Admin/Reportes/ReporteDevoluci
 import ReporteDevolucionesProveedor from "./view/Dashboard/Admin/Reportes/ReporteDevolucionesProveedor";
 import ReporteRotacionProductos from "./view/Dashboard/Admin/Reportes/ReporteRotacionProductos";
 import ReporteFacturacion from "./view/Dashboard/Admin/Reportes/ReporteFacturacion";
+//
+
+//VENDEDORFARMACEUTICO
+import DashboardVendedorFarmaceutico from "./view/DashboardVendedorFarmaceutico/VendedorFarmaceutico/DashboardVendedorFarmaceutico";
 
 
+//
+
+
+//EncargadoInventario
+import DashboardEncargadoInventario from "./view/DashboardEncargadoInventario/EncargadoInventario/DashboardEncargadoInventario";
+
+//
 
 
 export default function Router() {
@@ -69,6 +86,20 @@ export default function Router() {
               <Route path="/Dashboard/ReportesDevolucionesProveedor" element={<ReporteDevolucionesProveedor/>}/>
               <Route path="/Dashboard/ReportesRotacionProductos" element={<ReporteRotacionProductos/>}/>
               <Route path="/Dashboard/ReportesFacturacion" element={<ReporteFacturacion/>}/>
+            </Route>
+
+
+
+            
+            {/* layout para VENDEDORFARMACEUTICO */}
+            <Route element={<AsideF/>}>
+              <Route path="/DashboardVendedorFarmaceutico"  element={<DashboardVendedorFarmaceutico/>} index/>
+            </Route>
+
+
+            {/* layout para Academ//EncargadoInventarioico */}
+            <Route element={<AsideE/>}>
+              <Route path="/DashboardEncargadoInventario"  element={<DashboardEncargadoInventario/>} index/>
             </Route>
 
 
