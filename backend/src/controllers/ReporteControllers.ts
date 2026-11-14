@@ -164,7 +164,7 @@ async function generarExcel(datos: any): Promise<Buffer> {
     // Hoja 2: detalle de ventas
     const hojaDetalle = workbook.addWorksheet('Detalle de Ventas');
     hojaDetalle.columns = [
-        { header: 'N° Factura', key: 'numeroFactura', width: 14 },
+        { header: 'N° Recibo', key: 'numeroFactura', width: 14 },
         { header: 'N° Venta', key: 'idVenta', width: 10 },
         { header: 'Fecha', key: 'fechaCreacion', width: 20 },
         { header: 'Cliente', key: 'cliente', width: 25 },
@@ -289,7 +289,7 @@ function generarHtml(datos: any): string {
     <div class="meta">
         <span>Periodo: <b>${formatearFecha(datos.fechaInicio)}</b> al <b>${formatearFecha(datos.fechaFin)}</b></span>
         <span>Ventas completadas: <b>${datos.totales.cantidad}</b></span>
-        <span>Total facturado: <b>${formatoMoneda(datos.totales.total)}</b></span>
+        <span>Total vendido: <b>${formatoMoneda(datos.totales.total)}</b></span>
     </div>
 
     <h2>Resumen ${TITULO_HUMANO[datos.frecuencia]}</h2>
@@ -1415,7 +1415,7 @@ async function generarExcelDevoluciones(datos: any): Promise<Buffer> {
         { header: 'N° devolución', key: 'numeroDevolucion', width: 15 },
         { header: 'Fecha', key: 'fechaCreacion', width: 18 },
         { header: 'N° venta', key: 'idVenta', width: 10 },
-        { header: 'N° factura', key: 'numeroFactura', width: 14 },
+        { header: 'N° recibo', key: 'numeroFactura', width: 14 },
         { header: 'Cliente', key: 'cliente', width: 28 },
         { header: 'CI / NIT', key: 'clienteCi', width: 14 },
         { header: 'Producto', key: 'nombreComercial', width: 28 },
@@ -1625,7 +1625,7 @@ function generarHtmlDevoluciones(datos: any): string {
         <thead>
             <tr>
                 <th>Devolución</th>
-                <th>Venta / Factura</th>
+                <th>Venta / Recibo</th>
                 <th>Cliente</th>
                 <th>Producto</th>
                 <th>Lote / Vence</th>

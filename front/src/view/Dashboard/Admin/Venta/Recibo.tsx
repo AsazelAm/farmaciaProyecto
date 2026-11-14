@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ban, Banknote, Check, CreditCard, QrCode, Receipt, X } from "lucide-react";
 
 export interface IDatosCobro {
@@ -43,6 +43,16 @@ export default function Recibo({
   const [tipoPago, setTipoPago] = useState<IDatosCobro["tipoPago"]>("Efectivo");
   const [observaciones, setObservaciones] = useState("");
   const [emitirRecibo, setEmitirRecibo] = useState(true);
+
+  // Al cerrarse el modal (por éxito o por cancelar) limpiamos la selección,
+  // para que la siguiente venta no herede observaciones ni el tipo de pago.
+  useEffect(() => {
+    if (!isOpen) {
+      setTipoPago("Efectivo");
+      setObservaciones("");
+      setEmitirRecibo(true);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -159,7 +169,7 @@ export default function Recibo({
                 style={emitirRecibo ? { background: GRADIENT, color: "#FFFFFF" } : { color: C.medium }}
               >
                 <Receipt className="h-3.5 w-3.5" />
-                Con Recibo
+                <span>Con Recibo</span>
               </button>
               <button
                 type="button"
@@ -170,9 +180,14 @@ export default function Recibo({
                 style={!emitirRecibo ? { background: GRADIENT, color: "#FFFFFF" } : { color: C.medium }}
               >
                 <Ban className="h-3.5 w-3.5" />
-                Sin Recibo
+                <span>Sin Recibo</span>
               </button>
             </div>
+              {emitirRecibo && (
+                  <p className="mt-1.5 text-xs" style={{ color: C.medium }}>
+                    Al confirmar se descargará el recibo en PDF.
+                  </p>
+                )}
           </div>
 
           {/* Observaciones */}
@@ -191,7 +206,7 @@ export default function Recibo({
               onChange={(e) => setObservaciones(e.target.value)}
               maxLength={500}
               rows={3}
-              placeholder="Ej: cliente solicita factura a nombre de..."
+              placeholder="Ej: cliente solicita el recibo a nombre de..."
               className="w-full resize-none rounded-xl border-2 bg-white px-3.5 py-2.5 text-sm font-medium outline-none transition-all placeholder:text-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-100"
               style={{ borderColor: C.border, color: C.text }}
             />
@@ -238,12 +253,12 @@ export default function Recibo({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
-                Procesando...
+                <span>Procesando...</span>
               </>
             ) : (
               <>
                 <Check className="h-4 w-4" strokeWidth={3} />
-                Confirmar transacción
+                <span>Confirmar transacción</span>
               </>
             )}
           </button>

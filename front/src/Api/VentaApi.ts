@@ -161,3 +161,44 @@ export async function GetAlertaFEFOApi(idProducto: number, idLote: number) {
     throw error;
   }
 }
+
+// ── GET: Recibo en PDF (devuelve el archivo como Blob) ───────────────────────
+export async function GetReciboPdfApi(idVenta: number): Promise<Blob> {
+  try {
+    const { data } = await api.get(`/Venta/ReciboPdf/${idVenta}`, { responseType: "blob" });
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      // Con responseType "blob", incluso el error JSON llega como Blob: hay que leerlo
+      let mensaje = "Error al generar el recibo PDF";
+      if (error.response.data instanceof Blob) {
+        try {
+          mensaje = JSON.parse(await error.response.data.text()).error || mensaje;
+        } catch { /* se queda el mensaje por defecto */ }
+      }
+      throw new Error(mensaje);
+    }
+    throw error;
+  }
+}
+
+// ── Descarga el PDF en el navegador ──────────────────────────────────────────
+export async function DescargarReciboPdfApi(idVenta: number) {
+  const blob = await GetReciboPdfApi(idVenta);
+  const url = URL.createObjectURL(blob);          // URL temporal en memoria
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = `recibo-venta-${String(idVenta).padStart(5, "0")}.pdf`;
+  // Si el navegador ignora "download", que abra una pestaña nueva en lugar de
+  // reemplazar la vista actual (evita que el POS quede en blanco).
+  enlace.target = "_blank";
+  enlace.rel = "noopener";
+  document.body.appendChild(enlace);
+  enlace.click();                                  // dispara la descarga
+  // No quitamos el enlace ni liberamos la URL de inmediato: algunos
+  // navegadores cancelan la descarga si el ancla desaparece al instante.
+  setTimeout(() => {
+    enlace.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
+}

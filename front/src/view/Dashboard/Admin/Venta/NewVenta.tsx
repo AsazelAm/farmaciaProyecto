@@ -20,6 +20,7 @@ import {
   AddVentaApi,
   ChangeEstadoVentaApi,
   EmitirReciboApi,
+  DescargarReciboPdfApi,
   GetLotesDisponiblesApi,
 } from "../../../../Api/VentaApi";
 // TODO: estos dos archivos API no venían en lo que compartiste. Los asumo
@@ -39,7 +40,7 @@ import {
   type CreateVentaType,
   type LoteDisponibleType,
 } from "../../../../types";
-import Recibo, { type IDatosCobro } from "./Factura";
+import Recibo, { type IDatosCobro } from "./Recibo";
 
 // ── Tipos derivados de los schemas de Zod que ya tienes en types/index.ts ──
 // ProductoArray, ClienteArray y sucursalArray SÍ están exportados como
@@ -349,6 +350,16 @@ export default function NewVenta() {
     setCarrito([]);
   }
 
+  // Deja el POS listo para la siguiente venta: además del carrito, limpia la
+  // búsqueda y vuelve al cliente "Público General".
+  function reiniciarPOS() {
+    limpiarVenta();
+    setBusqueda("");
+    setBusquedaCliente("");
+    setIdClienteSeleccionado(ID_CLIENTE_PUBLICO_GENERAL);
+    setMostrarSugerencias(false);
+  }
+
   // ── Mutación: registra la venta completa ────────────────────────────────
   // Tu backend separa esto en 3 endpoints (AddVenta crea en 'pendiente',
   // ChangeEstadoVenta la pasa a 'completado', EmitirRecibo es opcional),
@@ -365,9 +376,19 @@ export default function NewVenta() {
         throw new Error(`No hay stock disponible de ${sinLotes.nombreGenerico}`);
       }
 
+      // Reparto FEFO que se va a descontar de cada producto. Lo devolvemos al
+      // onSuccess para actualizar el stock en pantalla sin esperar al refetch.
+      const reparto = Object.fromEntries(
+        carrito.map((item) => [
+          item.idProducto,
+          repartirFEFO(lotesPorProducto[item.idProducto] ?? [], item.cantidad),
+        ])
+      ) as Record<number, IRepartoLote[]>;
+
       const payload: CreateVentaType = {
         idCliente: idClienteSeleccionado,
         idSucursal: idSucursalSeleccionada,
+        idUsuario: user?.idUsuario,
         tipoPago: datosCobro.tipoPago,
         subtotal: subtotalBruto,
         descuentoTotal: descuentosAplicados,
@@ -387,24 +408,65 @@ export default function NewVenta() {
       // 1) Crear la venta (queda en estado 'pendiente' + descuenta stock)
       const { idVenta } = await AddVentaApi(payload);
 
-      // 2) Como ya se cobró en el modal, la pasamos a 'completado'
-      await ChangeEstadoVentaApi(idVenta, "completado");
-
-      // 3) Emitir el recibo solo si el usuario eligió "Con Recibo"
-      if (datosCobro.emitirRecibo) {
-        await EmitirReciboApi(idVenta);
+      // A partir de aquí la venta YA existe. Si algo falla en los pasos
+      // siguientes NO se debe volver a registrar la venta (evitamos duplicados):
+      // avisamos al cajero y dejamos que la operación termine como exitosa.
+      let completada = false;
+      try {
+        // 2) Como ya se cobró en el modal, la pasamos a 'completado'
+        await ChangeEstadoVentaApi(idVenta, "completado");
+        completada = true;
+      } catch {
+        toast.warning(
+          `Venta #${idVenta} registrada como pendiente: no se pudo confirmar el pago. Confírmala desde el listado de ventas.`
+        );
       }
 
-      return idVenta;
+      // 3) Emitir el recibo solo si el usuario eligió "Con Recibo"
+      if (datosCobro.emitirRecibo && completada) {
+        try {
+          await EmitirReciboApi(idVenta);
+        } catch {
+          toast.warning(
+            "Venta registrada, pero no se pudo emitir el recibo. Puedes generarlo desde el listado de ventas."
+          );
+        }
+        // Si el PDF falla, la venta ya está registrada: avisamos pero no la deshacemos
+        try {
+          await DescargarReciboPdfApi(idVenta);
+        } catch {
+          toast.warning("Venta registrada, pero no se pudo generar el PDF. Descárgalo desde el listado de ventas.");
+        }
+      }
+
+      return { idVenta, reparto };
     },
-    onSuccess: () => {
+    onSuccess: ({ reparto }) => {
       toast.success("Venta registrada exitosamente");
-      // Invalidamos lo que quedó desactualizado: el listado de ventas, el
-      // dashboard, y el stock de lotes (bajó por cada producto vendido).
-      queryClient.invalidateQueries({ queryKey: ["ventas"] });
-      queryClient.invalidateQueries({ queryKey: ["ventasEstadisticas"] });
-      queryClient.invalidateQueries({ queryKey: ["lotesDisponibles"] });
-      limpiarVenta();
+
+      // 1) Descontar el stock en la caché con el mismo reparto FEFO que aplicó
+      //    el backend. Así la vista se actualiza al instante y no queda
+      //    mostrando stock viejo (ni vacía) mientras se refresca.
+      for (const [idProducto, lineas] of Object.entries(reparto)) {
+        queryClient.setQueryData<LoteDisponibleType[]>(
+          ["lotesDisponibles", Number(idProducto)],
+          (lotesPrevios) => {
+            if (!lotesPrevios) return lotesPrevios;
+            return lotesPrevios
+              .map((lote) => {
+                const usadas = lineas.find((r) => r.idLote === lote.idLote)?.unidades ?? 0;
+                return usadas > 0 ? { ...lote, stock: Math.max(0, lote.stock - usadas) } : lote;
+              })
+              .filter((lote) => lote.stock > 0);
+          }
+        );
+        // 2) Reconciliar en segundo plano SOLO los productos vendidos (antes se
+        //    invalidaban todos los lotes y se disparaba una petición por producto).
+        queryClient.invalidateQueries({ queryKey: ["lotesDisponibles", Number(idProducto)] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["VentasAll"] });
+      queryClient.invalidateQueries({ queryKey: ["VentasEstadisticas"] });
+      reiniciarPOS();
       setModalReciboAbierto(false);
     },
     onError: (error: any) => {

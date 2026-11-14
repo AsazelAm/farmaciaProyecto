@@ -94,10 +94,11 @@ function SummaryRow({ label, value, color, strong = false }: {
 
 // ─── Componente Principal ────────────────────────────────────────────────────
 export default function GetVenta({ isOpen, setIsOpen, idVenta }: Props) {
-  const { data: venta, isLoading } = useQuery({
+  const { data: venta, isLoading, isError, error } = useQuery({
     queryKey: ["VentaDetalle", idVenta],
     queryFn: () => GetVentaByIdApi(idVenta as number),
     enabled: isOpen && !!idVenta,
+    retry: 1,
   });
 
   if (!isOpen) return null;
@@ -114,7 +115,24 @@ export default function GetVenta({ isOpen, setIsOpen, idVenta }: Props) {
         className="relative w-full max-w-3xl max-h-[92vh] rounded-2xl overflow-hidden shadow-2xl z-10 border flex flex-col"
         style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.border }}
       >
-        {isLoading || !venta ? (
+        {isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-24 text-center">
+            <p className="text-sm font-bold" style={{ color: COLORS.red }}>
+              No se pudo cargar el detalle de la venta
+            </p>
+            <p className="text-xs" style={{ color: COLORS.textMuted }}>
+              {error instanceof Error ? error.message : "Intenta nuevamente en unos segundos."}
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
+              style={{ backgroundColor: COLORS.purpleDark }}
+            >
+              Cerrar
+            </button>
+          </div>
+        ) : isLoading || !venta ? (
           <div className="flex items-center justify-center py-24">
             <svg className="w-8 h-8 animate-spin" style={{ color: COLORS.purple }} fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

@@ -786,7 +786,7 @@ export default function ReporteDevoluciones() {
               <thead>
                 <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
                   <SortHeader label="DEVOLUCIÓN" campo="fechaCreacion" orden={orden} onOrden={alternarOrden} />
-                  <th className="px-4 py-3 text-left text-xs font-bold tracking-wider text-gray-500">VENTA / FACTURA</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold tracking-wider text-gray-500">VENTA / RECIBO</th>
                   <SortHeader label="CLIENTE" campo="cliente" orden={orden} onOrden={alternarOrden} />
                   <SortHeader label="PRODUCTO" campo="nombreComercial" orden={orden} onOrden={alternarOrden} />
                   <th className="px-4 py-3 text-left text-xs font-bold tracking-wider text-gray-500">LOTE / VENCE</th>

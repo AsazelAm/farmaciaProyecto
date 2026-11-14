@@ -4,6 +4,9 @@ import Loading from "../../../../Helpers/Loading";
 import { GetVentasApi, GetEstadisticasVentasApi } from "../../../../Api/VentaApi";
 import type { VentaType, VentaEstadisticasType, IVentaFiltros } from "../../../../types";
 
+import BotonReciboPdf from "../../../../Components/Venta/BotonReciboPdf";
+
+
 const GetVenta = lazy(() => import("../../../../Components/Venta/GetVenta"));
 
 // ─── Paleta de colores y Estilos ──────────────────────────────────────────────
@@ -183,11 +186,11 @@ export default function Venta() {
   // Tarjetas de estadísticas (independientes de los filtros de la tabla)
   const dashboardStats = useMemo(() => {
     if (!stats?.porEstado) {
-      return { totalRegistros: 0, ingresosFacturados: 0, porConfirmar: 0, ticketPromedio: 0 };
+      return { totalRegistros: 0, ingresosVentas: 0, porConfirmar: 0, ticketPromedio: 0 };
     }
 
     let totalRegistros = 0;
-    let ingresosFacturados = 0;
+    let ingresosVentas = 0;
     let noAnuladas = 0;
     let porConfirmar = 0;
 
@@ -196,14 +199,14 @@ export default function Venta() {
       const monto = Number(s.monto ?? 0);
       totalRegistros += cantidad;
       if (s.estado !== "cancelado") {
-        ingresosFacturados += monto;
+        ingresosVentas += monto;
         noAnuladas += cantidad;
       }
       if (s.estado === "pendiente") porConfirmar += cantidad;
     }
 
-    const ticketPromedio = noAnuladas > 0 ? ingresosFacturados / noAnuladas : 0;
-    return { totalRegistros, ingresosFacturados, porConfirmar, ticketPromedio };
+    const ticketPromedio = noAnuladas > 0 ? ingresosVentas / noAnuladas : 0;
+    return { totalRegistros, ingresosVentas, porConfirmar, ticketPromedio };
   }, [stats?.porEstado]);
 
   if (loadingVentas || loadingStats) return <Loading />;
@@ -246,7 +249,7 @@ export default function Venta() {
         <StatCard
           accentColor="#059669"
           titulo="Ingresos por Ventas"
-          valor={formatBOB(dashboardStats.ingresosFacturados)}
+          valor={formatBOB(dashboardStats.ingresosVentas)}
           sub="Excluye anulados"
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
         />
@@ -407,14 +410,17 @@ export default function Venta() {
                           <p className="text-[11px] text-gray-400">{venta.totalItems ?? 0} producto{(venta.totalItems ?? 0) === 1 ? "" : "s"}</p>
                         </td>
                         <td className="px-5 py-4">
-                          <button
-                            onClick={() => openModal(venta.idVenta)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-white shadow-sm hover:brightness-110 active:scale-95"
-                            style={{ backgroundColor: COLORS.dark }}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            Ver Detalle
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => openModal(venta.idVenta)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-white shadow-sm hover:brightness-110 active:scale-95"
+                              style={{ backgroundColor: COLORS.dark }}
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                              Ver Detalle
+                            </button>
+                            <BotonReciboPdf idVenta={venta.idVenta} disabled={venta.estado === "pendiente"} />
+                          </div>
                         </td>
                       </tr>
                     );

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { generarReciboPdf } from '../Services/ReciboPdf';
 import DataVenta from '../Models/VentaModels';
 
 export class VentaControllers {
@@ -57,11 +58,18 @@ export class VentaControllers {
                 return res.status(400).json({ error: 'Debe ingresar al menos un producto para registrar la venta' });
             }
 
-            // 2. Verificar stock disponible de cada lote antes de intentar la transacción
+            // 2. Verificar stock disponible del producto antes de intentar la
+            //    transacción. Se valida el total de sus lotes activos porque el
+            //    POS envía el lote FEFO, pero la venta puede repartirse entre
+            //    varios lotes si el primero no alcanza. El modelo vuelve a
+            //    validar el stock dentro de la transacción con FOR UPDATE.
             for (const detalle of datos.detalles) {
-                const stockDisponible = await DataVenta.VerificarStockLote(detalle.idLote, detalle.cantidad);
-                if (!stockDisponible) {
-                    return res.status(400).json({ error: `Stock insuficiente o lote no disponible (idLote ${detalle.idLote})` });
+                const lotes = await DataVenta.LotesDisponiblesPorProducto(Number(detalle.idProducto));
+                const stockDisponible = lotes.reduce((acc: number, lote: any) => acc + Number(lote.stock ?? 0), 0);
+                if (stockDisponible < Number(detalle.cantidad)) {
+                    return res.status(400).json({
+                        error: `Stock insuficiente para el producto #${detalle.idProducto}. Disponible: ${stockDisponible}, solicitado: ${detalle.cantidad}.`,
+                    });
                 }
             }
 
@@ -219,6 +227,37 @@ export class VentaControllers {
         } catch (error) {
             console.error('Error al obtener estadísticas de ventas:', error);
             res.status(500).json({ error: 'Error al cargar las métricas del dashboard' });
+        }
+    };
+
+    // ── GET: Descargar el recibo de una venta en PDF ──────────────────────────
+    static readonly GetReciboPdfC = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const idVenta = Number(req.params.idVenta);
+            if (!Number.isInteger(idVenta) || idVenta <= 0) {
+                return res.status(400).json({ error: 'Id de venta no válido' });
+            }
+
+            const venta = await DataVenta.obtenerPorId(idVenta);
+            if (!venta) {
+                return res.status(404).json({ error: 'Venta no encontrada' });
+            }
+            if (venta.estado === 'pendiente') {
+                return res.status(400).json({ error: 'Solo se puede generar el recibo de una venta completada' });
+            }
+
+            const pdf = await generarReciboPdf(venta);
+            const nombre = venta.recibo?.numeroRecibo ?? `venta-${String(idVenta).padStart(5, '0')}`;
+
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename="recibo-${nombre}.pdf"`,
+                'Content-Length': String(pdf.length),
+            });
+            res.status(200).end(pdf);
+        } catch (error) {
+            console.error('Error al generar el recibo PDF:', error);
+            res.status(500).json({ error: 'Error al generar el recibo en PDF' });
         }
     };
 }

@@ -42,8 +42,8 @@ export default function ReporteFacturacion() {
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-[#4A1A6E]"><FileText className="w-6 h-6 text-white" /></div>
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Recibos, Emisiones y Anulacionesón, Emisiones y Anulaciones</h1>
-          <p className="text-sm text-gray-500">Gestion de recibos y auditoriaía</p>
+          <h1 className="text-xl font-bold text-gray-800">Recibos, Emisiones y Anulaciones</h1>
+          <p className="text-sm text-gray-500">Gestión de recibos y auditoría</p>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ export default function ReporteFacturacion() {
               {(parametros?.estados ?? []).map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
             </select>
           </div>
-          <div className="sm:col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1.5">Búsqueda</label><input type="text" value={busquedaInput} onChange={(e) => setBusquedaInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") consultar(); }} placeholder="Número, NIT o razón social..." className="w-full px-3 py-2 rounded-xl border border-purple-200 text-sm" /></div>
+          <div className="sm:col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1.5">Búsqueda</label><input type="text" value={busquedaInput} onChange={(e) => setBusquedaInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") consultar(); }} placeholder="Número de recibo, NIT/CI o cliente..." className="w-full px-3 py-2 rounded-xl border border-purple-200 text-sm" /></div>
           <div className="flex items-end gap-2">
             <button onClick={consultar} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#4A1A6E]"><Search className="w-4 h-4" />Consultar</button>
             <button onClick={resetear} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 border border-purple-200">Limpiar</button>
@@ -95,7 +95,7 @@ export default function ReporteFacturacion() {
                   <div key={e.estado} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-extrabold" style={{ color }}>{e.estado}</span>
-                      <span className="text-xs text-gray-500">{e.facturas} fact. · {formatoMoneda(e.total)}</span>
+                      <span className="text-xs text-gray-500">{e.facturas} recibos · {formatoMoneda(e.total)}</span>
                     </div>
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${Math.max(pct, 4)}%`, backgroundColor: color }} />
@@ -115,7 +115,7 @@ export default function ReporteFacturacion() {
                   <div key={t.tipo} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-extrabold text-purple-700">{t.tipo}</span>
-                      <span className="text-xs text-gray-500">{t.facturas} fact. · {formatoMoneda(t.total)}</span>
+                      <span className="text-xs text-gray-500">{t.facturas} recibos · {formatoMoneda(t.total)}</span>
                     </div>
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                       <div className="h-full rounded-full bg-purple-500" style={{ width: `${Math.max(pct, 4)}%` }} />
@@ -140,7 +140,7 @@ export default function ReporteFacturacion() {
                 <div key={m.motivo} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-semibold text-gray-700">{m.motivo}</span>
-                    <span className="text-xs font-bold text-red-600">{m.facturas} fact.</span>
+                    <span className="text-xs font-bold text-red-600">{m.facturas} recibos</span>
                   </div>
                   <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                     <div className="h-full rounded-full bg-red-500" style={{ width: `${Math.max(pct, 4)}%` }} />
@@ -153,14 +153,14 @@ export default function ReporteFacturacion() {
       )}
 
       <div className="overflow-hidden rounded-2xl bg-white border border-purple-100 shadow-sm">
-        <div className="px-5 py-4 border-b border-purple-100"><h3 className="text-sm font-bold text-gray-700">Detalle de facturas</h3></div>
+        <div className="px-5 py-4 border-b border-purple-100"><h3 className="text-sm font-bold text-gray-700">Detalle de recibos</h3></div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-purple-100">
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">NRO</th>
               <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">FECHA</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">NIT/DOC</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">RAZÓN SOCIAL</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">NIT/CI</th>
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500">CLIENTE</th>
               <th className="px-4 py-3 text-right text-xs font-bold text-gray-500">SUBTOTAL</th>
               <th className="px-4 py-3 text-right text-xs font-bold text-gray-500">DESC.</th>
               <th className="px-4 py-3 text-right text-xs font-bold text-gray-500">IMPUESTO</th>

@@ -56,4 +56,6 @@ router.post('/EmitirRecibo/:idVenta',
     VentaControllers.EmitirReciboC
 );
 
+router.get('/ReciboPdf/:idVenta', VentaControllers.GetReciboPdfC);
+
 export default router;
