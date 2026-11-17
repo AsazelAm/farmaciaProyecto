@@ -91,17 +91,38 @@ export default function Router() {
 
 
             
-            {/* layout para VENDEDORFARMACEUTICO */}
-            <Route element={<AsideF/>}>
-              <Route path="/DashboardVendedorFarmaceutico"  element={<DashboardVendedorFarmaceutico/>} index/>
-            </Route>
+            {/* VENDEDOR FARMACEUTICO */}
+              <Route path="/DashboardVendedorFarmaceutico" element={<AsideF />}>
+                <Route index element={<DashboardVendedorFarmaceutico />} />
+                <Route path="Lote" element={<Lote />} />
+                <Route path="Venta" element={<Venta />} />
+                <Route path="NewVenta" element={<NewVenta />} />
+                <Route path="Cliente" element={<Cliente />} />
+                <Route path="Devoluciones" element={<Devolucion />} />
+                <Route path="Reportes" element={<Reportes />} />
+                <Route path="ReportesRotacionProductos" element={<ReporteRotacionProductos />} />
+                <Route path="ReportesFacturacion" element={<ReporteFacturacion />} />
+                <Route path="ReportesInventario" element={<ReporteInventario/>}/>
+              </Route>
 
-
-            {/* layout para Academ//EncargadoInventarioico */}
-            <Route element={<AsideE/>}>
-              <Route path="/DashboardEncargadoInventario"  element={<DashboardEncargadoInventario/>} index/>
-            </Route>
-
+              {/* ENCARGADO INVENTARIO */}
+              <Route path="/DashboardEncargadoInventario" element={<AsideE />}>
+                <Route index element={<DashboardEncargadoInventario />} />
+                <Route path="Productos" element={<Productos/>}/>
+              <Route path="Presentacion" element={<Presentacion/>}/>
+              <Route path="TipoProductos" element={<TipoProductos/>}/>
+              <Route path="Laboratorios" element={<Laboratorios/>}/>
+              <Route path="Proveedor" element={<Proveedor/>}/>
+              <Route path="Compra" element={<Compra/>}/>
+              <Route path="NewCompra" element={<NewCompra/>}/>
+              <Route path="Lote" element={<Lote/>}/>
+               <Route path="Devoluciones" element={<Devolucion />} />
+               <Route path="ReportesCompras" element={<ReporteCompra/>}/>
+              <Route path="ReportesVencimientos" element={<ReporteVencimientos/>}/>
+              <Route path="ReportesInventario" element={<ReporteInventario/>}/>
+              <Route path="ReportesDevolucionesProveedor" element={<ReporteDevolucionesProveedor/>}/>
+              <Route path="ReportesRotacionProductos" element={<ReporteRotacionProductos/>}/>
+              </Route>
 
 
         </Routes>

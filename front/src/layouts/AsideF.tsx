@@ -70,28 +70,25 @@ export default function Aside() {
           <div className="px-2 space-y-1">
             
             <SubMenu label="Venta" icon={iconuser}>
-              <NavItem to="/Dashboard/Venta" icon={iconuser} label="Venta"/>
-              <NavItem to="/Dashboard/NewVenta" icon={iconuser} label="Nueva Venta" />
+              <NavItem to="/DashboardVendedorFarmaceutico/Venta" icon={iconuser} label="Venta"/>
+              <NavItem to="/DashboardVendedorFarmaceutico/NewVenta" icon={iconuser} label="Nueva Venta" />
              
             </SubMenu>
 
             <SubMenu label="Clientes" icon={iconuser}>
-              <NavItem to="/Dashboard/Devoluciones" icon={iconuser} label="Clientes" />
+              <NavItem to="/DashboardVendedorFarmaceutico/Cliente" icon={iconuser} label="Clientes" />
             </SubMenu>
 
             <SubMenu label="Devoluciones" icon={iconuser}>
-              <NavItem to="/Dashboard/Devoluciones" icon={iconuser} label="Devoluciones" />
+              <NavItem to="/DashboardVendedorFarmaceutico/Devoluciones" icon={iconuser} label="Devoluciones" />
             </SubMenu>
 
             <SubMenu label="Reportes" icon={iconuser}>
-              <NavItem to="/Dashboard/Reportes" icon={iconuser} label="Ventas" />
-              <NavItem to="/Dashboard/ReportesCompras" icon={iconuser} label="Compras" />
-              <NavItem to="/Dashboard/ReportesVencimientos" icon={iconuser} label="Control Vencimientos" />
-              <NavItem to="/Dashboard/ReportesInventario" icon={iconuser} label="Inventario Valorizado" />
-              <NavItem to="/Dashboard/ReportesDevoluciones" icon={iconuser} label="Devoluciones y Causas" />
-              <NavItem to="/Dashboard/ReportesDevolucionesProveedor" icon={iconuser} label="Devoluciones Proveedores" />
-              <NavItem to="/Dashboard/ReportesRotacionProductos" icon={iconuser} label="Rotación ABC Productos" />
-              <NavItem to="/Dashboard/ReportesFacturacion" icon={iconuser} label="Recibos y Anulaciones" />
+              <NavItem to="/DashboardVendedorFarmaceutico/Reportes" icon={iconuser} label="Ventas" />
+              <NavItem to="/DashboardVendedorFarmaceutico/ReportesVencimientos" icon={iconuser} label="Control Vencimientos" />
+              <NavItem to="/DashboardVendedorFarmaceutico/ReportesInventario" icon={iconuser} label="Inventario Valorizado" />
+              <NavItem to="/DashboardVendedorFarmaceutico/ReportesRotacionProductos" icon={iconuser} label="Rotación ABC Productos" />
+              <NavItem to="/DashboardVendedorFarmaceutico/ReportesFacturacion" icon={iconuser} label="Recibos y Anulaciones" />
             </SubMenu>
 
   

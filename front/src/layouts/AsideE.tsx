@@ -71,38 +71,36 @@ export default function Aside() {
            
 
             <SubMenu icon={iconuser} label="Catálogo">
-              <NavItem to="/Dashboard/Productos" icon={iconuser} label="Productos" />
-              <NavItem to="/Dashboard/Presentacion" icon={iconuser} label="Presentación" />
-              <NavItem to="/Dashboard/TipoProductos" icon={iconuser} label="Tipos" />
-              <NavItem to="/Dashboard/Laboratorios" icon={iconuser} label="Laboratorios" />
+              <NavItem to="/DashboardEncargadoInventario/Productos" icon={iconuser} label="Productos" />
+              <NavItem to="/DashboardEncargadoInventario/Presentacion" icon={iconuser} label="Presentación" />
+              <NavItem to="/DashboardEncargadoInventario/TipoProductos" icon={iconuser} label="Tipos" />
+              <NavItem to="/DashboardEncargadoInventario/Laboratorios" icon={iconuser} label="Laboratorios" />
             </SubMenu>
 
             <SubMenu label="Contactos Comerciales" icon={iconuser}>
-              <NavItem to="/Dashboard/Proveedor" icon={iconuser} label="Proveedores" />
+              <NavItem to="/DashboardEncargadoInventario/Proveedor" icon={iconuser} label="Proveedores" />
            
             </SubMenu>
 
             <SubMenu label="Compra de Lotes" icon={iconuser}>
-              <NavItem to="/Dashboard/Compra" icon={iconuser} label="Compra" />
-              <NavItem to="/Dashboard/NewCompra" icon={iconuser} label="Nueva Compra" />
-              <NavItem to="/Dashboard/Lote" icon={iconuser} label="Lotes" />
+              <NavItem to="/DashboardEncargadoInventario/Compra" icon={iconuser} label="Compra" />
+              <NavItem to="/DashboardEncargadoInventario/NewCompra" icon={iconuser} label="Nueva Compra" />
+              <NavItem to="/DashboardEncargadoInventario/Lote" icon={iconuser} label="Lotes" />
             </SubMenu>
 
           
 
             <SubMenu label="Devoluciones" icon={iconuser}>
-              <NavItem to="/Dashboard/Devoluciones" icon={iconuser} label="Devoluciones" />
+              <NavItem to="/DashboardEncargadoInventario/Devoluciones" icon={iconuser} label="Devoluciones" />
             </SubMenu>
 
             <SubMenu label="Reportes" icon={iconuser}>
-              <NavItem to="/Dashboard/Reportes" icon={iconuser} label="Ventas" />
-              <NavItem to="/Dashboard/ReportesCompras" icon={iconuser} label="Compras" />
-              <NavItem to="/Dashboard/ReportesVencimientos" icon={iconuser} label="Control Vencimientos" />
-              <NavItem to="/Dashboard/ReportesInventario" icon={iconuser} label="Inventario Valorizado" />
-              <NavItem to="/Dashboard/ReportesDevoluciones" icon={iconuser} label="Devoluciones y Causas" />
-              <NavItem to="/Dashboard/ReportesDevolucionesProveedor" icon={iconuser} label="Devoluciones Proveedores" />
-              <NavItem to="/Dashboard/ReportesRotacionProductos" icon={iconuser} label="Rotación ABC Productos" />
-              <NavItem to="/Dashboard/ReportesFacturacion" icon={iconuser} label="Recibos y Anulaciones" />
+              <NavItem to="/DashboardEncargadoInventario/ReportesCompras" icon={iconuser} label="Compras" />
+              <NavItem to="/DashboardEncargadoInventario/ReportesVencimientos" icon={iconuser} label="Control Vencimientos" />
+              <NavItem to="/DashboardEncargadoInventario/ReportesInventario" icon={iconuser} label="Inventario Valorizado" />
+            
+              <NavItem to="/DashboardEncargadoInventario/ReportesDevolucionesProveedor" icon={iconuser} label="Devoluciones Proveedores" />
+              <NavItem to="/DashboardEncargadoInventario/ReportesRotacionProductos" icon={iconuser} label="Rotación ABC Productos" />
             </SubMenu>
 
   

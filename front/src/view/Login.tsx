@@ -38,7 +38,7 @@ export default function Logins() {
 
   const rutasPorRol: Record<string, string> = {
     Admin: "/Dashboard",
-    VendedorFarmaceutico: "/DashboarVendedordFarmaceutico",
+    VendedorFarmaceutico: "/DashboardVendedorFarmaceutico",
     EncargadoInventario: "/DashboardEncargadoInventario",
   };
 
