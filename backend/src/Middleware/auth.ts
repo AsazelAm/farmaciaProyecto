@@ -6,8 +6,9 @@ declare global {
         interface Request {
             user?: {
                 idUsuario: number;
-                idTipoUs:number;
-                nameRol:string;
+                idTipoUs: number;
+                idSucursal: number;
+                nameRol: string;
             };
         }
     }
@@ -30,7 +31,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
         if (decoded?.id) {
             const [user] = await db.query(
-                'SELECT usuario.idUsuario, usuario.idTipoUs, tipous.nameRol FROM usuario JOIN tipous ON usuario.idTipoUs = tipous.idTipoUs WHERE usuario.idUsuario = ?',[decoded.id]
+                'SELECT usuario.idUsuario, usuario.idTipoUs, usuario.idSucursal, tipous.nameRol FROM usuario JOIN tipous ON usuario.idTipoUs = tipous.idTipoUs WHERE usuario.idUsuario = ?',[decoded.id]
             );
             if (!user) {
                 return res.status(401).json({ error: 'Usuario no encontrado' });

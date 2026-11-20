@@ -46,9 +46,6 @@ const jwt_1 = require("../Utils/jwt");
 // Codigo de 6 digitos (100000 - 999999) para la verificacion por correo.
 const GenerarCodigoLogin = () => String((0, crypto_1.randomInt)(100000, 1000000));
 class AuthControllers {
-    // ── POST /login: valida credenciales y envia codigo OTP por correo ──────
-    // Ya NO devuelve el JWT directamente: primero debe verificar el codigo
-    // en POST /verificar-codigo.
     static Login = async (req, res) => {
         try {
             const { email, passwd } = req.body;
@@ -60,7 +57,7 @@ class AuthControllers {
             const VerPass = Pass[0].passwd;
             const Correct = await (0, auth_1.CheckPassword)(passwd, VerPass);
             if (!Correct) {
-                return res.status(401).json({ error: 'El password es incorrecto' });
+                return res.status(401).json({ error: 'El password o el correo son incorrectos' });
             }
             const codigo = GenerarCodigoLogin();
             await CodigoModels_1.default.GuardarCodigo(codigo, email);

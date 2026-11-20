@@ -1,5 +1,6 @@
 import conectar from '../config/db';
 import { sqlNombreGenerico, sqlConcentracion } from './ProductoDerivado';
+import { recalcularStockTotales } from './StockModels';
 
 // ─── Interfaces Internas (puedes moverlas a types/compra.types.ts luego) ─────
 export interface ICompraFiltros {
@@ -276,19 +277,13 @@ const DataCompra = {
                 )
             `, [idCompra]);
 
-            await conection.query(`
-                UPDATE producto p
-                SET stockTotal = (
-                    SELECT COALESCE(SUM(l.stock),0)
-                    FROM lote l
-                    WHERE l.idProducto = p.idProducto
-                      AND l.estado IN ('activo','pendiente')
-                )
-                WHERE p.idProducto IN (
-                    SELECT l.idProducto FROM lote l
-                    WHERE l.idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
-                )
+            const filasProducto = await conection.query(`
+                SELECT DISTINCT l.idProducto
+                FROM lote l
+                INNER JOIN detallecompra dc ON dc.idLote = l.idLote
+                WHERE dc.idCompra = ?
             `, [idCompra]);
+            await recalcularStockTotales(conection, (filasProducto as any[]).map((f: any) => Number(f.idProducto)));
 
             await conection.commit();
             return true;
@@ -346,19 +341,13 @@ async cambiarAPendiente(idCompra: number) {
                 WHERE idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
             `, [idCompra]);
 
-            await conection.query(`
-                UPDATE producto p
-                SET stockTotal = (
-                    SELECT COALESCE(SUM(l.stock),0)
-                    FROM lote l
-                    WHERE l.idProducto = p.idProducto
-                      AND l.estado IN ('activo','pendiente')
-                )
-                WHERE p.idProducto IN (
-                    SELECT l.idProducto FROM lote l
-                    WHERE l.idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
-                )
+            const filasProducto = await conection.query(`
+                SELECT DISTINCT l.idProducto
+                FROM lote l
+                INNER JOIN detallecompra dc ON dc.idLote = l.idLote
+                WHERE dc.idCompra = ?
             `, [idCompra]);
+            await recalcularStockTotales(conection, (filasProducto as any[]).map((f: any) => Number(f.idProducto)));
 
             await conection.commit();
             return true;

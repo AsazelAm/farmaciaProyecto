@@ -23,6 +23,7 @@ import VentaRoutes from "./Routes/VentaRoutes";
 import DevolucionRoutes from "./Routes/DevolucionRoutes";
 import DashboardRoutes from "./Routes/DashboardRoutes";
 import ReporteRoutes from "./Routes/ReporteRoutes";
+import BajaLoteVencidoRoutes from "./Routes/BajaLoteVencidoRoutes";
 
 import path from "path";
 
@@ -59,5 +60,7 @@ app.use('/api/Devolucion', DevolucionRoutes);
 
 app.use('/api/Dashboard', DashboardRoutes);
 app.use('/api/Reporte', ReporteRoutes);
+app.use('/api/BajaLoteVencido', BajaLoteVencidoRoutes);
+app.use('/api/MermaLote', BajaLoteVencidoRoutes); // alias según el nombre real de la tabla
 
 export default app

@@ -10,7 +10,7 @@ export interface IVentaFiltros {
 }
 export interface IDetalleVentaInput {
     idProducto: number;
-    idLote: number;
+    idLote?: number;
     cantidad: number;
     precioUnitario: number;
     descuento: number;
@@ -40,28 +40,15 @@ declare const DataVenta: {
         idRecibo: number;
         numeroRecibo: string;
     }>;
-    estadisticas(): Promise<{
-        porEstado: {
-            estado: any;
-            cantidad: number;
-            monto: number;
-        }[];
-        totalMes: number;
-        totalMesAnterior: number;
-        porSucursal: {
-            nombre: any;
-            cantidad: number;
-            monto: number;
-        }[];
-        masVendidos: {
-            nombreGenerico: any;
-            unidadesVendidas: number;
-            monto: number;
-        }[];
+    VerificarStockLote(idLote: number, cantidad: number): Promise<{
+        disponible: boolean;
+        stock: number;
+        estado?: undefined;
+    } | {
+        disponible: boolean;
+        stock: number;
+        estado: any;
     }>;
-    VerificarStockLote(idLote: number, cantidad: number): Promise<boolean>;
-    LotesDisponiblesPorProducto(idProducto: number): Promise<any>;
-    loteFEFODeProducto(idProducto: number): Promise<any>;
     AlertaFEFO(idProducto: number, idLote: number): Promise<{
         existe: boolean;
         cumpleFEFO: boolean;
@@ -95,10 +82,23 @@ declare const DataVenta: {
         diasDiferencia: number;
         mensaje: string;
     }>;
+    LotesDisponiblesPorProducto(idProducto: number): Promise<any[]>;
     ValidarFEFODetalles(detalles: {
         idLote: number;
         cantidad: number;
     }[]): Promise<{
+        idLote: number;
+        numeroLote: any;
+        codigo: any;
+        noVendible: boolean;
+        mensaje: string;
+        diasRestantes?: undefined;
+        idLoteFEFO?: undefined;
+        numeroLoteFEFO?: undefined;
+        diasRestantesFEFO?: undefined;
+        stockRestanteFEFO?: undefined;
+        diasDiferencia?: undefined;
+    } | {
         idLote: number;
         numeroLote: any;
         codigo: any;
@@ -109,6 +109,27 @@ declare const DataVenta: {
         stockRestanteFEFO: number;
         diasDiferencia: number;
         mensaje: string;
+        noVendible?: undefined;
+    }>;
+    estadisticas(): Promise<{
+        porEstado: {
+            estado: any;
+            cantidad: number;
+            monto: number;
+        }[];
+        totalMes: number;
+        totalMesAnterior: number;
+        porSucursal: {
+            nombre: any;
+            cantidad: number;
+            monto: number;
+        }[];
+        masVendidos: {
+            nombreGenerico: any;
+            unidadesVendidas: number;
+            monto: number;
+        }[];
     }>;
 };
+export { DataVenta };
 export default DataVenta;

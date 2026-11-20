@@ -30,6 +30,7 @@ import Venta from "./view/Dashboard/Admin/Venta/Venta";
 import NewVenta from "./view/Dashboard/Admin/Venta/NewVenta";
 
 import Devolucion from "./view/Dashboard/Admin/Devolucion/Devolucion";
+import BajasLotesVencidos from "./view/Dashboard/Admin/Bajas/BajasLotesVencidos";
 
 import Reportes from "./view/Dashboard/Admin/Reportes/Reporte";
 import ReporteCompra from "./view/Dashboard/Admin/Reportes/ReporteCompra";
@@ -78,6 +79,7 @@ export default function Router() {
               <Route path="/Dashboard/Venta" element={<Venta/>}/>
               <Route path="/Dashboard/NewVenta" element={<NewVenta/>}/>
               <Route path="/Dashboard/Devoluciones" element={<Devolucion/>}/>
+              <Route path="/Dashboard/BajasLotesVencidos" element={<BajasLotesVencidos/>}/>
               <Route path="/Dashboard/Reportes" element={<Reportes/>}/>
               <Route path="/Dashboard/ReportesCompras" element={<ReporteCompra/>}/>
               <Route path="/Dashboard/ReportesVencimientos" element={<ReporteVencimientos/>}/>
@@ -117,6 +119,7 @@ export default function Router() {
               <Route path="NewCompra" element={<NewCompra/>}/>
               <Route path="Lote" element={<Lote/>}/>
                <Route path="Devoluciones" element={<Devolucion />} />
+               <Route path="BajasLotesVencidos" element={<BajasLotesVencidos/>}/>
                <Route path="ReportesCompras" element={<ReporteCompra/>}/>
               <Route path="ReportesVencimientos" element={<ReporteVencimientos/>}/>
               <Route path="ReportesInventario" element={<ReporteInventario/>}/>

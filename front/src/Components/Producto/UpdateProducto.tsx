@@ -10,7 +10,7 @@ import { GetPresentaApi } from "../../Api/PresentacionApi";
 import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
 import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
-import { soloLetras, soloDigitos, numero, textoLibre, alfanumerico, tecladoSoloLetras, tecladoSoloDigitos, tecladoAlfanumerico } from "../../lib/validators";
+import { soloLetras, codigoBarra, numero, textoLibre, alfanumerico, tecladoSoloLetras, tecladoCodigoBarra, tecladoAlfanumerico } from "../../lib/validators";
 import type {
   ProductoPrincipioInput,
   ProductoTipoInput,
@@ -298,11 +298,11 @@ export default function UpdateProductoModal({ SendValor, SetVer }: Props) {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                                             </svg>
                                         </div>
-                                        <input id="upd-codigoBarra" type="text" placeholder="Ej: 7501234567890"
+                                        <input id="upd-codigoBarra" type="text" placeholder="Ej: 7501234567890 o ABC12345"
                                             className="w-full pl-11 pr-4 py-3 rounded-xl border-2 outline-none transition-all focus:ring-4 focus:ring-purple-100 text-sm font-medium"
                                             style={{ borderColor: C.border, color: C.text }}
-                                            {...register("codigoBarra", soloDigitos("Código de barra", { required: "El código de barra es obligatorio", min: 8, max: 14 }))}
-                                            {...tecladoSoloDigitos}
+                                            {...register("codigoBarra", codigoBarra("Código de barra", { required: "El código de barra es obligatorio", min: 8, max: 14 }))}
+                                            {...tecladoCodigoBarra}
                                         />
                                     </div>
                                     {errors.codigoBarra && <ErrorMessage>{errors.codigoBarra.message}</ErrorMessage>}

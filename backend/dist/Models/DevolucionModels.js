@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
 const ProductoDerivado_1 = require("./ProductoDerivado");
+const StockModels_1 = require("./StockModels");
 const DataDevolucion = {
     // ═══════════════ DEVOLUCIONES DE VENTA (cliente → farmacia) ═══════════════
     // ── GET: Listar devoluciones de venta ─────────────────────────────────────
@@ -190,6 +191,15 @@ const DataDevolucion = {
                     }
                     // 'merma': el producto no vuelve al inventario, no se ajusta stock
                 }
+                // El snapshot de stock vendible debe recalcularse siempre que
+                // cambie lote.stock o lote.estado (misma transacción).
+                const filasProducto = await conection.query(`
+                    SELECT DISTINCT l.idProducto
+                    FROM lote l
+                    INNER JOIN detalledevolucionventa ddv ON ddv.idLote = l.idLote
+                    WHERE ddv.idDevolucionVenta = ?
+                `, [idDevolucionVenta]);
+                await (0, StockModels_1.recalcularStockTotales)(conection, filasProducto.map((f) => Number(f.idProducto)));
                 // 2. Actualizar el estado de la venta origen
                 await conection.query(`
                     UPDATE venta SET estado = ? WHERE idVenta = ?
@@ -406,13 +416,31 @@ const DataDevolucion = {
                     WHERE idDevolucionProveedor = ?
                 `, [idDevolucionProveedor]);
                 for (const d of detalles) {
+                    // Si una baja por vencimiento ya ejecutó el descuento para
+                    // este lote/devolución, solo se descuenta el remanente.
+                    // Evita contabilizar dos veces la misma salida física.
+                    const ejecutado = await conection.query(`
+                        SELECT COALESCE(SUM(cantidadAfectada), 0) AS afectado
+                        FROM mermalote
+                        WHERE idDevolucionProveedor = ? AND idLote = ? AND estado = 'ejecutada'
+                    `, [idDevolucionProveedor, d.idLote]);
+                    const restante = Math.max(Number(d.cantidad) - Number(ejecutado[0]?.afectado ?? 0), 0);
+                    if (restante <= 0)
+                        continue;
                     await conection.query(`
                         UPDATE lote SET stock = stock - ? WHERE idLote = ?
-                    `, [d.cantidad, d.idLote]);
+                    `, [restante, d.idLote]);
                     await conection.query(`
                         UPDATE lote SET estado = 'devuelto' WHERE idLote = ? AND stock <= 0
                     `, [d.idLote]);
                 }
+                const filasProducto = await conection.query(`
+                    SELECT DISTINCT l.idProducto
+                    FROM lote l
+                    INNER JOIN detalledevolucionproveedor ddp ON ddp.idLote = l.idLote
+                    WHERE ddp.idDevolucionProveedor = ?
+                `, [idDevolucionProveedor]);
+                await (0, StockModels_1.recalcularStockTotales)(conection, filasProducto.map((f) => Number(f.idProducto)));
                 // 2. Actualizar el estado de la compra origen
                 await conection.query(`
                     UPDATE compra SET estado = ? WHERE idCompra = ?

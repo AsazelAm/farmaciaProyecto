@@ -1,5 +1,6 @@
 import conectar from '../config/db';
 import { sqlNombreGenerico, sqlConcentracion } from './ProductoDerivado';
+import { recalcularStockTotal, recalcularStockTotales } from './StockModels';
 
 export interface IVentaFiltros { estado?: 'pendiente' | 'completado' | 'cancelado' | 'devuelto_parcial' | 'devuelto_total'; idCliente?: number; idUsuario?: number; idSucursal?: number; fechaDesde?: string; fechaHasta?: string; pagina?: number; porPagina?: number; }
 export interface IDetalleVentaInput { idProducto: number; idLote?: number; cantidad: number; precioUnitario: number; descuento: number; }
@@ -50,7 +51,8 @@ const DataVenta = {
             for (const detalle of datos.detalles) {
                 let cantidadRestante = Number(detalle.cantidad);
                 if (cantidadRestante <= 0) throw new Error('La cantidad debe ser mayor a 0.');
-                const lotesDisponibles = await conection.query(`SELECT idLote, stock, estado, fechaVencimiento FROM lote WHERE idProducto = ? AND estado = 'activo' ORDER BY fechaVencimiento ASC, idLote ASC FOR UPDATE`, [detalle.idProducto]);
+                // REGLA DE NEGOCIO: jamás dispensar lotes vencidos ni en cuarentena.
+                const lotesDisponibles = await conection.query(`SELECT idLote, stock, estado, fechaVencimiento FROM lote WHERE idProducto = ? AND estado = 'activo' AND fechaVencimiento > CURDATE() ORDER BY fechaVencimiento ASC, idLote ASC FOR UPDATE`, [detalle.idProducto]);
                 if ((lotesDisponibles as any[]).length === 0) throw new Error(`No hay lotes activos disponibles para el producto #${detalle.idProducto}.`);
                 let stockTotalDisponible = 0;
                 for (const l of lotesDisponibles as any[]) stockTotalDisponible += Number(l.stock);
@@ -64,7 +66,7 @@ const DataVenta = {
                     await conection.query(`INSERT INTO detalleventa (cantidad, precioUnitario, descuento, subtotal, idLote, idVenta) VALUES (?, ?, ?, ?, ?, ?)`, [aConsumir, detalle.precioUnitario, detalle.descuento * (aConsumir / detalle.cantidad), subtotalDetalle, (lote as any).idLote, idVenta]);
                     cantidadRestante -= aConsumir;
                 }
-                await conection.query(`UPDATE producto p SET stockTotal = (SELECT COALESCE(SUM(l.stock),0) FROM lote l WHERE l.idProducto = p.idProducto AND l.estado IN ('activo','pendiente')) WHERE p.idProducto = ?`, [detalle.idProducto]);
+                await recalcularStockTotal(conection, Number(detalle.idProducto));
             }
             await conection.commit();
             return idVenta;
@@ -107,10 +109,8 @@ const DataVenta = {
             for (const d of detalles as any[]) {
                 await conection.query(`UPDATE lote SET stock = stock + ? WHERE idLote = ?`, [d.cantidad, d.idLote]);
             }
-            const prodAfectados = [...new Set((detalles as any[]).map((x:any)=>x.idProducto))];
-            for (const pid of prodAfectados) {
-                await conection.query(`UPDATE producto p SET stockTotal = (SELECT COALESCE(SUM(l.stock),0) FROM lote l WHERE l.idProducto = p.idProducto AND l.estado IN ('activo','pendiente')) WHERE p.idProducto = ?`, [pid]);
-            }
+            const prodAfectados = [...new Set((detalles as any[]).map((x:any)=>Number(x.idProducto)))];
+            await recalcularStockTotales(conection, prodAfectados);
             await conection.query(`UPDATE venta SET estado = 'cancelado', motivoCancelacion = ?, fechaCancelacion = NOW(), idUsuarioCancelacion = ? WHERE idVenta = ?`, [motivo || 'Venta anulada', idUsuario ?? null, idVenta]);
             await conection.query(`UPDATE recibo SET estado = 'anulado' WHERE idVenta = ?`, [idVenta]);
             await conection.commit();
@@ -135,15 +135,13 @@ const DataVenta = {
             for (const d of detallesActuales as any[]) {
                 await conection.query(`UPDATE lote SET stock = stock + ? WHERE idLote = ?`, [d.cantidad, d.idLote]);
             }
-            const prodAfectados = [...new Set((detallesActuales as any[]).map((x:any)=>x.idProducto))];
-            for (const pid of prodAfectados) {
-                await conection.query(`UPDATE producto p SET stockTotal = (SELECT COALESCE(SUM(l.stock),0) FROM lote l WHERE l.idProducto = p.idProducto AND l.estado IN ('activo','pendiente')) WHERE p.idProducto = ?`, [pid]);
-            }
+            const prodAfectados = [...new Set((detallesActuales as any[]).map((x:any)=>Number(x.idProducto)))];
+            await recalcularStockTotales(conection, prodAfectados);
             await conection.query(`DELETE FROM detalleventa WHERE idVenta = ?`, [idVenta]);
             for (const detalle of datos.detalles) {
                 let cantidadRestante = Number(detalle.cantidad);
                 if (cantidadRestante <= 0) throw new Error('La cantidad debe ser mayor a 0.');
-                const lotesDisponibles = await conection.query(`SELECT idLote, stock, fechaVencimiento FROM lote WHERE idProducto = ? AND estado = 'activo' ORDER BY fechaVencimiento ASC, idLote ASC FOR UPDATE`, [detalle.idProducto]);
+                const lotesDisponibles = await conection.query(`SELECT idLote, stock, fechaVencimiento FROM lote WHERE idProducto = ? AND estado = 'activo' AND fechaVencimiento > CURDATE() ORDER BY fechaVencimiento ASC, idLote ASC FOR UPDATE`, [detalle.idProducto]);
                 if ((lotesDisponibles as any[]).length === 0) throw new Error(`No hay lotes activos disponibles para el producto #${detalle.idProducto}.`);
                 let stockTotalDisponible = 0;
                 for (const l of lotesDisponibles as any[]) stockTotalDisponible += Number(l.stock);
@@ -157,7 +155,7 @@ const DataVenta = {
                     await conection.query(`INSERT INTO detalleventa (cantidad, precioUnitario, descuento, subtotal, idLote, idVenta) VALUES (?, ?, ?, ?, ?, ?)`, [aConsumir, detalle.precioUnitario, detalle.descuento * (aConsumir / detalle.cantidad), subtotalDetalle, (lote as any).idLote, idVenta]);
                     cantidadRestante -= aConsumir;
                 }
-                await conection.query(`UPDATE producto p SET stockTotal = (SELECT COALESCE(SUM(l.stock),0) FROM lote l WHERE l.idProducto = p.idProducto AND l.estado IN ('activo','pendiente')) WHERE p.idProducto = ?`, [detalle.idProducto]);
+                await recalcularStockTotal(conection, Number(detalle.idProducto));
             }
             await conection.commit();
             return true;
@@ -195,10 +193,14 @@ const DataVenta = {
     async VerificarStockLote(idLote: number, cantidad: number) {
         const conection = await conectar.getConnection();
         try {
-            const rows = await conection.query(`SELECT stock, estado FROM lote WHERE idLote = ?`, [idLote]);
+            const rows = await conection.query(`SELECT stock, estado, IF(fechaVencimiento > CURDATE(), 1, 0) AS vigente FROM lote WHERE idLote = ?`, [idLote]);
             const lote = (rows as any[])[0];
             if (!lote) return { disponible: false, stock: 0 };
-            return { disponible: lote.estado === 'activo' && Number(lote.stock) >= cantidad, stock: Number(lote.stock ?? 0), estado: lote.estado };
+            return {
+                disponible: lote.estado === 'activo' && Number(lote.vigente) === 1 && Number(lote.stock) >= cantidad,
+                stock: Number(lote.stock ?? 0),
+                estado: lote.estado,
+            };
         } finally {
             conection.release();
         }
@@ -207,10 +209,10 @@ const DataVenta = {
     async AlertaFEFO(idProducto: number, idLote: number) {
         const conection = await conectar.getConnection();
         try {
-            const lotes = await conection.query(`SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, estado, DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes FROM lote WHERE idLote = ?`, [idLote]);
+            const lotes = await conection.query(`SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, estado, DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes FROM lote WHERE idLote = ? AND estado = 'activo' AND fechaVencimiento > CURDATE()`, [idLote]);
             const seleccionado = (lotes as any[])[0];
-            if (!seleccionado) return { existe: false, cumpleFEFO: true, mensaje: '' };
-            const fefo = await conection.query(`SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes FROM lote WHERE idProducto = ? AND estado = 'activo' AND stock > 0 ORDER BY fechaVencimiento ASC, idLote ASC LIMIT 1`, [idProducto]);
+            if (!seleccionado) return { existe: false, cumpleFEFO: false, mensaje: 'El lote no está disponible para dispensación (vencido o inactivo).' };
+            const fefo = await conection.query(`SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes FROM lote WHERE idProducto = ? AND estado = 'activo' AND fechaVencimiento > CURDATE() AND stock > 0 ORDER BY fechaVencimiento ASC, idLote ASC LIMIT 1`, [idProducto]);
             const loteFEFO = (fefo as any[])[0] ?? null;
             const diasSeleccionado = Number(seleccionado.diasRestantes ?? 0);
             const diasFEFO = loteFEFO ? Number(loteFEFO.diasRestantes ?? 0) : diasSeleccionado;
@@ -226,7 +228,7 @@ const DataVenta = {
     async LotesDisponiblesPorProducto(idProducto: number) {
         const conection = await conectar.getConnection();
         try {
-            const lotes = await conection.query(`SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, precioCompra, estado, DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes FROM lote WHERE idProducto = ? AND estado = 'activo' AND stock > 0 ORDER BY fechaVencimiento ASC, idLote ASC`, [idProducto]);
+            const lotes = await conection.query(`SELECT idLote, codigo, numeroLote, stock, fechaVencimiento, precioCompra, estado, DATEDIFF(fechaVencimiento, CURDATE()) AS diasRestantes FROM lote WHERE idProducto = ? AND estado = 'activo' AND fechaVencimiento > CURDATE() AND stock > 0 ORDER BY fechaVencimiento ASC, idLote ASC`, [idProducto]);
             return (lotes as any[]).map((l:any)=>({ ...l, stock: Number(l.stock), diasRestantes: Number(l.diasRestantes ?? 0) }));
         } finally {
             conection.release();
@@ -239,7 +241,7 @@ const DataVenta = {
         if (idsLote.length === 0) return null;
         const conection = await conectar.getConnection();
         try {
-            const filas = await conection.query(`SELECT l.idLote, l.idProducto, l.codigo, l.numeroLote, l.stock, l.fechaVencimiento, DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasRestantes FROM lote l WHERE l.idLote IN (${idsLote.map(() => '?').join(', ')})`, idsLote);
+            const filas = await conection.query(`SELECT l.idLote, l.idProducto, l.codigo, l.numeroLote, l.stock, l.fechaVencimiento, DATEDIFF(l.fechaVencimiento, CURDATE()) AS diasRestantes, IF(l.estado = 'activo' AND l.fechaVencimiento > CURDATE(), 1, 0) AS esVendible FROM lote l WHERE l.idLote IN (${idsLote.map(() => '?').join(', ')})`, idsLote);
             const lotes = filas as any[];
             if (lotes.length === 0) return null;
             const idsProducto = [...new Set(lotes.map((l) => Number(l.idProducto)))];
@@ -255,6 +257,15 @@ const DataVenta = {
                 asignadoPorLote.set(id, (asignadoPorLote.get(id) ?? 0) + Number(d.cantidad ?? 0));
             });
             for (const lote of lotes) {
+                if (Number(lote.esVendible) !== 1) {
+                    return {
+                        idLote: Number(lote.idLote),
+                        numeroLote: lote.numeroLote,
+                        codigo: lote.codigo,
+                        noVendible: true,
+                        mensaje: `El lote ${lote.numeroLote} no se puede dispensar: está vencido o no está activo.`,
+                    };
+                }
                 const loteFEFO = fEFOPorProducto.get(Number(lote.idProducto));
                 if (!loteFEFO) continue;
                 if (Number(loteFEFO.idLote) === Number(lote.idLote)) continue;

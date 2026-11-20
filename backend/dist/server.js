@@ -24,6 +24,7 @@ const VentaRoutes_1 = __importDefault(require("./Routes/VentaRoutes"));
 const DevolucionRoutes_1 = __importDefault(require("./Routes/DevolucionRoutes"));
 const DashboardRoutes_1 = __importDefault(require("./Routes/DashboardRoutes"));
 const ReporteRoutes_1 = __importDefault(require("./Routes/ReporteRoutes"));
+const BajaLoteVencidoRoutes_1 = __importDefault(require("./Routes/BajaLoteVencidoRoutes"));
 const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use((0, morgan_1.default)('dev'));
@@ -51,5 +52,7 @@ app.use('/api/Venta', VentaRoutes_1.default);
 app.use('/api/Devolucion', DevolucionRoutes_1.default);
 app.use('/api/Dashboard', DashboardRoutes_1.default);
 app.use('/api/Reporte', ReporteRoutes_1.default);
+app.use('/api/BajaLoteVencido', BajaLoteVencidoRoutes_1.default);
+app.use('/api/MermaLote', BajaLoteVencidoRoutes_1.default); // alias según el nombre real de la tabla
 exports.default = app;
 //# sourceMappingURL=server.js.map

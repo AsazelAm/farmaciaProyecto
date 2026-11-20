@@ -9,4 +9,5 @@ export declare class VentaControllers {
     static readonly GetLotesDisponiblesC: (req: Request, res: Response) => Promise<any>;
     static readonly GetAlertaFEFOC: (req: Request, res: Response) => Promise<any>;
     static readonly GetEstadisticasC: (req: Request, res: Response) => Promise<any>;
+    static readonly GetReciboPdfC: (req: Request, res: Response) => Promise<any>;
 }

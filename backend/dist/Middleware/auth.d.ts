@@ -5,6 +5,7 @@ declare global {
             user?: {
                 idUsuario: number;
                 idTipoUs: number;
+                idSucursal: number;
                 nameRol: string;
             };
         }

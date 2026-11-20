@@ -27,5 +27,6 @@ router.put('/UpdateVenta/:idVenta', VentaControllers_1.VentaControllers.UpdateVe
 router.patch('/ChangeEstadoVenta/:idVenta', VentaControllers_1.VentaControllers.ChangeEstadoVentaC);
 //  POST: emitir el recibo de una venta ya completada 
 router.post('/EmitirRecibo/:idVenta', VentaControllers_1.VentaControllers.EmitirReciboC);
+router.get('/ReciboPdf/:idVenta', VentaControllers_1.VentaControllers.GetReciboPdfC);
 exports.default = router;
 //# sourceMappingURL=VentaRoutes.js.map

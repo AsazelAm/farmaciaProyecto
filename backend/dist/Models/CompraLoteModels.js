@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../config/db"));
 const ProductoDerivado_1 = require("./ProductoDerivado");
+const StockModels_1 = require("./StockModels");
 const DataCompra = {
     // ── GET: Listar compras con filtros dinámicos y paginación ────────────────
     async listar(filtros) {
@@ -213,6 +214,13 @@ const DataCompra = {
                     SELECT idLote FROM detallecompra WHERE idCompra = ?
                 )
             `, [idCompra]);
+            const filasProducto = await conection.query(`
+                SELECT DISTINCT l.idProducto
+                FROM lote l
+                INNER JOIN detallecompra dc ON dc.idLote = l.idLote
+                WHERE dc.idCompra = ?
+            `, [idCompra]);
+            await (0, StockModels_1.recalcularStockTotales)(conection, filasProducto.map((f) => Number(f.idProducto)));
             await conection.commit();
             return true;
         }
@@ -267,6 +275,13 @@ const DataCompra = {
                 UPDATE lote SET estado = 'cancelado' 
                 WHERE idLote IN (SELECT idLote FROM detallecompra WHERE idCompra = ?)
             `, [idCompra]);
+            const filasProducto = await conection.query(`
+                SELECT DISTINCT l.idProducto
+                FROM lote l
+                INNER JOIN detallecompra dc ON dc.idLote = l.idLote
+                WHERE dc.idCompra = ?
+            `, [idCompra]);
+            await (0, StockModels_1.recalcularStockTotales)(conection, filasProducto.map((f) => Number(f.idProducto)));
             await conection.commit();
             return true;
         }

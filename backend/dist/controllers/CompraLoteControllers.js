@@ -61,7 +61,7 @@ class CompraLoteControllers {
                 for (const lote of datos.lotes) {
                     const loteExiste = await CompraLoteModels_1.default.VerificarCodigoLote(lote.codigo);
                     if (loteExiste !== 0) {
-                        return res.status(400).json({ error: `El código de lote ${lote.codigo} ya existe en el sistema` });
+                        return res.status(400).json({ error: `El código de lote ${lote.codigo} ya existe en un lote` });
                     }
                 }
             }

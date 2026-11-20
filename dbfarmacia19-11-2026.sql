@@ -165,9 +165,9 @@ CREATE TABLE IF NOT EXISTS `compra` (
   CONSTRAINT `fk_compra_sucursal` FOREIGN KEY (`idSucursal`) REFERENCES `sucursal` (`idSucursal`),
   CONSTRAINT `fk_compra_usuario` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`),
   CONSTRAINT `fk_compra_usuario_cancel` FOREIGN KEY (`idUsuarioCancelacion`) REFERENCES `usuario` (`idUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=161 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=162 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.compra: ~160 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.compra: ~161 rows (aproximadamente)
 INSERT INTO `compra` (`idCompra`, `numeroFactura`, `fechaCreacion`, `fechaModificacion`, `fechaEntrega`, `subtotal`, `descuento`, `impuesto`, `total`, `estado`, `observaciones`, `motivoCancelacion`, `fechaCancelacion`, `idUsuarioCancelacion`, `idProveedor`, `idUsuario`, `idSucursal`) VALUES
 	(1, 'FC-00101', '2026-09-01 08:30:00', '2026-10-09 20:51:30', '2026-09-02 08:30:00', 80.00, 0.00, 10.40, 90.40, 'completado', 'Ingreso stock inicial Nodolex', NULL, NULL, NULL, 1, 1, 1),
 	(2, 'FC-00102', '2026-09-02 09:15:00', '2026-10-09 20:51:30', '2026-09-03 09:15:00', 425.00, 5.00, 55.25, 475.25, 'completado', 'Pedido regular', NULL, NULL, NULL, 2, 5, 1),
@@ -328,7 +328,8 @@ INSERT INTO `compra` (`idCompra`, `numeroFactura`, `fechaCreacion`, `fechaModifi
 	(157, 'FC-00257', '2026-10-09 08:30:00', '2026-10-10 09:45:00', '2026-10-10 09:45:00', 660.00, 0.00, 85.80, 745.80, 'completado', 'Reposición de la compra FC-00217 cancelada (Hidrocortisona + Lidocaína pomada rectal)', NULL, NULL, NULL, 1, 6, 1),
 	(158, 'FC-00258', '2026-10-09 10:00:00', '2026-10-10 11:00:00', '2026-10-10 11:00:00', 800.00, 0.00, 104.00, 904.00, 'completado', 'Reposición de la compra FC-00232 rechazada. Medicamento controlado: acta de recepción firmada por el regente farmacéutico', NULL, NULL, NULL, 6, 4, 1),
 	(159, 'FC-00259', '2026-10-09 11:10:00', '2026-10-10 08:30:00', '2026-10-10 08:30:00', 1280.00, 0.00, 166.40, 1446.40, 'completado', 'Reposición de la compra FC-00215 rechazada. Cadena de frío verificada a la recepción (5.1 °C)', NULL, NULL, NULL, 25, 6, 1),
-	(160, 'FC-00260', '2026-10-11 09:00:00', '2026-10-12 10:00:00', '2026-10-12 10:00:00', 720.00, 0.00, 93.60, 813.60, 'completado', 'Reposición de la compra FC-00235 devuelta (Carbamazepina)', NULL, NULL, NULL, 28, 9, 1);
+	(160, 'FC-00260', '2026-10-11 09:00:00', '2026-10-12 10:00:00', '2026-10-12 10:00:00', 720.00, 0.00, 93.60, 813.60, 'completado', 'Reposición de la compra FC-00235 devuelta (Carbamazepina)', NULL, NULL, NULL, 28, 9, 1),
+	(161, 'FAC-001849', '2026-11-12 18:38:02', '2026-11-12 18:39:46', '2026-11-12 00:00:00', 773.50, 0.00, 13.00, 874.06, 'completado', 'Mercadería recibida en cajas selladas, envases íntegros y sin signos de humedad. Control térmico dentro de rango (18°C - 22°C).', NULL, NULL, NULL, 1, 1, 1);
 
 -- Volcando estructura para tabla dbfarmacia.detallecompra
 CREATE TABLE IF NOT EXISTS `detallecompra` (
@@ -351,7 +352,7 @@ CREATE TABLE IF NOT EXISTS `detallecompra` (
   CONSTRAINT `chk_detcompra_recibida` CHECK (`cantidadRecibida` is null or `cantidadRecibida` <= `cantidad`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.detallecompra: ~223 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.detallecompra: ~225 rows (aproximadamente)
 INSERT INTO `detallecompra` (`cantidad`, `cantidadRecibida`, `cantidadRechazada`, `precioUnitario`, `descuento`, `subtotal`, `fechaCreacion`, `fechaModificacion`, `estado`, `idLote`, `idCompra`) VALUES
 	(100, 100, 0, 0.80, 0.00, 80.00, '2026-10-09 20:51:30', '2026-10-14 00:58:01', 'activo', 1, 1),
 	(50, 50, 0, 8.50, 5.00, 420.00, '2026-10-09 20:51:30', '2026-10-14 00:58:01', 'activo', 2, 2),
@@ -575,7 +576,9 @@ INSERT INTO `detallecompra` (`cantidad`, `cantidadRecibida`, `cantidadRechazada`
 	(30, 30, 0, 22.00, 0.00, 660.00, '2026-10-09 08:30:00', '2026-10-10 09:45:00', 'activo', 220, 157),
 	(25, 25, 0, 32.00, 0.00, 800.00, '2026-10-09 10:00:00', '2026-10-10 11:00:00', 'activo', 221, 158),
 	(40, 40, 0, 32.00, 0.00, 1280.00, '2026-10-09 11:10:00', '2026-10-10 08:30:00', 'activo', 222, 159),
-	(30, 30, 0, 24.00, 0.00, 720.00, '2026-10-11 09:00:00', '2026-10-12 10:00:00', 'activo', 223, 160);
+	(30, 30, 0, 24.00, 0.00, 720.00, '2026-10-11 09:00:00', '2026-10-12 10:00:00', 'activo', 223, 160),
+	(50, NULL, 0, 3.50, 0.00, 175.00, '2026-11-12 18:38:02', '2026-11-12 18:38:02', 'activo', 224, 161),
+	(20, NULL, 0, 31.50, 5.00, 625.00, '2026-11-12 18:38:02', '2026-11-12 18:38:02', 'activo', 225, 161);
 
 -- Volcando estructura para tabla dbfarmacia.detalledevolucionproveedor
 CREATE TABLE IF NOT EXISTS `detalledevolucionproveedor` (
@@ -653,7 +656,7 @@ CREATE TABLE IF NOT EXISTS `detalleventa` (
   CONSTRAINT `fk_detalleventa_venta` FOREIGN KEY (`idVenta`) REFERENCES `venta` (`idVenta`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.detalleventa: ~179 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.detalleventa: ~193 rows (aproximadamente)
 INSERT INTO `detalleventa` (`cantidad`, `precioUnitario`, `descuento`, `subtotal`, `idLote`, `idVenta`) VALUES
 	(2, 1.50, 0.00, 3.00, 1, 1),
 	(2, 12.00, 0.00, 24.00, 2, 2),
@@ -833,7 +836,21 @@ INSERT INTO `detalleventa` (`cantidad`, `precioUnitario`, `descuento`, `subtotal
 	(6, 1.20, 0.00, 7.20, 18, 107),
 	(10, 1.50, 0.00, 15.00, 60, 107),
 	(6, 2.00, 0.00, 12.00, 117, 107),
-	(1, 70.00, 0.00, 70.00, 218, 109);
+	(1, 70.00, 0.00, 70.00, 218, 109),
+	(0, 1.50, 0.00, 0.00, 1, 110),
+	(1, 5.00, 0.00, 5.00, 9, 110),
+	(4, 1.50, 0.00, 6.00, 60, 110),
+	(0, 1.50, 0.00, 0.00, 1, 111),
+	(1, 5.00, 0.00, 5.00, 9, 111),
+	(3, 1.50, 0.00, 4.50, 60, 111),
+	(5, 2.50, 0.00, 12.50, 4, 112),
+	(1, 40.00, 0.00, 40.00, 216, 113),
+	(1, 78.00, 0.00, 78.00, 217, 113),
+	(3, 65.00, 0.00, 195.00, 214, 114),
+	(1, 40.00, 0.00, 40.00, 216, 114),
+	(1, 35.00, 0.00, 35.00, 224, 115),
+	(76, 5.00, 0.00, 380.00, 9, 116),
+	(6, 5.00, 0.00, 30.00, 111, 116);
 
 -- Volcando estructura para tabla dbfarmacia.devolucionproveedor
 CREATE TABLE IF NOT EXISTS `devolucionproveedor` (
@@ -929,10 +946,10 @@ CREATE TABLE IF NOT EXISTS `laboratorio` (
 
 -- Volcando datos para la tabla dbfarmacia.laboratorio: ~50 rows (aproximadamente)
 INSERT INTO `laboratorio` (`idLaboratorio`, `nombre`, `img`, `estado`, `fechaCreacion`, `fechaModificacion`) VALUES
-	(1, 'Laboratorios Bagó', NULL, 1, '2026-10-02 08:59:24', '2026-10-05 08:59:24'),
-	(2, 'Droguería INTI S.A.', NULL, 1, '2025-10-10 11:53:40', '2025-10-30 11:53:40'),
-	(3, 'Laboratorios Vita', NULL, 1, '2025-07-05 16:12:45', '2025-07-08 16:12:45'),
-	(4, 'Sigma Corporación Médica', NULL, 1, '2025-01-24 17:14:49', '2025-02-03 17:14:49'),
+	(1, 'Laboratorios Bagó', 'Uploads\\img\\Laboratorio\\1-2026-11-1019-20-54\\1-2026-11-1019-20-54.webp', 1, '2026-10-02 08:59:24', '2026-11-10 19:20:54'),
+	(2, 'Droguería INTI S.A.', 'Uploads\\img\\Laboratorio\\2-2026-11-1019-21-24\\2-2026-11-1019-21-24.webp', 1, '2025-10-10 11:53:40', '2026-11-10 19:21:24'),
+	(3, 'Laboratorios Vita', 'Uploads\\img\\Laboratorio\\3-2026-11-1019-22-26\\3-2026-11-1019-22-26.webp', 1, '2025-07-05 16:12:45', '2026-11-10 19:22:26'),
+	(4, 'Sigma Corporación Médica', 'Uploads\\img\\Laboratorio\\4-2026-11-1019-21-50\\4-2026-11-1019-21-50.webp', 1, '2025-01-24 17:14:49', '2026-11-10 19:21:51'),
 	(5, 'Laboratorios Delta S.A.', NULL, 1, '2025-02-10 20:14:55', '2025-02-14 20:14:55'),
 	(6, 'Bayer Bolivia', NULL, 1, '2026-07-14 11:29:40', '2026-07-26 11:29:40'),
 	(7, 'Pfizer Bolivia', NULL, 1, '2026-03-25 12:22:13', '2026-04-03 12:22:13'),
@@ -1002,19 +1019,19 @@ CREATE TABLE IF NOT EXISTS `lote` (
   CONSTRAINT `fk_lote_producto` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`),
   CONSTRAINT `fk_lote_proveedor` FOREIGN KEY (`idProveedor`) REFERENCES `proveedor` (`idProveedor`),
   CONSTRAINT `chk_lote_stock` CHECK (`stock` >= 0)
-) ENGINE=InnoDB AUTO_INCREMENT=224 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=226 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.lote: ~223 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.lote: ~225 rows (aproximadamente)
 INSERT INTO `lote` (`idLote`, `codigo`, `numeroLote`, `stock`, `fechaVencimiento`, `precioCompra`, `fechaIngreso`, `fechaCreacion`, `fechaModificacion`, `fechaFabricacion`, `estado`, `idProducto`, `idProveedor`) VALUES
 	(1, 'L-001', 'B2026-01', 0, '2027-12-31', 0.80, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-13 11:50:00', '2026-01-15', 'activo', 1, 1),
 	(2, 'L-002', 'IN1025', 46, '2028-05-10', 8.50, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 17:20:00', '2025-05-10', 'activo', 2, 2),
 	(3, 'L-003', 'V-887', 48, '2027-08-20', 1.50, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 13:50:00', '2026-02-20', 'activo', 3, 3),
-	(4, 'L-004', 'SIG-44', 78, '2028-01-15', 1.20, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:01', '2026-01-15', 'activo', 4, 4),
+	(4, 'L-004', 'SIG-44', 73, '2028-01-15', 1.20, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-29 21:34:41', '2026-01-15', 'activo', 4, 4),
 	(5, 'L-005', 'DN-990', 58, '2027-11-30', 4.00, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:01', '2025-11-30', 'activo', 5, 5),
 	(6, 'L-006', 'ASP-01', 148, '2028-06-01', 0.50, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:01', '2026-06-01', 'activo', 6, 6),
 	(7, 'L-007', 'AMX-02', 56, '2027-04-10', 2.80, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 11:20:00', '2026-04-10', 'activo', 7, 7),
 	(8, 'L-008', 'AZT-88', 49, '2028-09-12', 12.00, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:02', '2025-09-12', 'activo', 8, 8),
-	(9, 'L-009', 'CIP-11', 78, '2027-07-22', 3.20, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:01', '2026-07-22', 'activo', 9, 9),
+	(9, 'L-009', 'CIP-11', 0, '2027-07-22', 3.20, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-11-12 21:30:47', '2026-07-22', 'activo', 9, 9),
 	(10, 'L-010', 'BAC-33', 118, '2028-02-14', 2.10, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:01', '2026-02-14', 'activo', 10, 10),
 	(11, 'L-011', 'FLU-45', 18, '2027-10-05', 9.00, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 11:20:00', '2025-10-05', 'activo', 11, 11),
 	(12, 'L-012', 'OME-56', 196, '2028-11-18', 1.00, '2026-10-09 20:51:30', '2026-10-09 20:51:30', '2026-10-14 00:58:03', '2026-11-18', 'activo', 12, 12),
@@ -1065,7 +1082,7 @@ INSERT INTO `lote` (`idLote`, `codigo`, `numeroLote`, `stock`, `fechaVencimiento
 	(57, 'L-057', 'AUG-2607A', 120, '2028-07-31', 8.50, '2026-09-16 09:10:00', '2026-09-15 08:40:00', '2026-09-16 09:10:00', '2026-07-01', 'activo', 51, 1),
 	(58, 'L-058', 'PAN-2607A', 200, '2028-07-31', 2.20, '2026-09-16 09:10:00', '2026-09-15 08:40:00', '2026-09-16 09:10:00', '2026-07-01', 'activo', 53, 1),
 	(59, 'L-059', 'DEX-2607A', 100, '2028-07-31', 3.80, '2026-09-16 09:10:00', '2026-09-15 08:40:00', '2026-09-16 09:10:00', '2026-07-01', 'activo', 52, 1),
-	(60, 'L-060', 'NOD-2606A', 2900, '2029-06-30', 0.62, '2026-09-16 15:30:00', '2026-09-15 10:05:00', '2026-10-15 11:10:00', '2026-06-01', 'activo', 1, 5),
+	(60, 'L-060', 'NOD-2606A', 2893, '2029-06-30', 0.62, '2026-09-16 15:30:00', '2026-09-15 10:05:00', '2026-10-29 21:26:22', '2026-06-01', 'activo', 1, 5),
 	(61, 'L-061', 'IBU-2607A', 500, '2028-07-31', 1.80, '2026-09-16 15:30:00', '2026-09-15 10:05:00', '2026-09-16 15:30:00', '2026-07-01', 'activo', 58, 5),
 	(62, 'L-062', 'VIT-2607A', 60, '2028-07-31', 15.00, '2026-09-17 10:00:00', '2026-09-16 09:20:00', '2026-09-17 10:00:00', '2026-07-01', 'activo', 32, 17),
 	(63, 'L-063', 'ACI-2607A', 200, '2028-07-31', 0.80, '2026-09-17 10:00:00', '2026-09-16 09:20:00', '2026-09-17 10:00:00', '2026-07-01', 'activo', 34, 17),
@@ -1116,7 +1133,7 @@ INSERT INTO `lote` (`idLote`, `codigo`, `numeroLote`, `stock`, `fechaVencimiento
 	(108, 'L-108', 'SAL-2608A', 0, '2028-08-31', 30.00, '2026-10-13 09:00:00', '2026-10-13 09:00:00', '2026-10-13 09:00:00', '2026-08-01', 'pendiente', 16, 16),
 	(109, 'L-109', 'SER-2608A', 0, '2028-08-31', 4.50, '2026-10-14 08:30:00', '2026-10-14 08:30:00', '2026-10-14 08:30:00', '2026-08-01', 'pendiente', 29, 34),
 	(110, 'L-110', 'MIC-2608A', 0, '2028-08-31', 30.00, '2026-10-14 08:30:00', '2026-10-14 08:30:00', '2026-10-14 08:30:00', '2026-08-01', 'pendiente', 31, 34),
-	(111, 'L-111', 'CIP-2608A', 200, '2028-08-31', 3.20, '2026-10-07 10:00:00', '2026-10-05 09:00:00', '2026-10-07 10:00:00', '2026-08-01', 'activo', 9, 1),
+	(111, 'L-111', 'CIP-2608A', 194, '2028-08-31', 3.20, '2026-10-07 10:00:00', '2026-10-05 09:00:00', '2026-11-12 21:30:47', '2026-08-01', 'activo', 9, 1),
 	(112, 'L-112', 'FLA-2608A', 114, '2028-08-31', 3.50, '2026-10-07 10:00:00', '2026-10-05 09:00:00', '2026-10-13 08:50:00', '2026-08-01', 'activo', 40, 1),
 	(113, 'L-113', 'NOD-2608A', 5000, '2029-08-31', 0.58, '2026-10-07 09:30:00', '2026-10-06 08:30:00', '2026-10-07 09:30:00', '2026-08-01', 'activo', 1, 6),
 	(114, 'L-114', 'EUT-2608A', 50, '2028-08-31', 25.00, '2026-10-07 11:40:00', '2026-10-06 10:30:00', '2026-10-07 11:40:00', '2026-08-01', 'activo', 27, 29),
@@ -1219,16 +1236,54 @@ INSERT INTO `lote` (`idLote`, `codigo`, `numeroLote`, `stock`, `fechaVencimiento
 	(211, 'L-211', 'MIN-2608A', 23, '2028-08-31', 85.00, '2026-10-11 12:52:00', '2026-10-10 12:28:00', '2026-10-14 18:30:00', '2026-08-01', 'activo', 104, 94),
 	(212, 'L-212', 'MIN-2608A', 25, '2028-08-31', 85.00, '2026-10-11 10:15:00', '2026-10-10 15:45:00', '2026-10-11 10:15:00', '2026-08-01', 'activo', 104, 95),
 	(213, 'L-213', 'TIM-2608A', 29, '2028-08-31', 24.00, '2026-10-11 15:38:00', '2026-10-10 10:02:00', '2026-10-14 14:55:00', '2026-08-01', 'activo', 105, 96),
-	(214, 'L-214', 'CAR-2608A', 29, '2028-08-31', 42.00, '2026-10-11 15:38:00', '2026-10-10 10:02:00', '2026-10-14 14:55:00', '2026-08-01', 'activo', 106, 96),
+	(214, 'L-214', 'CAR-2608A', 26, '2028-08-31', 42.00, '2026-10-11 15:38:00', '2026-10-10 10:02:00', '2026-10-29 21:42:49', '2026-08-01', 'activo', 106, 96),
 	(215, 'L-215', 'CAR-2608A', 0, '2028-08-31', 42.00, '2026-10-14 11:29:00', '2026-10-14 11:29:00', '2026-10-14 11:29:00', '2026-08-01', 'pendiente', 106, 97),
-	(216, 'L-216', 'TOB-2608A', 29, '2028-08-31', 26.00, '2026-10-12 11:24:00', '2026-10-11 08:36:00', '2026-10-14 14:55:00', '2026-08-01', 'activo', 107, 98),
-	(217, 'L-217', 'TAM-2608A', 30, '2028-08-31', 52.00, '2026-10-12 09:47:00', '2026-10-11 11:53:00', '2026-10-12 09:47:00', '2026-08-01', 'activo', 108, 99),
+	(216, 'L-216', 'TOB-2608A', 27, '2028-08-31', 26.00, '2026-10-12 11:24:00', '2026-10-11 08:36:00', '2026-10-29 21:42:49', '2026-08-01', 'activo', 107, 98),
+	(217, 'L-217', 'TAM-2608A', 29, '2028-08-31', 52.00, '2026-10-12 09:47:00', '2026-10-11 11:53:00', '2026-10-29 21:38:54', '2026-08-01', 'activo', 108, 99),
 	(218, 'L-218', 'SIL-2608A', 24, '2028-08-31', 48.00, '2026-10-12 09:47:00', '2026-10-11 11:53:00', '2026-10-28 21:38:11', '2026-08-01', 'activo', 109, 99),
 	(219, 'L-219', 'SIL-2608A', 0, '2028-08-31', 48.00, '2026-10-13 10:50:00', '2026-10-13 10:50:00', '2026-10-13 10:50:00', '2026-08-01', 'pendiente', 109, 100),
 	(220, 'L-220', 'HID-2608A', 29, '2028-08-31', 22.00, '2026-10-10 09:45:00', '2026-10-09 08:30:00', '2026-10-14 08:50:00', '2026-08-01', 'activo', 70, 1),
 	(221, 'L-221', 'DIA-2608A', 24, '2028-08-31', 32.00, '2026-10-10 11:00:00', '2026-10-09 10:00:00', '2026-10-14 13:15:00', '2026-08-01', 'activo', 85, 6),
 	(222, 'L-222', 'SAC-2608A', 39, '2028-08-31', 32.00, '2026-10-10 08:30:00', '2026-10-09 11:10:00', '2026-10-14 08:50:00', '2026-08-01', 'activo', 68, 25),
-	(223, 'L-223', 'CAR-2608A', 29, '2028-08-31', 24.00, '2026-10-12 10:00:00', '2026-10-11 09:00:00', '2026-10-14 12:40:00', '2026-08-01', 'activo', 88, 28);
+	(223, 'L-223', 'CAR-2608A', 29, '2028-08-31', 24.00, '2026-10-12 10:00:00', '2026-10-11 09:00:00', '2026-10-14 12:40:00', '2026-08-01', 'activo', 88, 28),
+	(224, 'LT-749946', 'LT-2608-04', 49, '2029-07-15', 3.50, '2026-11-12 18:39:46', '2026-11-12 18:38:02', '2026-11-12 21:10:04', '2026-10-15', 'activo', 110, 1),
+	(225, 'LT-20261102', 'AMX-9042B', 20, '2028-10-12', 31.50, '2026-11-12 18:39:46', '2026-11-12 18:38:02', '2026-11-12 18:39:46', '2026-09-12', 'activo', 7, 1);
+
+-- Volcando estructura para tabla dbfarmacia.mermalote
+CREATE TABLE IF NOT EXISTS `mermalote` (
+  `idBajaVencimiento` int(11) NOT NULL AUTO_INCREMENT,
+  `idLote` int(11) NOT NULL,
+  `idSucursal` int(11) DEFAULT NULL,
+  `idUsuario` int(11) NOT NULL,
+  `idUsuarioAutoriza` int(11) DEFAULT NULL,
+  `idDevolucionProveedor` int(11) DEFAULT NULL,
+  `cantidadAfectada` int(11) NOT NULL,
+  `costoUnitario` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `montoPerdida` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `accionTomada` enum('cuarentena','baja_merma','destruccion','devolucion_proveedor') NOT NULL DEFAULT 'cuarentena',
+  `estado` enum('pendiente','aprobada','ejecutada','anulada') NOT NULL DEFAULT 'pendiente',
+  `fechaDeteccion` datetime NOT NULL DEFAULT current_timestamp(),
+  `fechaEjecucion` datetime DEFAULT NULL,
+  `motivoDetalle` text DEFAULT NULL,
+  `fechaCreacion` datetime NOT NULL DEFAULT current_timestamp(),
+  `fechaModificacion` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`idBajaVencimiento`),
+  KEY `fk_baja_venc_lote` (`idLote`),
+  KEY `fk_baja_venc_sucursal` (`idSucursal`),
+  KEY `fk_baja_venc_usuario` (`idUsuario`),
+  KEY `fk_baja_venc_autoriza` (`idUsuarioAutoriza`),
+  KEY `fk_baja_venc_devprov` (`idDevolucionProveedor`),
+  CONSTRAINT `fk_baja_venc_autoriza` FOREIGN KEY (`idUsuarioAutoriza`) REFERENCES `usuario` (`idUsuario`),
+  CONSTRAINT `fk_baja_venc_devprov` FOREIGN KEY (`idDevolucionProveedor`) REFERENCES `devolucionproveedor` (`idDevolucionProveedor`),
+  CONSTRAINT `fk_baja_venc_lote` FOREIGN KEY (`idLote`) REFERENCES `lote` (`idLote`),
+  CONSTRAINT `fk_baja_venc_sucursal` FOREIGN KEY (`idSucursal`) REFERENCES `sucursal` (`idSucursal`),
+  CONSTRAINT `fk_baja_venc_usuario` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`),
+  CONSTRAINT `chk_baja_venc_cantidad` CHECK (`cantidadAfectada` > 0),
+  CONSTRAINT `chk_baja_venc_costo` CHECK (`costoUnitario` >= 0),
+  CONSTRAINT `chk_baja_venc_perdida` CHECK (`montoPerdida` >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Volcando datos para la tabla dbfarmacia.mermalote: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla dbfarmacia.presentacion
 CREATE TABLE IF NOT EXISTS `presentacion` (
@@ -1238,9 +1293,9 @@ CREATE TABLE IF NOT EXISTS `presentacion` (
   `fechaCreacion` datetime NOT NULL DEFAULT current_timestamp(),
   `fechaModificacion` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`idPresentacion`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.presentacion: ~100 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.presentacion: ~101 rows (aproximadamente)
 INSERT INTO `presentacion` (`idPresentacion`, `nombre`, `estado`, `fechaCreacion`, `fechaModificacion`) VALUES
 	(1, 'Tableta', 1, '2025-01-11 08:55:33', '2025-01-11 08:55:33'),
 	(2, 'Tableta recubierta', 1, '2025-01-13 15:25:12', '2025-01-13 15:25:12'),
@@ -1341,7 +1396,8 @@ INSERT INTO `presentacion` (`idPresentacion`, `nombre`, `estado`, `fechaCreacion
 	(97, 'Caja x 30 monodosis', 1, '2026-09-25 13:50:10', '2026-09-25 13:50:10'),
 	(98, 'Frasco x 5 ml colirio', 1, '2026-09-26 14:57:21', '2026-09-26 14:57:21'),
 	(99, 'Caja x 30 cápsulas de liberación prolongada', 1, '2026-09-27 15:04:32', '2026-09-27 15:04:32'),
-	(100, 'Caja x 4 tabletas recubiertas', 1, '2026-09-28 16:11:43', '2026-09-28 16:11:43');
+	(100, 'Caja x 4 tabletas recubiertas', 1, '2026-09-28 16:11:43', '2026-09-28 16:11:43'),
+	(101, 'Caja x 10 Comprimidos', 1, '2026-11-12 18:12:54', '2026-11-12 18:12:54');
 
 -- Volcando estructura para tabla dbfarmacia.principio_activo
 CREATE TABLE IF NOT EXISTS `principio_activo` (
@@ -1353,9 +1409,9 @@ CREATE TABLE IF NOT EXISTS `principio_activo` (
   `fechaModificacion` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`idPrincipioActivo`) USING BTREE,
   UNIQUE KEY `uq_principio_nombre` (`nombre`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=107 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.principio_activo: ~106 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.principio_activo: ~107 rows (aproximadamente)
 INSERT INTO `principio_activo` (`idPrincipioActivo`, `nombre`, `descripcion`, `estado`, `fechaCreacion`, `fechaModificacion`) VALUES
 	(1, 'Paracetamol', 'Analgésico y antipirético de acción central. Dolor leve a moderado y fiebre; sin efecto antiinflamatorio relevante.', 1, '2025-01-07 17:59:33', '2025-01-07 17:59:33'),
 	(2, 'Ibuprofeno', 'Antiinflamatorio no esteroideo (AINE) derivado del ácido propiónico. Dolor, inflamación y fiebre.', 1, '2025-01-10 10:10:24', '2025-01-10 10:10:24'),
@@ -1462,7 +1518,8 @@ INSERT INTO `principio_activo` (`idPrincipioActivo`, `nombre`, `descripcion`, `e
 	(103, 'Carboximetilcelulosa sódica', 'Lubricante ocular. Síndrome de ojo seco e irritación ocular.', 1, '2026-09-27 15:04:32', '2026-09-27 15:04:32'),
 	(104, 'Tobramicina', 'Aminoglucósido oftálmico. Conjuntivitis y blefaritis bacteriana.', 1, '2026-09-28 16:11:43', '2026-09-28 16:11:43'),
 	(105, 'Tamsulosina clorhidrato', 'Alfabloqueante uroselectivo. Hiperplasia prostática benigna.', 1, '2026-09-20 08:18:54', '2026-09-20 08:18:54'),
-	(106, 'Sildenafilo citrato', 'Inhibidor de la fosfodiesterasa-5. Disfunción eréctil.', 1, '2026-09-21 09:25:05', '2026-09-21 09:25:05');
+	(106, 'Sildenafilo citrato', 'Inhibidor de la fosfodiesterasa-5. Disfunción eréctil.', 1, '2026-09-21 09:25:05', '2026-09-21 09:25:05'),
+	(107, 'Cafeina', NULL, 1, '2026-11-12 18:12:54', '2026-11-12 18:12:54');
 
 -- Volcando estructura para tabla dbfarmacia.producto
 CREATE TABLE IF NOT EXISTS `producto` (
@@ -1488,19 +1545,19 @@ CREATE TABLE IF NOT EXISTS `producto` (
   KEY `fk_prod_presentacion` (`idPresentacion`) USING BTREE,
   CONSTRAINT `fk_prod_laboratorio` FOREIGN KEY (`idLaboratorio`) REFERENCES `laboratorio` (`idLaboratorio`),
   CONSTRAINT `fk_prod_presentacion` FOREIGN KEY (`idPresentacion`) REFERENCES `presentacion` (`idPresentacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=110 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=111 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.producto: ~109 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.producto: ~110 rows (aproximadamente)
 INSERT INTO `producto` (`idProducto`, `codigoBarra`, `nombreComercial`, `descripcion`, `precio`, `img`, `requiereReceta`, `fechaCreacion`, `fechaModificacion`, `contraindicaciones`, `viaAdministracion`, `stockMinimo`, `estado`, `idLaboratorio`, `idPresentacion`, `stockTotal`) VALUES
-	(1, '7770001001', 'Nodolex 500mg', 'Analgésico para el alivio del dolor leve a moderado.', 1.50, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Hipersensibilidad al paracetamol.', 'Oral', 50, 1, 1, 1, 7900),
+	(1, '7770001001', 'Nodolex 500mg', 'Analgésico para el alivio del dolor leve a moderado.', 1.50, NULL, 0, '2026-10-09 20:51:30', '2026-10-29 21:26:22', 'Hipersensibilidad al paracetamol.', 'Oral', 50, 1, 1, 1, 7893),
 	(2, '7770001002', 'Mentisan Ungüento 15g', 'Ungüento para el alivio de síntomas de resfriado.', 12.00, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'No aplicar en heridas abiertas.', 'Tópica', 30, 1, 2, 26, 86),
 	(3, '7770001003', 'Vitagrip Día', 'Antigripal con acción analgésica y descongestionante.', 3.00, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Hipertensión severa.', 'Oral', 100, 1, 3, 1, 598),
-	(4, '7770001004', 'Sigmafen 400mg', 'Antiinflamatorio y analgésico.', 2.50, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Úlcera péptica activa.', 'Oral', 40, 1, 4, 2, 2078),
+	(4, '7770001004', 'Sigmafen 400mg', 'Antiinflamatorio y analgésico.', 2.50, NULL, 0, '2026-10-09 20:51:30', '2026-10-29 21:34:41', 'Úlcera péptica activa.', 'Oral', 40, 1, 4, 2, 2073),
 	(5, '7770001005', 'Dolo-Neurobión', 'Analgésico y antineurítico.', 6.50, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Hipersensibilidad a los componentes.', 'Oral', 20, 1, 29, 2, 158),
 	(6, '7770001006', 'Aspirina 100mg', 'Antiagregante plaquetario.', 1.00, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Riesgo de hemorragia.', 'Oral', 50, 1, 6, 1, 338),
-	(7, '7770001007', 'Amoxidal 500mg', 'Antibiótico de amplio espectro.', 4.50, NULL, 1, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Alergia a penicilinas.', 'Oral', 30, 1, 19, 8, 256),
+	(7, '7770001007', 'Amoxidal 500mg', 'Antibiótico de amplio espectro.', 4.50, NULL, 1, '2026-10-09 20:51:30', '2026-11-12 18:39:46', 'Alergia a penicilinas.', 'Oral', 30, 1, 19, 8, 276),
 	(8, '7770001008', 'Azitromicina MK 500mg', 'Antibiótico macrólido.', 18.00, NULL, 1, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Insuficiencia hepática grave.', 'Oral', 20, 1, 20, 1, 283),
-	(9, '7770001009', 'Ciprofloxacino 500mg', 'Antimicrobiano fluoroquinolónico.', 5.00, NULL, 1, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Embarazo y lactancia.', 'Oral', 25, 1, 1, 1, 278),
+	(9, '7770001009', 'Ciprofloxacino 500mg', 'Antimicrobiano fluoroquinolónico.', 5.00, NULL, 1, '2026-10-09 20:51:30', '2026-11-12 21:30:47', 'Embarazo y lactancia.', 'Oral', 25, 1, 1, 1, 194),
 	(10, '7770001010', 'Bactrim Forte', 'Tratamiento de infecciones bacterianas.', 4.00, NULL, 1, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Insuficiencia renal grave.', 'Oral', 30, 1, 10, 1, 118),
 	(11, '7770001011', 'Fluconazol 150mg', 'Antimicótico oral.', 15.00, NULL, 1, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Administración con terfenadina.', 'Oral', 15, 1, 13, 8, 18),
 	(12, '7770001012', 'Omeprazol 20mg', 'Antiulceroso, inhibidor de la bomba de protones.', 2.00, NULL, 0, '2026-10-09 20:51:30', '2026-10-28 20:47:34', 'Hipersensibilidad.', 'Oral', 100, 1, 1, 8, 786),
@@ -1597,10 +1654,11 @@ INSERT INTO `producto` (`idProducto`, `codigoBarra`, `nombreComercial`, `descrip
 	(103, '7770001103', 'Peróxido de Benzoilo 5% Gel', 'Tratamiento del acné vulgar leve a moderado.', 48.00, NULL, 0, '2026-09-27 15:04:32', '2026-10-28 20:47:34', 'Piel lesionada; hipersensibilidad.', 'Tópica', 10, 1, 21, 94, 29),
 	(104, '7770001104', 'Minoxidil 5% Solución', 'Tratamiento de la alopecia androgénica.', 120.00, NULL, 0, '2026-09-28 16:11:43', '2026-10-28 20:47:34', 'Hipertensión no controlada; piel irritada.', 'Tópica', 8, 1, 42, 95, 48),
 	(105, '7770001105', 'Timolol 0.5% Gotas', 'Reducción de la presión intraocular en glaucoma.', 38.00, NULL, 1, '2026-09-20 08:18:54', '2026-10-28 20:47:34', 'Asma; bradicardia sinusal; bloqueo AV.', 'Oftálmica', 10, 1, 27, 96, 29),
-	(106, '7770001106', 'Carboximetilcelulosa 0.5% Monodosis', 'Lágrimas artificiales para ojo seco, sin conservantes.', 65.00, NULL, 0, '2026-09-21 09:25:05', '2026-10-28 20:47:34', 'Hipersensibilidad a los componentes.', 'Oftálmica', 10, 1, 27, 97, 29),
-	(107, '7770001107', 'Tobramicina 0.3% Colirio', 'Antibiótico oftálmico para conjuntivitis bacteriana.', 40.00, NULL, 1, '2026-09-22 10:32:16', '2026-10-28 20:47:34', 'Hipersensibilidad a aminoglucósidos.', 'Oftálmica', 10, 1, 27, 98, 29),
-	(108, '7770001108', 'Tamsulosina 0.4mg', 'Alivio de síntomas de la hiperplasia prostática benigna.', 78.00, NULL, 1, '2026-09-23 11:39:27', '2026-10-28 20:47:34', 'Hipotensión ortostática; insuficiencia hepática grave.', 'Oral', 10, 1, 11, 99, 30),
-	(109, '7770001109', 'Sildenafilo 50mg', 'Tratamiento de la disfunción eréctil.', 70.00, NULL, 1, '2026-09-24 12:46:38', '2026-10-28 21:38:11', 'Uso con nitratos; hipotensión severa; infarto reciente.', 'Oral', 8, 1, 7, 100, 24);
+	(106, '7770001106', 'Carboximetilcelulosa 0.5% Monodosis', 'Lágrimas artificiales para ojo seco, sin conservantes.', 65.00, NULL, 0, '2026-09-21 09:25:05', '2026-10-29 21:42:49', 'Hipersensibilidad a los componentes.', 'Oftálmica', 10, 1, 27, 97, 26),
+	(107, '7770001107', 'Tobramicina 0.3% Colirio', 'Antibiótico oftálmico para conjuntivitis bacteriana.', 40.00, NULL, 1, '2026-09-22 10:32:16', '2026-10-29 21:42:49', 'Hipersensibilidad a aminoglucósidos.', 'Oftálmica', 10, 1, 27, 98, 27),
+	(108, '7770001108', 'Tamsulosina 0.4mg', 'Alivio de síntomas de la hiperplasia prostática benigna.', 78.00, NULL, 1, '2026-09-23 11:39:27', '2026-10-29 21:38:54', 'Hipotensión ortostática; insuficiencia hepática grave.', 'Oral', 10, 1, 11, 99, 29),
+	(109, '7770001109', 'Sildenafilo 50mg', 'Tratamiento de la disfunción eréctil.', 70.00, NULL, 1, '2026-09-24 12:46:38', '2026-10-28 21:38:11', 'Uso con nitratos; hipotensión severa; infarto reciente.', 'Oral', 8, 1, 7, 100, 24),
+	(110, '7771201001458', 'Tapsin Plus dia', 'Alivio sintomático del resfriado común, dolor de cabeza, fiebre y malestar general.', 35.00, 'Uploads\\img\\Producto\\110-2026-11-1218-12-54\\110-2026-11-1218-12-54.webp', 0, '2026-11-12 18:12:54', '2026-11-12 21:10:04', 'Hipersensibilidad al paracetamol o cafeína. Insuficiencia hepática o renal grave. No administrar a menores de 12 años.', 'Oral', 20, 1, 1, 101, 49);
 
 -- Volcando estructura para tabla dbfarmacia.productoprincipioactivo
 CREATE TABLE IF NOT EXISTS `productoprincipioactivo` (
@@ -1613,7 +1671,7 @@ CREATE TABLE IF NOT EXISTS `productoprincipioactivo` (
   CONSTRAINT `fk_ppa_producto` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.productoprincipioactivo: ~115 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.productoprincipioactivo: ~117 rows (aproximadamente)
 INSERT INTO `productoprincipioactivo` (`idProducto`, `idPrincipioActivo`, `concentracion`) VALUES
 	(1, 1, '500 mg'),
 	(2, 2, '5 g / 100g'),
@@ -1729,7 +1787,9 @@ INSERT INTO `productoprincipioactivo` (`idProducto`, `idPrincipioActivo`, `conce
 	(106, 103, '0.5%'),
 	(107, 104, '0.3%'),
 	(108, 105, '0.4 mg'),
-	(109, 106, '50 mg');
+	(109, 106, '50 mg'),
+	(110, 1, '500 mg'),
+	(110, 107, '30 mg');
 
 -- Volcando estructura para tabla dbfarmacia.productotipoproducto
 CREATE TABLE IF NOT EXISTS `productotipoproducto` (
@@ -1741,7 +1801,7 @@ CREATE TABLE IF NOT EXISTS `productotipoproducto` (
   CONSTRAINT `fk_ptp_tipo` FOREIGN KEY (`idTipoProd`) REFERENCES `tipoproducto` (`idTipoProd`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.productotipoproducto: ~165 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.productotipoproducto: ~168 rows (aproximadamente)
 INSERT INTO `productotipoproducto` (`idProducto`, `idTipoProd`) VALUES
 	(1, 1),
 	(2, 3),
@@ -1907,7 +1967,10 @@ INSERT INTO `productotipoproducto` (`idProducto`, `idTipoProd`) VALUES
 	(107, 43),
 	(107, 98),
 	(108, 99),
-	(109, 100);
+	(109, 100),
+	(110, 1),
+	(110, 2),
+	(110, 70);
 
 -- Volcando estructura para tabla dbfarmacia.proveedor
 CREATE TABLE IF NOT EXISTS `proveedor` (
@@ -2039,9 +2102,9 @@ CREATE TABLE IF NOT EXISTS `recibo` (
   UNIQUE KEY `uq_recibo_numero` (`numeroRecibo`),
   UNIQUE KEY `uq_recibo_venta` (`idVenta`),
   CONSTRAINT `fk_recibo_venta` FOREIGN KEY (`idVenta`) REFERENCES `venta` (`idVenta`)
-) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.recibo: ~101 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.recibo: ~103 rows (aproximadamente)
 INSERT INTO `recibo` (`idRecibo`, `numeroRecibo`, `fechaEmision`, `estado`, `idVenta`) VALUES
 	(1, 'R-001001', '2026-10-09 09:00:05', 'emitido', 1),
 	(2, 'R-001002', '2026-10-09 09:15:05', 'emitido', 2),
@@ -2143,7 +2206,9 @@ INSERT INTO `recibo` (`idRecibo`, `numeroRecibo`, `fechaEmision`, `estado`, `idV
 	(98, 'R-001098', '2026-10-15 09:50:05', 'emitido', 105),
 	(99, 'R-001099', '2026-10-15 10:25:05', 'emitido', 106),
 	(100, 'R-001100', '2026-10-15 11:10:05', 'emitido', 107),
-	(101, 'R-001101', '2026-10-28 21:38:11', 'emitido', 109);
+	(101, 'R-001101', '2026-10-28 21:38:11', 'emitido', 109),
+	(102, 'R-001102', '2026-11-12 21:10:04', 'emitido', 115),
+	(103, 'R-001103', '2026-11-12 21:30:47', 'emitido', 116);
 
 -- Volcando estructura para tabla dbfarmacia.sucursal
 CREATE TABLE IF NOT EXISTS `sucursal` (
@@ -2156,7 +2221,7 @@ CREATE TABLE IF NOT EXISTS `sucursal` (
   PRIMARY KEY (`idSucursal`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.sucursal: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.sucursal: ~1 rows (aproximadamente)
 INSERT INTO `sucursal` (`idSucursal`, `nombre`, `direccion`, `estado`, `fechaCreacion`, `fechaModificacion`) VALUES
 	(1, 'Farmacias Dr Osvaldo-Sucursal Montecristo', 'Av. Ecologica 9no anillo y montecristo', 1, '2026-10-08 21:03:08', '2026-10-08 21:03:08');
 
@@ -2286,8 +2351,8 @@ CREATE TABLE IF NOT EXISTS `tipous` (
 -- Volcando datos para la tabla dbfarmacia.tipous: ~10 rows (aproximadamente)
 INSERT INTO `tipous` (`idTipoUs`, `nameRol`, `fechaCreacion`, `fechaModificacion`, `estado`) VALUES
 	(1, 'Admin', '2026-03-15 22:32:23', '2026-03-15 23:56:12', 1),
-	(2, 'Farmaceutico', '2026-04-13 01:39:02', '2026-04-13 01:40:05', 1),
-	(3, 'Bodeguero', '2026-04-13 01:42:06', '2026-04-13 04:10:24', 1),
+	(2, 'VendedorFarmaceutico', '2026-04-13 01:39:02', '2026-11-19 20:30:40', 1),
+	(3, 'EncargadoInventario', '2026-04-13 01:42:06', '2026-11-19 20:31:23', 1),
 	(4, 'QUEPASA', '2026-04-13 01:48:58', '2026-04-13 14:08:37', 0),
 	(5, 'Josue', '2026-04-13 02:02:07', '2026-04-13 14:07:51', 0),
 	(6, 'sgsdfgs', '2026-04-13 03:27:25', '2026-04-13 04:11:35', 0),
@@ -2327,7 +2392,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
 
 -- Volcando datos para la tabla dbfarmacia.usuario: ~11 rows (aproximadamente)
 INSERT INTO `usuario` (`idUsuario`, `ci`, `nombre`, `apellido`, `img`, `passwd`, `telefono`, `email`, `estado`, `ultimoAcceso`, `fechaCreacion`, `fechaModificacion`, `confirmed`, `idTipoUs`, `idSucursal`, `codigoVerificacion`, `codigoExpiracion`, `codigoIntentos`) VALUES
-	(1, '12121212', 'Guillermo', 'Mullisaca', 'Uploads\\img\\Usuario\\1-2026-10-1621-42-37\\1-2026-10-1621-42-37.webp', '$2b$10$mJ1c0O.aw1r4SznXKtZbjemWmvu6dq0kQ1xNo7OFW7dH7yo4lJFzC', '41491031', 'asafajoruro597@gmail.com', 1, '2026-09-04 20:57:51', '2026-03-15 23:37:10', '2026-10-20 21:52:30', 1, 1, 1, NULL, NULL, 0),
+	(1, '12121212', 'Guillermo', 'Mullisaca', 'Uploads\\img\\Usuario\\1-2026-10-1621-42-37\\1-2026-10-1621-42-37.webp', '$2b$10$mJ1c0O.aw1r4SznXKtZbjemWmvu6dq0kQ1xNo7OFW7dH7yo4lJFzC', '41491031', 'asafajoruro597@gmail.com', 1, '2026-09-04 20:57:51', '2026-03-15 23:37:10', '2026-11-12 17:54:10', 1, 1, 1, NULL, NULL, 0),
 	(2, '136125412', 'JoseEDITADO', 'ErnestoEDITADO', 'Uploads\\img\\Usuario\\2-2026-04-1315-44-53\\2-2026-04-1315-44-53.webp', '$2b$10$e8jYonwAUdCH64vtj88y9.c04yao3lR.w034M1qbaF9EeuvMOgxBG', '73189038', 'asafajoruro@gmail.com', 1, NULL, '2026-04-13 15:44:53', '2026-10-20 20:38:07', 1, 1, 1, NULL, NULL, 0),
 	(3, '1370981', 'P1', 'P11', NULL, '$2b$10$xntPLRs5dXNPaIGzYXv0Yu/7IhlO6Zn.wzUqZSOdHydpFGt5L.oru', '12345', 'guillermoFarma@gmail.com', 0, NULL, '2026-04-13 15:49:43', '2026-04-13 16:10:17', 1, 2, 1, NULL, NULL, 0),
 	(4, '13612541', 'Asaf Guillermo', 'Ajoruro Mullisaca', 'Uploads\\img\\Usuario\\4-2026-04-1315-58-08\\4-2026-04-1315-58-08.webp', '$2b$10$rps2lZW8ZSzckU1xWZ9Ax.ZwHcooVSNxvTe25xk5xej732LNHacRu', '73189028', 'asafAdmin@gmail.com', 1, NULL, '2026-04-13 15:58:08', '2026-04-13 15:58:13', 1, 1, 1, NULL, NULL, 0),
@@ -2366,9 +2431,9 @@ CREATE TABLE IF NOT EXISTS `venta` (
   CONSTRAINT `fk_venta_usuario` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`),
   CONSTRAINT `fk_venta_usuario_cancel` FOREIGN KEY (`idUsuarioCancelacion`) REFERENCES `usuario` (`idUsuario`),
   CONSTRAINT `chk_venta_estado` CHECK (`estado` in ('pendiente','completado','cancelado','devuelto_parcial','devuelto_total'))
-) ENGINE=InnoDB AUTO_INCREMENT=110 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla dbfarmacia.venta: ~108 rows (aproximadamente)
+-- Volcando datos para la tabla dbfarmacia.venta: ~115 rows (aproximadamente)
 INSERT INTO `venta` (`idVenta`, `fechaCreacion`, `fechaModificacion`, `subtotal`, `descuentoTotal`, `total`, `estado`, `tipoPago`, `observaciones`, `motivoCancelacion`, `fechaCancelacion`, `idUsuarioCancelacion`, `idCliente`, `idUsuario`, `idSucursal`) VALUES
 	(1, '2026-10-09 09:00:00', '2026-10-28 18:08:52', 3.00, 0.00, 3.00, 'completado', 'Efectivo', 'Venta mostrador', NULL, NULL, NULL, 1, 1, 1),
 	(2, '2026-10-09 09:15:00', '2026-10-28 18:08:52', 24.00, 0.00, 24.00, 'completado', 'Tarjeta', 'Cliente frecuente', NULL, NULL, NULL, 2, 3, 1),
@@ -2477,7 +2542,14 @@ INSERT INTO `venta` (`idVenta`, `fechaCreacion`, `fechaModificacion`, `subtotal`
 	(105, '2026-10-15 09:50:00', '2026-10-28 18:08:52', 100.00, 0.00, 100.00, 'completado', 'Efectivo', 'Receta retenida', NULL, NULL, NULL, 94, 9, 1),
 	(106, '2026-10-15 10:25:00', '2026-10-28 18:08:52', 1100.00, 66.00, 1034.00, 'completado', 'Transferencia', 'Asociación de Jubilados: 2 cajas x 100 tab de Metformina, 1 caja x 100 de Glibenclamida y cajas de Atenolol y Valsartán. Descuento 6%', NULL, NULL, NULL, 95, 10, 1),
 	(107, '2026-10-15 11:10:00', '2026-10-28 18:08:52', 34.20, 0.00, 34.20, 'completado', 'Efectivo', 'Tabletas sueltas', NULL, NULL, NULL, 96, 9, 1),
-	(109, '2026-10-28 21:38:11', '2026-10-28 21:38:11', 70.00, 0.00, 79.10, 'completado', 'Efectivo', NULL, NULL, NULL, NULL, 5, 1, 1);
+	(109, '2026-10-28 21:38:11', '2026-10-28 21:38:11', 70.00, 0.00, 79.10, 'completado', 'Efectivo', NULL, NULL, NULL, NULL, 5, 1, 1),
+	(110, '2026-10-29 21:20:01', '2026-10-29 21:20:01', 11.00, 0.00, 12.43, 'completado', 'Efectivo', NULL, NULL, NULL, NULL, 7, 1, 1),
+	(111, '2026-10-29 21:26:22', '2026-10-29 21:26:22', 9.50, 0.00, 10.74, 'completado', 'QR Directo', NULL, NULL, NULL, NULL, 6, 1, 1),
+	(112, '2026-10-29 21:34:41', '2026-10-29 21:34:41', 12.50, 0.00, 14.13, 'completado', 'Tarjeta de Crédito', NULL, NULL, NULL, NULL, 58, 1, 1),
+	(113, '2026-10-29 21:38:54', '2026-10-29 21:38:54', 118.00, 0.00, 133.34, 'completado', 'Tarjeta de Crédito', NULL, NULL, NULL, NULL, 58, 1, 1),
+	(114, '2026-10-29 21:42:49', '2026-10-29 21:42:49', 235.00, 0.00, 265.55, 'completado', 'Efectivo', NULL, NULL, NULL, NULL, 58, 1, 1),
+	(115, '2026-11-12 21:10:04', '2026-11-12 21:10:04', 35.00, 0.00, 39.55, 'completado', 'Efectivo', NULL, NULL, NULL, NULL, 5, 1, 1),
+	(116, '2026-11-12 21:30:47', '2026-11-12 21:30:47', 410.00, 0.00, 463.30, 'completado', 'Tarjeta de Crédito', NULL, NULL, NULL, NULL, 7, 1, 1);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

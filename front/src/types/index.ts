@@ -1903,3 +1903,191 @@ export const ReporteFacturacionFiltrosSchema = z.object({
   busqueda: z.string().optional(),
 });
 export type ReporteFacturacionFiltrosType = z.infer<typeof ReporteFacturacionFiltrosSchema>;
+
+// ========================================================================
+// TYPES: BAJAS / MERMAS DE LOTES VENCIDOS (tabla física: mermalote)
+// ========================================================================
+
+export const EstadoBajaSchema = z.enum(['pendiente', 'aprobada', 'ejecutada', 'anulada']);
+export type EstadoBaja = z.infer<typeof EstadoBajaSchema>;
+
+export const AccionBajaSchema = z.enum([
+  'cuarentena',
+  'baja_merma',
+  'destruccion',
+  'devolucion_proveedor',
+]);
+export type AccionBaja = z.infer<typeof AccionBajaSchema>;
+
+/** Parámetros que el backend devuelve en las respuestas de detección/reporte. */
+export const BajasParametrosSchema = z.record(z.unknown());
+
+// ── Detección: lotes vencidos / próximos a vencer ─────────────────────────────
+export const LoteParaBajaSchema = z.object({
+  idLote: z.number(),
+  codigo: z.string(),
+  numeroLote: z.string(),
+  stock: z.number(),
+  fechaVencimiento: z.string(),
+  precioCompra: z.number(),
+  estadoLote: z.string(),
+  idProducto: z.number(),
+  idProveedor: z.number(),
+  diasRestantes: z.number(),
+  codigoBarra: z.string().nullable().optional(),
+  nombreComercial: z.string(),
+  stockTotal: z.number(),
+  nombreGenerico: z.string().nullable().optional(),
+  idLaboratorio: z.number().nullable().optional(),
+  laboratorio: z.string().nullable().optional(),
+  presentacion: z.string().nullable().optional(),
+  proveedor: z.string().nullable().optional(),
+  estadoGestion: EstadoBajaSchema.nullable().optional(),
+  idBajaVencimiento: z.number().nullable().optional(),
+});
+export const LotesParaBajaSchema = z.array(LoteParaBajaSchema);
+export type LoteParaBajaType = z.infer<typeof LoteParaBajaSchema>;
+
+export const LotesParaBajaResponseSchema = z.object({
+  parametros: BajasParametrosSchema,
+  criterio: z.string(),
+  total: z.number(),
+  lotes: LotesParaBajaSchema,
+});
+export type LotesParaBajaResponseType = z.infer<typeof LotesParaBajaResponseSchema>;
+
+// ── Expediente de baja (mermalote) ────────────────────────────────────────────
+export const BajaListItemSchema = z.object({
+  idBajaVencimiento: z.number(),
+  idLote: z.number(),
+  idSucursal: z.number().nullable().optional(),
+  idUsuario: z.number(),
+  idUsuarioAutoriza: z.number().nullable().optional(),
+  idDevolucionProveedor: z.number().nullable().optional(),
+  cantidadAfectada: z.number(),
+  costoUnitario: z.number(),
+  montoPerdida: z.number(),
+  accionTomada: AccionBajaSchema,
+  estado: EstadoBajaSchema,
+  fechaDeteccion: z.string(),
+  fechaEjecucion: z.string().nullable().optional(),
+  motivoDetalle: z.string().nullable().optional(),
+  fechaCreacion: z.string(),
+  fechaModificacion: z.string(),
+  codigoLote: z.string(),
+  numeroLote: z.string(),
+  stockActual: z.number(),
+  fechaVencimiento: z.string(),
+  precioCompraActual: z.number(),
+  estadoLote: z.string(),
+  idProducto: z.number(),
+  codigoBarra: z.string().nullable().optional(),
+  nombreComercial: z.string(),
+  nombreGenerico: z.string().nullable().optional(),
+  laboratorio: z.string().nullable().optional(),
+  presentacion: z.string().nullable().optional(),
+  proveedor: z.string().nullable().optional(),
+  sucursal: z.string().nullable().optional(),
+  usuario: z.string().nullable().optional(),
+  usuarioAutoriza: z.string().nullable().optional(),
+  estadoDevolucion: z.string().nullable().optional(),
+  motivoDevolucion: z.string().nullable().optional(),
+  montoNotaCredito: z.number(),
+  numeroNotaCredito: z.string().nullable().optional(),
+  diasRestantes: z.number(),
+});
+export const BajaListSchema = z.array(BajaListItemSchema);
+export type BajaListItemType = z.infer<typeof BajaListItemSchema>;
+
+/** El detalle devuelve exactamente la misma proyección que un elemento del listado. */
+export const BajaSchema = BajaListItemSchema;
+export type BajaType = z.infer<typeof BajaSchema>;
+
+export const CrearBajaSchema = z.object({
+  idLote: z.number().int().positive(),
+  cantidadAfectada: z.number().int().positive(),
+  accionTomada: AccionBajaSchema,
+  idSucursal: z.number().int().positive().optional().nullable(),
+  idDevolucionProveedor: z.number().int().positive().optional().nullable(),
+  fechaDeteccion: z.string().optional().nullable(),
+  motivoDetalle: z.string().max(2000).optional().nullable(),
+});
+export type CrearBajaType = z.infer<typeof CrearBajaSchema>;
+
+// Los filtros permiten "" para representar "Todos" en los <select> del front.
+export interface IBajaFiltros {
+  estado?: EstadoBaja | '';
+  accionTomada?: AccionBaja | '';
+  idSucursal?: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  pagina?: number;
+  porPagina?: number;
+}
+
+export interface IDeteccionBajaFiltros {
+  dias?: 30 | 60 | 90;
+  idSucursal?: number;
+  idProducto?: number;
+  idProveedor?: number;
+  idLaboratorio?: number;
+  busqueda?: string;
+  limite?: number;
+}
+
+// ── Reporte de pérdidas ───────────────────────────────────────────────────────
+export const ReportePerdidaFilaSchema = z.object({
+  idBajaVencimiento: z.number(),
+  fechaEjecucion: z.string(),
+  accionTomada: AccionBajaSchema,
+  estado: EstadoBajaSchema,
+  cantidadAfectada: z.number(),
+  costoUnitario: z.number(),
+  montoPerdida: z.number(),
+  codigoLote: z.string(),
+  numeroLote: z.string(),
+  idProducto: z.number(),
+  nombreComercial: z.string(),
+  laboratorio: z.string().nullable().optional(),
+  idSucursal: z.number().nullable().optional(),
+  sucursal: z.string().nullable().optional(),
+  numeroNotaCredito: z.string().nullable().optional(),
+  montoNotaCredito: z.number(),
+});
+export const ReportePerdidasFilasSchema = z.array(ReportePerdidaFilaSchema);
+export type ReportePerdidaFilaType = z.infer<typeof ReportePerdidaFilaSchema>;
+
+export const ReportePerdidasPorAccionSchema = z.object({
+  accion: AccionBajaSchema,
+  bajas: z.number(),
+  unidades: z.number(),
+  perdida: z.number(),
+});
+export const ReportePerdidasPorSucursalSchema = z.object({
+  sucursal: z.string(),
+  bajas: z.number(),
+  unidades: z.number(),
+  perdida: z.number(),
+});
+export const ReportePerdidasResumenSchema = z.object({
+  totalBajas: z.number(),
+  totalUnidades: z.number(),
+  montoPerdidaTotal: z.number(),
+  porAccion: z.array(ReportePerdidasPorAccionSchema),
+  porSucursal: z.array(ReportePerdidasPorSucursalSchema),
+});
+
+export const ReportePerdidasDatosSchema = z.object({
+  parametros: BajasParametrosSchema,
+  filas: ReportePerdidasFilasSchema,
+  resumen: ReportePerdidasResumenSchema,
+});
+export type ReportePerdidasDatosType = z.infer<typeof ReportePerdidasDatosSchema>;
+
+export interface IReportePerdidasFiltros {
+  fechaDesde: string;
+  fechaHasta: string;
+  idSucursal?: number;
+  accionTomada?: AccionBaja | '';
+  idProducto?: number;
+}

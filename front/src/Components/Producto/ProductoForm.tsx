@@ -10,7 +10,7 @@ import { GetPresentaApi } from "../../Api/PresentacionApi";
 import { GetPrincipioActivoApi } from "../../Api/PrincipioActivoApi";
 import SearchableSelect, { type SearchableOption } from "../Common/SearchableSelect";
 import ErrorMessage from "../Error/ErrorMessage";
-import { soloLetras, soloDigitos, numero, textoLibre, alfanumerico, tecladoSoloLetras, tecladoSoloDigitos, tecladoAlfanumerico } from "../../lib/validators";
+import { soloLetras, codigoBarra, numero, textoLibre, alfanumerico, tecladoSoloLetras, tecladoCodigoBarra, tecladoAlfanumerico } from "../../lib/validators";
 import type {
   CreateProducto,
   ProductoPrincipioInput,
@@ -446,16 +446,16 @@ export default function ProductoForm({ setIsOpen, isOpen }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Código de barra */}
                 <div className="md:col-span-2">
-                  <Field id="codigoBarra" label="Código de barra" required hint="Debe ser único. Entre 8 y 14 dígitos.">
+                  <Field id="codigoBarra" label="Código de barra" required hint="Debe ser único. Entre 8 y 14 caracteres (letras o números).">
                     <IconInput icon="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01">
                       <input
                         id="codigoBarra"
                         type="text"
-                        placeholder="Ej: 7501234567890"
+                        placeholder="Ej: 7501234567890 o ABC12345"
                         className={inputCls}
                         style={fieldStyle(!!errors.codigoBarra)}
-                        {...register("codigoBarra", soloDigitos("Código de barra", { required: "El código de barra es obligatorio", min: 8, max: 14 }))}
-                        {...tecladoSoloDigitos}
+                        {...register("codigoBarra", codigoBarra("Código de barra", { required: "El código de barra es obligatorio", min: 8, max: 14 }))}
+                        {...tecladoCodigoBarra}
                       />
                     </IconInput>
                     {errors.codigoBarra && <ErrorMessage>{errors.codigoBarra.message}</ErrorMessage>}

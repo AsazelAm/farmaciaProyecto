@@ -14,12 +14,15 @@ export const RX = {
   telefono:    /^[0-9+\-\s()]{6,20}$/,
   email:       /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   alfanum:     /^[A-Za-z0-9\-_/ ]+$/,
+  // Código de barras: ahora admite letras además de números (y - _).
+  codigoBarra: /^[A-Za-z0-9\-_]+$/,
 } as const;
 
 // Reemplazos globales (para sanear valores de inputs controlados)
 export const limpiarLetras   = (v: string) => v.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s.'-]/g, "");
 export const limpiarDigitos  = (v: string) => v.replace(/\D/g, "");
 export const limpiarAlfanum  = (v: string) => v.replace(/[^A-Za-z0-9\-_/ ]/g, "");
+export const limpiarCodigoBarra = (v: string) => v.replace(/[^A-Za-z0-9\-_]/g, "");
 
 // ── Bloqueo de teclado (no permitir escribir caracteres inválidos) ────────────
 const soloPermite = (permitido: RegExp) => (e: KeyboardEvent<HTMLInputElement>) => {
@@ -41,6 +44,12 @@ export const tecladoSoloLetras = {
 export const tecladoSoloDigitos = {
   onKeyDown: soloPermite(/\d/),
   onPaste:   bloqueaPegado(/\D/),
+};
+
+/** Teclado para código de barras alfanumérico (letras, números, - y _). */
+export const tecladoCodigoBarra = {
+  onKeyDown: soloPermite(/[A-Za-z0-9\-_]/),
+  onPaste:   bloqueaPegado(/[^A-Za-z0-9\-_]/),
 };
 
 export const tecladoAlfanumerico = {
@@ -74,6 +83,14 @@ export const soloDigitos = (label: string, { required, min = 1, max = 15 }: OpcL
   ...req(label, required),
   maxLength: { value: max, message: `${label}: máximo ${max} dígitos` },
   pattern:   { value: new RegExp(`^\\d{${min},${max}}$`), message: `${label}: debe tener entre ${min} y ${max} dígitos` },
+});
+
+/** Código de barras: admite letras y números (8 a 14 caracteres). */
+export const codigoBarra = (label: string, { required, min = 8, max = 14 }: OpcLetras = {}) => ({
+  ...req(label, required),
+  minLength: { value: min, message: `${label}: mínimo ${min} caracteres` },
+  maxLength: { value: max, message: `${label}: máximo ${max} caracteres` },
+  pattern:   { value: RX.codigoBarra, message: `${label}: solo letras, números, guion y guion bajo` },
 });
 
 /** Campos alfanuméricos (códigos, números de lote, factura). */

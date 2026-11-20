@@ -24,6 +24,7 @@ const DataProducto = {
                         p.contraindicaciones,
                         p.viaAdministracion,
                         p.stockMinimo,
+                        p.stockTotal,
                         p.estado,
                         p.idLaboratorio,
                         p.idPresentacion,

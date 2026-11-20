@@ -18,7 +18,7 @@ const authenticate = async (req, res, next) => {
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         if (decoded?.id) {
-            const [user] = await db_1.default.query('SELECT usuario.idUsuario, usuario.idTipoUs, tipous.nameRol FROM usuario JOIN tipous ON usuario.idTipoUs = tipous.idTipoUs WHERE usuario.idUsuario = ?', [decoded.id]);
+            const [user] = await db_1.default.query('SELECT usuario.idUsuario, usuario.idTipoUs, usuario.idSucursal, tipous.nameRol FROM usuario JOIN tipous ON usuario.idTipoUs = tipous.idTipoUs WHERE usuario.idUsuario = ?', [decoded.id]);
             if (!user) {
                 return res.status(401).json({ error: 'Usuario no encontrado' });
             }

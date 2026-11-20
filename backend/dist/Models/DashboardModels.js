@@ -54,15 +54,11 @@ const DataDashboard = {
                 conection.query(`SELECT COUNT(*) AS total FROM producto WHERE estado = 1`),
                 conection.query(`SELECT COUNT(*) AS total FROM usuario WHERE estado = 1`),
                 conection.query(`
-                    SELECT COUNT(*) AS total FROM (
-                        SELECT pr.idProducto, pr.stockMinimo, IFNULL(SUM(l.stock), 0) AS stockTotal
-                        FROM producto pr
-                        LEFT JOIN lote l ON l.idProducto = pr.idProducto
-                          AND l.estado IN ('activo', 'pendiente')
-                        WHERE pr.estado = 1
-                        GROUP BY pr.idProducto, pr.stockMinimo
-                        HAVING stockTotal <= pr.stockMinimo
-                    ) AS bajo
+                    -- Usa el snapshot vendible (activo + no vencido), no SUM(lote.stock) crudo.
+                    SELECT COUNT(*) AS total
+                    FROM producto pr
+                    WHERE pr.estado = 1
+                      AND COALESCE(pr.stockTotal, 0) <= pr.stockMinimo
                 `),
                 conection.query(`
                     SELECT COUNT(*) AS total FROM lote
@@ -242,15 +238,12 @@ const DataDashboard = {
         const conection = await db_1.default.getConnection();
         try {
             const rows = await conection.query(`
-                SELECT pr.idProducto, pr.codigoBarra, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico, pr.nombreComercial,
-                       pr.stockMinimo,
-                       IFNULL(SUM(l.stock), 0) AS stockTotal
+                SELECT pr.idProducto, pr.codigoBarra, ${(0, ProductoDerivado_1.sqlNombreGenerico)('pr')} AS nombreGenerico,
+                       pr.nombreComercial, pr.stockMinimo,
+                       COALESCE(pr.stockTotal, 0) AS stockTotal
                 FROM producto pr
-                LEFT JOIN lote l ON l.idProducto = pr.idProducto
-                  AND l.estado IN ('activo', 'pendiente')
                 WHERE pr.estado = 1
-                GROUP BY pr.idProducto, pr.codigoBarra, pr.nombreComercial, pr.stockMinimo
-                HAVING stockTotal <= pr.stockMinimo
+                  AND COALESCE(pr.stockTotal, 0) <= pr.stockMinimo
                 ORDER BY stockTotal ASC
                 LIMIT ?
             `, [limite]);

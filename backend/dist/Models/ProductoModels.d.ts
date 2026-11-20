@@ -8,6 +8,7 @@ interface IProducto {
     contraindicaciones: string | null;
     viaAdministracion: string | null;
     stockMinimo: number;
+    stockTotal?: number;
     idLaboratorio: number;
     idPresentacion: number;
 }

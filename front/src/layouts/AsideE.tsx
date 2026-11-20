@@ -4,7 +4,6 @@ import { ToastContainer } from "react-toastify";
 import { useAuth } from "../Hook/UseAuth";
 import Loading from "../Helpers/Loading";
 import iconuser from "../assets/group.png";
-import rol from "../assets/gestion.png";
 //import icondoc from "../assets/doc.png";
 import 'react-toastify/dist/ReactToastify.css';
 import NavItem from "./Admin/NavItem";
@@ -92,6 +91,10 @@ export default function Aside() {
 
             <SubMenu label="Devoluciones" icon={iconuser}>
               <NavItem to="/DashboardEncargadoInventario/Devoluciones" icon={iconuser} label="Devoluciones" />
+            </SubMenu>
+
+            <SubMenu label="Bajas y mermas" icon={iconuser}>
+              <NavItem to="/DashboardEncargadoInventario/BajasLotesVencidos" icon={iconuser} label="Bajas de lotes vencidos" />
             </SubMenu>
 
             <SubMenu label="Reportes" icon={iconuser}>
